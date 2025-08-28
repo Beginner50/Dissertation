@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" data-darkreader-mode="dynamic" data-darkreader-scheme="dark"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><style class="darkreader darkreader--fallback" media="screen"></style><style class="darkreader darkreader--user-agent" media="screen">@layer {
+html {
+    background-color: var(--darkreader-background-ffffff, #181a1b) !important;
+}
+html {
+    color-scheme: dark !important;
+}
+iframe {
+    color-scheme: dark !important;
+}
+html, body {
+    background-color: var(--darkreader-background-ffffff, #181a1b);
+}
+html, body {
+    border-color: var(--darkreader-border-4c4c4c, #736b5e);
+    color: var(--darkreader-text-000000, #e8e6e3);
+}
+a {
+    color: var(--darkreader-text-0040ff, #3391ff);
+}
+table {
+    border-color: var(--darkreader-border-808080, #545b5e);
+}
+mark {
+    color: var(--darkreader-text-000000, #e8e6e3);
+}
+::placeholder {
+    color: var(--darkreader-text-a9a9a9, #b2aba1);
+}
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    background-color: var(--darkreader-background-faffbd, #404400) !important;
+    color: var(--darkreader-text-000000, #e8e6e3) !important;
+}
+::selection {
+    background-color: var(--darkreader-background-0060d4, #004daa) !important;
+    color: var(--darkreader-text-ffffff, #e8e6e3) !important;
+}
+::-moz-selection {
+    background-color: var(--darkreader-background-0060d4, #004daa) !important;
+    color: var(--darkreader-text-ffffff, #e8e6e3) !important;
+}
+}</style><style class="darkreader darkreader--text" media="screen"></style><style class="darkreader darkreader--invert" media="screen">.jfk-bubble.gtx-bubble, .captcheck_answer_label > input + img, span#closed_text > img[src^="https://www.gstatic.com/images/branding/googlelogo"], span[data-href^="https://www.hcaptcha.com/"] > #icon, img.Wirisformula, a[data-testid="headerMediumLogo"]>svg, .d2l-navigation-link-image-container, .d2l-iframe-loading-container {
+    filter: invert(100%) hue-rotate(180deg) contrast(90%) !important;
+}</style><style class="darkreader darkreader--inline" media="screen">[data-darkreader-inline-bgcolor] {
+  background-color: var(--darkreader-inline-bgcolor) !important;
+}
+[data-darkreader-inline-bgimage] {
+  background-image: var(--darkreader-inline-bgimage) !important;
+}
+[data-darkreader-inline-border] {
+  border-color: var(--darkreader-inline-border) !important;
+}
+[data-darkreader-inline-border-bottom] {
+  border-bottom-color: var(--darkreader-inline-border-bottom) !important;
+}
+[data-darkreader-inline-border-left] {
+  border-left-color: var(--darkreader-inline-border-left) !important;
+}
+[data-darkreader-inline-border-right] {
+  border-right-color: var(--darkreader-inline-border-right) !important;
+}
+[data-darkreader-inline-border-top] {
+  border-top-color: var(--darkreader-inline-border-top) !important;
+}
+[data-darkreader-inline-boxshadow] {
+  box-shadow: var(--darkreader-inline-boxshadow) !important;
+}
+[data-darkreader-inline-color] {
+  color: var(--darkreader-inline-color) !important;
+}
+[data-darkreader-inline-fill] {
+  fill: var(--darkreader-inline-fill) !important;
+}
+[data-darkreader-inline-stroke] {
+  stroke: var(--darkreader-inline-stroke) !important;
+}
+[data-darkreader-inline-outline] {
+  outline-color: var(--darkreader-inline-outline) !important;
+}
+[data-darkreader-inline-stopcolor] {
+  stop-color: var(--darkreader-inline-stopcolor) !important;
+}
+[data-darkreader-inline-bg] {
+  background: var(--darkreader-inline-bg) !important;
+}
+[data-darkreader-inline-border-short] {
+  border: var(--darkreader-inline-border-short) !important;
+}
+[data-darkreader-inline-border-bottom-short] {
+  border-bottom: var(--darkreader-inline-border-bottom-short) !important;
+}
+[data-darkreader-inline-border-left-short] {
+  border-left: var(--darkreader-inline-border-left-short) !important;
+}
+[data-darkreader-inline-border-right-short] {
+  border-right: var(--darkreader-inline-border-right-short) !important;
+}
+[data-darkreader-inline-border-top-short] {
+  border-top: var(--darkreader-inline-border-top-short) !important;
+}
+[data-darkreader-inline-invert] {
+    filter: invert(100%) hue-rotate(180deg);
+}</style><style class="darkreader darkreader--variables" media="screen">:root {
+   --darkreader-neutral-background: var(--darkreader-background-ffffff, #181a1b);
+   --darkreader-neutral-text: var(--darkreader-text-000000, #e8e6e3);
+   --darkreader-selection-background: var(--darkreader-background-0060d4, #004daa);
+   --darkreader-selection-text: var(--darkreader-text-ffffff, #e8e6e3);
+}</style><style class="darkreader darkreader--root-vars" media="screen"></style>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>
+		Digital solutions for graduate supervision: A critical analysis of thesis management systems
+							| American Journal of STEM Education
+			</title>
+
+	
+<meta name="generator" content="Open Journal Systems 3.4.0.7">
+<meta name="citation_journal_title" content="American Journal of STEM Education">
+<meta name="keywords" content="stem,education,research,journal,publication">
+<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/">
+<meta name="DC.Creator.PersonalName" content="Agnes Lucy Lando">
+<meta name="DC.Creator.PersonalName" content="Anthony Wambua Wambua">
+<meta name="DC.Date.created" scheme="ISO8601" content="2025-04-07">
+<meta name="DC.Date.dateSubmitted" scheme="ISO8601" content="2025-01-27">
+<meta name="DC.Date.issued" scheme="ISO8601" content="2025-04-07">
+<meta name="DC.Date.modified" scheme="ISO8601" content="2025-04-19">
+<meta name="DC.Description" xml:lang="en" content="Until 2020, the allocation of thesis supervisors at Daystar University was manually done in face-to-face communication. However, the COVID-19 pandemic yielded two problems. First, it was not possible for graduate students and the leadership of the various programs on the one hand and the graduate students and their supervisors on the other to be in physical contact. When Daystar enforced the Kenyan government directive to transit online to curb the spread of COVID-19, most supervisors reached their supervisees via email, phone call, or Zoom. However, the challenge of supervisor allocation and follow-up was real. The second problem was the supervisors' delay in giving students feedback on their thesis progress. Data collected indicated that several supervisors could take a month or more to respond, yet the University allocates a maximum of two weeks. Further, supervisors gave feedback if and when they wanted. This corroborated an earlier complaint that supervisors were non-responsive to students’ inquiries. Disturbed by this scenario, the University organs were challenged to be innovative in developing practical solutions to fast-track the supervision process. It is on this background that we developed a Thesis Management System (TMS) to monitor&nbsp;supervisors and reduce time and distance. This paper adopts mixed methodologies to study TMS.​&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;">
+<meta name="DC.Format" scheme="IMT" content="application/pdf">
+<meta name="DC.Identifier" content="7753">
+<meta name="DC.Identifier.pageNumber" content="49-64">
+<meta name="DC.Identifier.DOI" content="10.32674/sbs52z14">
+<meta name="DC.Identifier.URI" content="https://www.ojed.org/STEM/article/view/7753">
+<meta name="DC.Language" scheme="ISO639-1" content="en">
+<meta name="DC.Rights" content="Copyright (c) 2025 American Journal of STEM Education">
+<meta name="DC.Source" content="American Journal of STEM Education">
+<meta name="DC.Source.ISSN" content="3065-1190">
+<meta name="DC.Source.Volume" content="9">
+<meta name="DC.Source.URI" content="https://www.ojed.org/STEM">
+<meta name="DC.Subject" xml:lang="en" content="Supervise supervisors">
+<meta name="DC.Subject" xml:lang="en" content="Marshall Plan">
+<meta name="DC.Subject" xml:lang="en" content="Thesis Management System">
+<meta name="DC.Subject" xml:lang="en" content="Communication Technology Innovation">
+<meta name="DC.Subject" xml:lang="en" content="Thesis supervision">
+<meta name="DC.Subject" xml:lang="en" content="Graduate Students ">
+<meta name="DC.Title" content="Digital solutions for graduate supervision: A critical analysis of thesis management systems">
+<meta name="DC.Type" content="Text.Serial.Journal">
+<meta name="DC.Type.articleType" content="Articles">
+<meta name="gs_meta_revision" content="1.1">
+<meta name="citation_journal_title" content="American Journal of STEM Education">
+<meta name="citation_journal_abbrev" content="STEM">
+<meta name="citation_issn" content="3065-1190"> 
+<meta name="citation_author" content="Agnes Lucy Lando">
+<meta name="citation_author_institution" content="Daystar University">
+<meta name="citation_author" content="Anthony Wambua Wambua">
+<meta name="citation_author_institution" content="Daystar University">
+<meta name="citation_title" content="Digital solutions for graduate supervision: A critical analysis of thesis management systems">
+<meta name="citation_language" content="en">
+<meta name="citation_date" content="2025/04/07">
+<meta name="citation_volume" content="9">
+<meta name="citation_firstpage" content="49">
+<meta name="citation_lastpage" content="64">
+<meta name="citation_doi" content="10.32674/sbs52z14">
+<meta name="citation_abstract_html_url" content="https://www.ojed.org/STEM/article/view/7753">
+<meta name="citation_abstract" xml:lang="en" content="Until 2020, the allocation of thesis supervisors at Daystar University was manually done in face-to-face communication. However, the COVID-19 pandemic yielded two problems. First, it was not possible for graduate students and the leadership of the various programs on the one hand and the graduate students and their supervisors on the other to be in physical contact. When Daystar enforced the Kenyan government directive to transit online to curb the spread of COVID-19, most supervisors reached their supervisees via email, phone call, or Zoom. However, the challenge of supervisor allocation and follow-up was real. The second problem was the supervisors' delay in giving students feedback on their thesis progress. Data collected indicated that several supervisors could take a month or more to respond, yet the University allocates a maximum of two weeks. Further, supervisors gave feedback if and when they wanted. This corroborated an earlier complaint that supervisors were non-responsive to students’ inquiries. Disturbed by this scenario, the University organs were challenged to be innovative in developing practical solutions to fast-track the supervision process. It is on this background that we developed a Thesis Management System (TMS) to monitor&nbsp;supervisors and reduce time and distance. This paper adopts mixed methodologies to study TMS.​&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;">
+<meta name="citation_keywords" xml:lang="en" content="Supervise supervisors">
+<meta name="citation_keywords" xml:lang="en" content="Marshall Plan">
+<meta name="citation_keywords" xml:lang="en" content="Thesis Management System">
+<meta name="citation_keywords" xml:lang="en" content="Communication Technology Innovation">
+<meta name="citation_keywords" xml:lang="en" content="Thesis supervision">
+<meta name="citation_keywords" xml:lang="en" content="Graduate Students ">
+<meta name="citation_pdf_url" content="https://www.ojed.org/STEM/article/download/7753/3334">
+<link rel="alternate" type="application/atom+xml" href="https://www.ojed.org/STEM/gateway/plugin/AnnouncementFeedGatewayPlugin/atom">
+<link rel="alternate" type="application/rdf+xml" href="https://www.ojed.org/STEM/gateway/plugin/AnnouncementFeedGatewayPlugin/rss">
+<link rel="alternate" type="application/rss+xml" href="https://www.ojed.org/STEM/gateway/plugin/AnnouncementFeedGatewayPlugin/rss2">
+<meta name="ojtcontrolpanel" content="OJT Control Panel Version 3.0.2.0 by openjournaltheme.com">
+	<link rel="stylesheet" href="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/css_002.css" type="text/css"><style class="darkreader darkreader--sync" media="screen"></style><link rel="stylesheet" href="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/css.css" type="text/css"><style class="darkreader darkreader--sync" media="screen"></style><link rel="stylesheet" href="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/fontawesome.css" type="text/css"><style class="darkreader darkreader--sync" media="screen"></style><link rel="stylesheet" href="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/citations.css" type="text/css"><style class="darkreader darkreader--sync" media="screen"></style><link rel="stylesheet" href="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/citationStyleLanguagePlugin.css" type="text/css"><style class="darkreader darkreader--sync" media="screen"></style>
+<meta name="darkreader" content="cfbad170cba1426f9e66f076c3c24834"><style class="darkreader darkreader--override" media="screen">.vimvixen-hint {
+    background-color: var(--darkreader-background-ffd76e, #684b00) !important;
+    border-color: var(--darkreader-background-c59d00, #9e7e00) !important;
+    color: var(--darkreader-text-302505, #d7d4cf) !important;
+}
+#vimvixen-console-frame {
+    color-scheme: light !important;
+}
+::placeholder {
+    opacity: 0.5 !important;
+}
+#edge-translate-panel-body,
+.MuiTypography-body1,
+.nfe-quote-text {
+    color: var(--darkreader-neutral-text) !important;
+}
+gr-main-header {
+    background-color: var(--darkreader-background-add8e6, #1b4958) !important;
+}
+.tou-z65h9k,
+.tou-mignzq,
+.tou-1b6i2ox,
+.tou-lnqlqk {
+    background-color: var(--darkreader-neutral-background) !important;
+}
+.tou-75mvi {
+    background-color: var(--darkreader-background-cfecf5, #0f3a47) !important;
+}
+.tou-ta9e87,
+.tou-1w3fhi0,
+.tou-1b8t2us,
+.tou-py7lfi,
+.tou-1lpmd9d,
+.tou-1frrtv8,
+.tou-17ezmgn {
+    background-color: var(--darkreader-background-f5f5f5, #1e2021) !important;
+}
+.tou-uknfeu {
+    background-color: var(--darkreader-background-faedda, #432c09) !important;
+}
+.tou-6i3zyv {
+    background-color: var(--darkreader-background-85c3d8, #245d70) !important;
+}
+div.mermaid-viewer-control-panel .btn {
+    background-color: var(--darkreader-neutral-background);
+    fill: var(--darkreader-neutral-text);
+}
+svg g rect.er {
+    fill: var(--darkreader-neutral-background) !important;
+}
+svg g rect.er.entityBox {
+    fill: var(--darkreader-neutral-background) !important;
+}
+svg g rect.er.attributeBoxOdd {
+    fill: var(--darkreader-neutral-background) !important;
+}
+svg g rect.er.attributeBoxEven {
+    fill: var(--darkreader-selection-background);
+    fill-opacity: 0.8 !important;
+}
+svg rect.er.relationshipLabelBox {
+    fill: var(--darkreader-neutral-background) !important;
+}
+svg g g.nodes rect,
+svg g g.nodes polygon {
+    fill: var(--darkreader-neutral-background) !important;
+}
+svg g rect.task {
+    fill: var(--darkreader-selection-background) !important;
+}
+svg line.messageLine0,
+svg line.messageLine1 {
+    stroke: var(--darkreader-neutral-text) !important;
+}
+div.mermaid .actor {
+    fill: var(--darkreader-neutral-background) !important;
+}
+mitid-authenticators-code-app > .code-app-container {
+    background-color: white !important;
+    padding-top: 1rem;
+}
+iframe#unpaywall[src$="unpaywall.html"] {
+    color-scheme: light !important;
+}
+select {
+    --darkreader-bg--form-control-background-color: rgba(22, 22, 22, 0) !important;
+}
+select * {
+    background-color: var(--darkreader-neutral-background) !important;
+}
+body#tumblr {
+    --darkreader-bg--secondary-accent: 31, 32, 34 !important;
+    --darkreader-bg--white: 23, 23, 23 !important;
+    --darkreader-text--black: 228, 224, 218 !important;
+}
+:host {
+    --d2l-border-color: var(--darkreader-bg--d2l-color-gypsum) !important;
+    --d2l-button-icon-background-color-hover: var(--darkreader-bg--d2l-color-gypsum) !important;
+    --d2l-color-ferrite: var(--darkreader-neutral-text) !important;
+    --d2l-color-sylvite: var(--darkreader-bg--d2l-color-sylvite) !important;
+    --d2l-dropdown-background-color: var(--darkreader-neutral-background) !important;
+    --d2l-dropdown-border-color: var(--darkreader-border--d2l-color-mica) !important;
+    --d2l-input-backgroud-color: var(--darkreader-neutral-background) !important;
+    --d2l-menu-border-color: var(--darkreader-bg--d2l-color-gypsum) !important;
+    --d2l-tooltip-background-color: var(--darkreader-neutral-background) !important;
+    --d2l-tooltip-border-color: var(--darkreader-bg--d2l-color-gypsum) !important;
+}
+:host([_floating]) .d2l-floating-buttons-container {
+    background-color: var(--darkreader-neutral-background) !important;
+    border-top-color: var(--darkreader-border--d2l-color-mica) !important;
+    opacity: 0.88 !important;
+}
+d2l-card {
+    background: var(--darkreader-neutral-background) !important;
+    border-color: var(--darkreader-border--d2l-color-gypsum) !important;
+}
+d2l-dropdown-content > div,
+d2l-menu-item {
+    background-color: var(--darkreader-neutral-background) !important;
+    border-radius: 10px !important;
+}
+d2l-empty-state-simple {
+    border-color: var(--darkreader-bg--d2l-color-gypsum) !important;
+}
+.d2l-button-filter > ul > li > a.vui-button {
+    border-color: var(--darkreader-border--d2l-color-mica) !important;
+}
+.d2l-label-text:has(.d2l-button-subtle-content):hover,
+.d2l-label-text:has(.d2l-button-subtle-content):focus,
+.d2l-label-text:has(.d2l-button-subtle-content):active {
+    background-color: var(--darkreader-bg--d2l-color-gypsum) !important;
+}
+.d2l-navigation-centerer {
+    color: inherit !important;
+}
+.d2l-tabs-layout {
+    border-color: var(--darkreader-border--d2l-color-gypsum) !important;
+}
+.d2l-input,
+.d2l-calendar-date,
+.d2l-htmleditor-container {
+    background-color: var(--darkreader-neutral-background) !important;
+}
+.d2l-collapsible-panel {
+    border: 1px solid var(--darkreader-border--d2l-color-mica) !important;
+    border-radius: 0.4rem !important;
+}
+.d2l-collapsible-panel-divider {
+    border-bottom: 1px solid var(--darkreader-border--d2l-color-mica) !important;
+}
+.d2l-w2d-flex {
+    border-bottom: 2px solid var(--darkreader-border--d2l-color-mica) !important;
+}
+.d2l-collapsible-panel scrolled,
+.d2l-collapsible-panel-header,
+.d2l-w2d-collection-fixed {
+    background-color: var(--darkreader-neutral-background) !important;
+}
+.d2l-loading-spinner-bg {
+    fill: var(--darkreader-bg--d2l-color-gypsum) !important;
+}
+.d2l-loading-spinner-bg-stroke {
+    stroke: var(--darkreader-border--d2l-color-mica) !important;
+}
+.d2l-loading-spinner-wrapper svg path,
+.d2l-loading-spinner-wrapper svg circle {
+    fill: var(--darkreader-neutral-background) !important;
+}
+embed[type="application/pdf"] { filter: invert(100%) contrast(90%); }</style></head>
+<body class="pkp_page_article pkp_op_view" dir="ltr">
+
+	<div class="pkp_structure_page">
+
+				<header class="pkp_structure_head" id="headerNavigationContainer" role="banner">
+						
+ <nav class="cmp_skip_to_content" aria-label="Jump to content links">
+	<a href="#pkp_content_main">Skip to main content</a>
+	<a href="#siteNav">Skip to main navigation menu</a>
+		<a href="#pkp_content_footer">Skip to site footer</a>
+</nav>
+
+			<div class="pkp_head_wrapper">
+
+				<div class="pkp_site_name_wrapper">
+					<button class="pkp_site_nav_toggle">
+						<span>Open Menu</span>
+					</button>
+										<div class="pkp_site_name">
+																<a href="https://www.ojed.org/STEM/index" class="is_text">American Journal of STEM Education</a>
+										</div>
+				</div>
+
+				
+				<nav class="pkp_site_nav_menu" aria-label="Site Navigation">
+					<a id="siteNav"></a>
+					<div class="pkp_navigation_primary_row">
+						<div class="pkp_navigation_primary_wrapper">
+																				<ul id="navigationPrimary" class="pkp_navigation_primary pkp_nav_list">
+								<li class="">
+				<a href="https://www.ojed.org/STEM/issue/current">
+					Current
+				</a>
+							</li>
+								<li class="">
+				<a href="https://www.ojed.org/STEM/issue/archive">
+					Archives
+				</a>
+							</li>
+								<li class="">
+				<a href="https://www.ojed.org/STEM/announcement">
+					Announcements
+				</a>
+							</li>
+								<li class="">
+				<a href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="pkpDropdown0">
+					About
+				</a>
+									<ul class="dropdown-menu" aria-labelledby="pkpDropdown0">
+																					<li class="">
+									<a href="https://www.ojed.org/STEM/about">
+										About the Journal
+									</a>
+								</li>
+																												<li class="">
+									<a href="https://www.ojed.org/STEM/about/submissions">
+										Submissions
+									</a>
+								</li>
+																												<li class="">
+									<a href="https://www.ojed.org/STEM/crossmark-policy">
+										Crossmark Policy
+									</a>
+								</li>
+																												<li class="">
+									<a href="https://www.ojed.org/STEM/about/privacy">
+										Privacy Statement
+									</a>
+								</li>
+																		</ul>
+							</li>
+								<li class="">
+				<a href="https://www.ojed.org/STEM/about/editorialTeam">
+					Editorial Team
+				</a>
+							</li>
+								<li class="">
+				<a href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="pkpDropdown1">
+					Author Guidelines
+				</a>
+									<ul class="dropdown-menu" aria-labelledby="pkpDropdown1">
+																					<li class="">
+									<a href="https://www.ojed.org/STEM/steps">
+										Author Guidelines for Submissions
+									</a>
+								</li>
+																												<li class="">
+									<a href="https://www.ojed.org/STEM/ai-policies">
+										AI Policies for Authors, Reviewers, and Editors
+									</a>
+								</li>
+																												<li class="">
+									<a href="https://www.ojed.org/STEM/review">
+										Peer Review Process
+									</a>
+								</li>
+																												<li class="">
+									<a href="https://www.ojed.org/STEM/ethics">
+										Publication Ethics and Malpractice Statement
+									</a>
+								</li>
+																		</ul>
+							</li>
+								<li class="">
+				<a href="https://www.ojed.org/STEM/about/contact">
+					Contact
+				</a>
+							</li>
+			</ul>
+
+				
+
+																						<div class="pkp_navigation_search_wrapper">
+									<a href="https://www.ojed.org/STEM/search" class="pkp_search pkp_search_desktop">
+										<span class="fa fa-search" aria-hidden="true"></span>
+										Search
+									</a>
+								</div>
+													</div>
+					</div>
+					<div class="pkp_navigation_user_wrapper" id="navigationUserWrapper">
+							<ul id="navigationUser" class="pkp_navigation_user pkp_nav_list">
+								<li class="profile">
+				<a href="https://www.ojed.org/STEM/user/register">
+					Register
+				</a>
+							</li>
+								<li class="profile">
+				<a href="https://www.ojed.org/STEM/login">
+					Login
+				</a>
+							</li>
+										</ul>
+
+					</div>
+				</nav>
+			</div><!-- .pkp_head_wrapper -->
+		</header><!-- .pkp_structure_head -->
+
+						<div class="pkp_structure_content has_sidebar">
+			<div class="pkp_structure_main" role="main">
+				<a id="pkp_content_main"></a>
+
+<div class="page page_article">
+			<nav class="cmp_breadcrumbs" role="navigation" aria-label="You are here:">
+	<ol>
+		<li>
+			<a href="https://www.ojed.org/STEM/index">
+				Home
+			</a>
+			<span class="separator">/</span>
+		</li>
+		<li>
+			<a href="https://www.ojed.org/STEM/issue/archive">
+				Archives
+			</a>
+			<span class="separator">/</span>
+		</li>
+					<li>
+				<a href="https://www.ojed.org/STEM/issue/view/299">
+					Vol. 9 (2025): American Journal of STEM Education: Issues and Perspectives
+				</a>
+				<span class="separator">/</span>
+			</li>
+				<li class="current" aria-current="page">
+			<span aria-current="page">
+									Articles
+							</span>
+		</li>
+	</ol>
+</nav>
+	
+		  	 <article class="obj_article_details">
+
+		
+	<h1 class="page_title">
+		Digital solutions for graduate supervision
+	</h1>
+
+			<h2 class="subtitle">
+			A critical analysis of thesis management systems
+		</h2>
+	
+	<div class="row">
+		<div class="main_entry">
+
+							<section class="item authors">
+					<h2 class="pkp_screen_reader">Authors</h2>
+					<ul class="authors">
+											<li>
+							<span class="name">
+								Agnes Lucy Lando
+							</span>
+															<span class="affiliation">
+									Daystar University
+																	</span>
+																																		</li>
+											<li>
+							<span class="name">
+								Anthony Wambua Wambua
+							</span>
+															<span class="affiliation">
+									Daystar University
+																	</span>
+																																		</li>
+										</ul>
+				</section>
+			
+																	<section class="item doi">
+					<h2 class="label">
+												DOI:
+					</h2>
+					<span class="value">
+						<a href="https://doi.org/10.32674/sbs52z14">
+							https://doi.org/10.32674/sbs52z14
+						</a>
+					</span>
+				</section>
+			
+
+									<section class="item keywords">
+				<h2 class="label">
+										Keywords:
+				</h2>
+				<span class="value">
+											Supervise supervisors, 											Marshall Plan, 											
+Thesis Management System, 											Communication Technology 
+Innovation, 											Thesis supervision, 											Graduate Students 
+									</span>
+			</section>
+			
+										<section class="item abstract">
+					<h2 class="label">Abstract</h2>
+					<p>Until 2020, the allocation of thesis supervisors at Daystar 
+University was manually done in face-to-face communication. However, the
+ COVID-19 pandemic yielded two problems. First, it was not possible for 
+graduate students and the leadership of the various programs on the one 
+hand and the graduate students and their supervisors on the other to be 
+in physical contact. When Daystar enforced the Kenyan government 
+directive to transit online to curb the spread of COVID-19, most 
+supervisors reached their supervisees via email, phone call, or Zoom. 
+However, the challenge of supervisor allocation and follow-up was real. 
+The second problem was the supervisors' delay in giving students 
+feedback on their thesis progress. Data collected indicated that several
+ supervisors could take a month or more to respond, yet the University 
+allocates a maximum of two weeks. Further, supervisors gave feedback if 
+and when they wanted. This corroborated an earlier complaint that 
+supervisors were non-responsive to students’ inquiries. Disturbed by 
+this scenario, the University organs were challenged to be innovative in
+ developing practical solutions to fast-track the supervision process. 
+It is on this background that we developed a Thesis Management System 
+(TMS) to monitor&nbsp;supervisors and reduce time and distance. This 
+paper adopts mixed methodologies to study 
+TMS.​&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+				</section>
+			
+			
+
+						
+																										
+						
+		</div><!-- .main_entry -->
+
+		<div class="entry_details">
+
+										<div class="item cover_image">
+					<div class="sub_item">
+													<a href="https://www.ojed.org/STEM/issue/view/299">
+								<img src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/cover_issue_299_en.png" alt="">
+							</a>
+											</div>
+				</div>
+			
+													<div class="item galleys">
+					<h3 class="pkp_screen_reader">
+						Additional Files
+					</h3>
+					<ul class="value supplementary_galleys_links">
+													<li>
+								
+	
+													
+
+<a class="obj_galley_link_supplementary pdf" href="https://www.ojed.org/STEM/article/view/7753/3334">
+		
+	PDF
+
+	</a>
+							</li>
+											</ul>
+				</div>
+			
+						<div class="item published">
+				<section class="sub_item">
+					<h2 class="label">
+						Published
+					</h2>
+					<div class="value">
+																			<span>2025-04-07</span>
+																	</div>
+				</section>
+							</div>
+			
+						
+										<div class="item issue">
+
+											<section class="sub_item">
+							<h2 class="label">
+								Issue
+							</h2>
+							<div class="value">
+								<a class="title" href="https://www.ojed.org/STEM/issue/view/299">
+									Vol. 9 (2025): American Journal of STEM Education: Issues and Perspectives
+								</a>
+							</div>
+						</section>
+					
+											<section class="sub_item">
+							<h2 class="label">
+								Section
+							</h2>
+							<div class="value">
+								Articles
+							</div>
+						</section>
+					
+									</div>
+			
+																					
+						
+				<div class="item citation">
+		<section class="sub_item citation_display">
+			<h2 class="label">
+				How to Cite
+			</h2>
+			<div class="value">
+				<div id="citationOutput" role="region" aria-live="polite">
+					<div class="csl-bib-body">
+  <div class="csl-entry">Lando, A. L., &amp; Wambua, A. W. (2025). 
+Digital solutions for graduate supervision: A critical analysis of 
+thesis management systems. <i>American Journal of STEM Education</i>, <i>9</i>, 49-64. <a href="https://doi.org/10.32674/sbs52z14">https://doi.org/10.32674/sbs52z14</a></div>
+</div>
+				</div>
+				<div class="citation_formats">
+					<button class="citation_formats_button label" aria-controls="cslCitationFormats" aria-expanded="false" data-csl-dropdown="true">
+						More Citation Formats
+					</button>
+					<div id="cslCitationFormats" class="citation_formats_list" aria-hidden="true">
+						<ul class="citation_formats_styles">
+															<li>
+									<a aria-controls="citationOutput" href="https://www.ojed.org/STEM/citationstylelanguage/get/acm-sig-proceedings?submissionId=7753&amp;publicationId=7251&amp;issueId=299" data-load-citation="" data-json-href="https://www.ojed.org/STEM/citationstylelanguage/get/acm-sig-proceedings?submissionId=7753&amp;publicationId=7251&amp;issueId=299&amp;return=json">
+										ACM
+									</a>
+								</li>
+															<li>
+									<a aria-controls="citationOutput" href="https://www.ojed.org/STEM/citationstylelanguage/get/acs-nano?submissionId=7753&amp;publicationId=7251&amp;issueId=299" data-load-citation="" data-json-href="https://www.ojed.org/STEM/citationstylelanguage/get/acs-nano?submissionId=7753&amp;publicationId=7251&amp;issueId=299&amp;return=json">
+										ACS
+									</a>
+								</li>
+															<li>
+									<a aria-controls="citationOutput" href="https://www.ojed.org/STEM/citationstylelanguage/get/apa?submissionId=7753&amp;publicationId=7251&amp;issueId=299" data-load-citation="" data-json-href="https://www.ojed.org/STEM/citationstylelanguage/get/apa?submissionId=7753&amp;publicationId=7251&amp;issueId=299&amp;return=json">
+										APA
+									</a>
+								</li>
+															<li>
+									<a aria-controls="citationOutput" href="https://www.ojed.org/STEM/citationstylelanguage/get/associacao-brasileira-de-normas-tecnicas?submissionId=7753&amp;publicationId=7251&amp;issueId=299" data-load-citation="" data-json-href="https://www.ojed.org/STEM/citationstylelanguage/get/associacao-brasileira-de-normas-tecnicas?submissionId=7753&amp;publicationId=7251&amp;issueId=299&amp;return=json">
+										ABNT
+									</a>
+								</li>
+															<li>
+									<a aria-controls="citationOutput" href="https://www.ojed.org/STEM/citationstylelanguage/get/chicago-author-date?submissionId=7753&amp;publicationId=7251&amp;issueId=299" data-load-citation="" data-json-href="https://www.ojed.org/STEM/citationstylelanguage/get/chicago-author-date?submissionId=7753&amp;publicationId=7251&amp;issueId=299&amp;return=json">
+										Chicago
+									</a>
+								</li>
+															<li>
+									<a aria-controls="citationOutput" href="https://www.ojed.org/STEM/citationstylelanguage/get/harvard-cite-them-right?submissionId=7753&amp;publicationId=7251&amp;issueId=299" data-load-citation="" data-json-href="https://www.ojed.org/STEM/citationstylelanguage/get/harvard-cite-them-right?submissionId=7753&amp;publicationId=7251&amp;issueId=299&amp;return=json">
+										Harvard
+									</a>
+								</li>
+															<li>
+									<a aria-controls="citationOutput" href="https://www.ojed.org/STEM/citationstylelanguage/get/ieee?submissionId=7753&amp;publicationId=7251&amp;issueId=299" data-load-citation="" data-json-href="https://www.ojed.org/STEM/citationstylelanguage/get/ieee?submissionId=7753&amp;publicationId=7251&amp;issueId=299&amp;return=json">
+										IEEE
+									</a>
+								</li>
+															<li>
+									<a aria-controls="citationOutput" href="https://www.ojed.org/STEM/citationstylelanguage/get/modern-language-association?submissionId=7753&amp;publicationId=7251&amp;issueId=299" data-load-citation="" data-json-href="https://www.ojed.org/STEM/citationstylelanguage/get/modern-language-association?submissionId=7753&amp;publicationId=7251&amp;issueId=299&amp;return=json">
+										MLA
+									</a>
+								</li>
+															<li>
+									<a aria-controls="citationOutput" href="https://www.ojed.org/STEM/citationstylelanguage/get/turabian-fullnote-bibliography?submissionId=7753&amp;publicationId=7251&amp;issueId=299" data-load-citation="" data-json-href="https://www.ojed.org/STEM/citationstylelanguage/get/turabian-fullnote-bibliography?submissionId=7753&amp;publicationId=7251&amp;issueId=299&amp;return=json">
+										Turabian
+									</a>
+								</li>
+															<li>
+									<a aria-controls="citationOutput" href="https://www.ojed.org/STEM/citationstylelanguage/get/vancouver?submissionId=7753&amp;publicationId=7251&amp;issueId=299" data-load-citation="" data-json-href="https://www.ojed.org/STEM/citationstylelanguage/get/vancouver?submissionId=7753&amp;publicationId=7251&amp;issueId=299&amp;return=json">
+										Vancouver
+									</a>
+								</li>
+															<li>
+									<a aria-controls="citationOutput" href="https://www.ojed.org/STEM/citationstylelanguage/get/ama?submissionId=7753&amp;publicationId=7251&amp;issueId=299" data-load-citation="" data-json-href="https://www.ojed.org/STEM/citationstylelanguage/get/ama?submissionId=7753&amp;publicationId=7251&amp;issueId=299&amp;return=json">
+										AMA
+									</a>
+								</li>
+													</ul>
+													<div class="label">
+								Download Citation
+							</div>
+							<ul class="citation_formats_styles">
+																	<li>
+										<a href="https://www.ojed.org/STEM/citationstylelanguage/download/ris?submissionId=7753&amp;publicationId=7251&amp;issueId=299">
+											<span class="fa fa-download"></span>
+											Endnote/Zotero/Mendeley (RIS)
+										</a>
+									</li>
+																	<li>
+										<a href="https://www.ojed.org/STEM/citationstylelanguage/download/bibtex?submissionId=7753&amp;publicationId=7251&amp;issueId=299">
+											<span class="fa fa-download"></span>
+											BibTeX
+										</a>
+									</li>
+															</ul>
+											</div>
+				</div>
+			</div>
+		</section>
+	</div>
+
+
+		</div><!-- .entry_details -->
+	</div><!-- .row -->
+
+</article>
+
+	<div id="articlesBySameAuthorList">
+				</div>
+
+
+</div><!-- .page -->
+
+	</div><!-- pkp_structure_main -->
+
+									<div class="pkp_structure_sidebar left" role="complementary">
+				<div class="pkp_block block_make_submission">
+	<h2 class="pkp_screen_reader">
+		Make a Submission
+	</h2>
+
+	<div class="content">
+		<a class="block_make_submission_link" href="https://www.ojed.org/STEM/about/submissions">
+			Make a Submission
+		</a>
+	</div>
+</div>
+<div class="pkp_block block_custom" id="customblock-call-for-special-issue-proposals">
+	<h2 class="title">Call for Special Issue Proposals</h2>
+	<div class="content">
+		<p><strong><a href="https://ojed.org/STEM/announcement/view/110"><img src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/download-2cc3223c63c5a87bc0d26b9140e21157.png" alt="" width="50" height="50">Call for Special Issue Proposals </a></strong></p>
+<p>&nbsp;</p>
+<p><a href="https://ojed.org/STEM/announcement/view/130">Call for Abstracts: AI in Education, Research, and Society</a></p>
+<p><a href="https://www.ojed.org/STEM/innovations" target="_blank" rel="noopener">Evidence-Based Innovations in STEM Teacher Preparation</a></p>
+<p><a href="https://ojed.org/STEM/wellbeing" target="_blank" rel="noopener">Call for Abstracts: STEM and Student Wellbeing</a></p>
+<p><a href="https://www.ojed.org/STEM/steam" target="_blank" rel="noopener">STEAM Education: Hearing the Voices from the Global South</a></p>
+<p><a href="https://ojed.org/STEM/announcement/view/122">Call for Abstracts: STEM &amp; Internationalization</a></p>
+<p><strong><a href="https://form.jotform.com/242513882517156">C</a><a href="https://form.jotform.com/242513882517156">urrent openings</a></strong></p>
+	</div>
+</div>
+<div class="pkp_block block_custom" id="customblock-submit-your-paper">
+	<h2 class="title">Submit your paper</h2>
+	<div class="content">
+		<p><span style="font-weight: 400;">Submission Types:</span></p>
+<ul>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Short Essays/Narratives: 1500 words or less</span></li>
+<li style="font-weight: 400;" aria-level="1"><span style="font-weight: 400;">Empirical Articles: 2000 to 5500 words, including references and tables</span></li>
+</ul>
+<p><strong>Listed/Indexed with</strong></p>
+<p>The journal has been listed in the following associations and partners:</p>
+<p><a href="https://scholar.google.com/citations?user=GUPg0CoAAAAJ&amp;hl=en&amp;authuser=1" target="_blank" rel="noopener">Google Scholar</a>, <a href="https://journals.indexcopernicus.com/search/details?id=133460&amp;lang=en" target="_blank" rel="noopener">Index Copernicus</a>, <a href="https://search.crossref.org/search/works?q=american+journal+of+STEM+education&amp;from_ui=yes" target="_blank" rel="noopener">CrossRef</a>, <a href="https://openalex.org/" target="_blank" rel="noopener">OpenAlex</a>,
+ Academia, Indian Citation Index,&nbsp; Advanced Scientific Index, 
+EuroPub, IJI Factor Indexing, ResearchBib, CiteFactor, WorldCat, <a href="https://archive.org/details/1-stemgraduation-trends-gunter-polidori-revised" target="_blank" rel="noopener">Internet Archive</a>, ROAD, <a href="https://zenodo.org/communities/ajstem/records?q=&amp;l=list&amp;p=1&amp;s=10&amp;sort=newest" target="_blank" rel="noopener">Zenodo</a>, Scilicit, KODUS, Publons, OpenAIRE, <a href="https://www.semanticscholar.org/search?q=STEM%20Education&amp;sort=relevance" target="_blank" rel="noopener">Semantic Scholar</a>, and Directory of Research Journals Indexing, Bielefeld Academic Search Engine, Scientific Journal Impact Factor,&nbsp; <a href="https://www.rootindexing.com/journal/american-journal-of-stem-education-issues-and-perspectives-American%20Journal%20of%20STEM%20Education/" target="_blank" rel="noopener">Root Indexing</a>, and Mendeley.</p>
+<p><span style="font-weight: 400;"><img src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/Screen_Shot_2019-10-11_at_9.34_.39_PM_1.png"></span></p>
+	</div>
+</div>
+<div class="pkp_block block_custom" id="customblock-resources">
+	<h2 class="title pkp_screen_reader">Resources</h2>
+	<div class="content">
+		<p><strong><a href="https://form.jotform.com/242513882517156">C</a><a href="https://form.jotform.com/242513882517156">urrent openings</a></strong></p>
+<p><strong><a href="https://ojed.org/STEM/announcement/view/97" target="_blank" rel="noopener">Call for papers</a></strong></p>
+<p><strong><a href="https://www.jotform.com/build/242387930745162" target="_blank" rel="noopener">Call for chapters&nbsp;</a></strong></p>
+<p><a href="https://press.starscholars.org/press/announcement/view/21" target="_blank" rel="noopener">What is your story?</a></p>
+<p><a href="https://press.starscholars.org/press/announcement/view/21"><img src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/whats-your-story-807697c9eb09328530c0757c88d290ae.png" alt="" width="1483" height="1919"></a></p>
+<p>&nbsp;</p>
+<p><a href="https://press.starscholars.org/press/catalog/series/presidency" target="_blank" rel="noopener"><img src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/screenshot-2024-12-10-at-8.02.31pm.png" alt="" width="1449" height="804"></a></p>
+	</div>
+</div>
+<div class="pkp_block block_information">
+	<h2 class="title">Information</h2>
+	<div class="content">
+		<ul>
+							<li>
+					<a href="https://www.ojed.org/STEM/information/readers">
+						For Readers
+					</a>
+				</li>
+										<li>
+					<a href="https://www.ojed.org/STEM/information/authors">
+						For Authors
+					</a>
+				</li>
+										<li>
+					<a href="https://www.ojed.org/STEM/information/librarians">
+						For Librarians
+					</a>
+				</li>
+					</ul>
+	</div>
+</div>
+
+			</div><!-- pkp_sidebar.left -->
+			</div><!-- pkp_structure_content -->
+
+<div class="pkp_structure_footer_wrapper" role="contentinfo">
+	<a id="pkp_content_footer"></a>
+
+	<div class="pkp_structure_footer">
+
+					<div class="pkp_footer_content">
+				<p>Contact</p>
+<p><strong>Cherryllynn Williams, Project Co-Ordinator</strong><br><a href="https://ojed.org/STEM/index">&nbsp;Journal of STEM Education: Issues and Perspectives</a>&nbsp;</p>
+<p>(eISSN 3065-1190) | Print ISSN: 3069-0072<br>Star Scholars Press<br>PO Box 374, Baltimore, Maryland 21128 USA<br>E-mail: contact@starscholars.org</p>
+			</div>
+		
+		<div class="pkp_brand_footer">
+			<a href="https://www.ojed.org/STEM/about/aboutThisPublishingSystem">
+				<img alt="More information about the publishing system, Platform and Workflow by OJS/PKP." src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/ojs_brand.png">
+			</a>
+		</div>
+	</div>
+</div><!-- pkp_structure_footer_wrapper -->
+
+</div><!-- pkp_structure_page -->
+
+<script src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/jquery.min.js" type="text/javascript"></script><script src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/jquery-ui.min.js" type="text/javascript"></script><script src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/popper.js" type="text/javascript"></script><script src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/util.js" type="text/javascript"></script><script src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/dropdown.js" type="text/javascript"></script><script src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/main.js" type="text/javascript"></script><script src="Digital%20solutions%20for%20graduate%20supervision_%20A%20critical%20analysis%20of%20thesis%20management%20systems%20_%20American%20Journal%20of%20STEM%20Education_files/articleCitation.js" type="text/javascript"></script>
+
+
+
+
+</body></html>
