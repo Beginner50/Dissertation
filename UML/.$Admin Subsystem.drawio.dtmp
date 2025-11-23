@@ -1,0 +1,52 @@
+<mxfile host="Electron" modified="2025-11-23T15:01:34.054Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="lgmKjkcPkJ3O2TA09ap-" version="21.6.8" type="device">
+  <diagram name="Page-1" id="tLOreEs8Gu19APNTdd2e">
+    <mxGraphModel dx="880" dy="523" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="puTaV5ge7qOP3Mvq7ktK-1" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="40" width="290" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="puTaV5ge7qOP3Mvq7ktK-2" value="&amp;lt;&amp;lt;subsystem&amp;gt;&amp;gt;&lt;br&gt;Admin Subsystem" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="160" y="50" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="puTaV5ge7qOP3Mvq7ktK-3" value="Administrator" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="90" y="195" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="puTaV5ge7qOP3Mvq7ktK-5" value="View list of users" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="120" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="puTaV5ge7qOP3Mvq7ktK-6" value="Create User" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="240" y="300" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="puTaV5ge7qOP3Mvq7ktK-7" value="" style="endArrow=none;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="puTaV5ge7qOP3Mvq7ktK-5">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="130" y="210" as="sourcePoint" />
+            <mxPoint x="200" y="190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="puTaV5ge7qOP3Mvq7ktK-8" value="" style="endArrow=none;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="puTaV5ge7qOP3Mvq7ktK-6">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="130" y="230" as="sourcePoint" />
+            <mxPoint x="200" y="190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="puTaV5ge7qOP3Mvq7ktK-9" value="Assign User Role" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="250" y="210" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="puTaV5ge7qOP3Mvq7ktK-10" value="&amp;lt;&amp;lt;Include&amp;gt;&amp;gt;" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="puTaV5ge7qOP3Mvq7ktK-6" target="puTaV5ge7qOP3Mvq7ktK-9">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="360" y="320" as="sourcePoint" />
+            <mxPoint x="520" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="puTaV5ge7qOP3Mvq7ktK-11" value="" style="endArrow=none;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" target="puTaV5ge7qOP3Mvq7ktK-9">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="140" y="220" as="sourcePoint" />
+            <mxPoint x="260" y="155" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
