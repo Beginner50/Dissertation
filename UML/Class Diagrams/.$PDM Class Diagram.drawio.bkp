@@ -1,6 +1,6 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" modified="2025-11-25T12:03:23.655Z" etag="VT-XTgJGR1D9ZV_aJ-1-" version="21.6.8" type="device">
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" modified="2025-11-26T13:10:41.242Z" etag="7XuJqItxzHKuXbmSCcd2" version="21.6.8" type="device">
   <diagram name="Page-1" id="1JRuO4VKOA4PlabRyaYc">
-    <mxGraphModel dx="2610" dy="2146" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1502" dy="1487" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -321,6 +321,39 @@
         <mxCell id="2FM5JH5P3cOITvORVzT4-46" value="1..*" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;labelPosition=right;verticalLabelPosition=top;" parent="2FM5JH5P3cOITvORVzT4-44" connectable="0" vertex="1">
           <mxGeometry x="1" relative="1" as="geometry">
             <mxPoint x="-30" y="20" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="RUPhs9d_d_NB692Pw-yy-1" value="ProgressLogEntry" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-414.5" y="-710" width="160" height="104" as="geometry" />
+        </mxCell>
+        <mxCell id="RUPhs9d_d_NB692Pw-yy-2" value="+ ProgressLogEntryID" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="RUPhs9d_d_NB692Pw-yy-1">
+          <mxGeometry y="26" width="160" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="RUPhs9d_d_NB692Pw-yy-4" value="+ LogText" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="RUPhs9d_d_NB692Pw-yy-1">
+          <mxGeometry y="52" width="160" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="RUPhs9d_d_NB692Pw-yy-5" value="+ LogDate" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="RUPhs9d_d_NB692Pw-yy-1">
+          <mxGeometry y="78" width="160" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="RUPhs9d_d_NB692Pw-yy-6" value="belongs_to" style="endArrow=open;html=1;endSize=12;startArrow=diamondThin;startSize=14;startFill=0;edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" parent="1" source="RUPhs9d_d_NB692Pw-yy-1" target="Krr6UlXSo3gP6qCNbBUC-152">
+          <mxGeometry x="-0.7821" y="-35" relative="1" as="geometry">
+            <mxPoint x="-360" y="-510" as="sourcePoint" />
+            <mxPoint x="-230" y="-600" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="-334" y="-510" />
+              <mxPoint x="-334" y="-510" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="RUPhs9d_d_NB692Pw-yy-7" value="0..*" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=top;" connectable="0" vertex="1" parent="RUPhs9d_d_NB692Pw-yy-6">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="14" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="RUPhs9d_d_NB692Pw-yy-8" value="1" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=top;" connectable="0" vertex="1" parent="RUPhs9d_d_NB692Pw-yy-6">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="25" y="-21" as="offset" />
           </mxGeometry>
         </mxCell>
       </root>

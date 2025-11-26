@@ -1,17 +1,17 @@
-<mxfile host="Electron" modified="2025-11-26T07:52:54.061Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="ZzUXxIEITo2iRLHMiMLq" version="21.6.8" type="device">
+<mxfile host="Electron" modified="2025-11-26T07:52:01.057Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="sgtvzw5bQLRjMZzRbFNU" version="21.6.8" type="device">
   <diagram name="Page-1" id="WRmk6lY9p6odG9xHkM6v">
-    <mxGraphModel dx="1100" dy="654" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="533" dy="317" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="Cfb6odIDkDicDTQsMnT--1" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="110" y="10" width="480" height="710" as="geometry" />
+          <mxGeometry x="110" y="30" width="480" height="690" as="geometry" />
         </mxCell>
         <mxCell id="Cfb6odIDkDicDTQsMnT--2" value="&amp;lt;&amp;lt;subsystem&amp;gt;&amp;gt;&lt;br&gt;Meeting Scheduling Subsystem" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-          <mxGeometry x="100" y="30" width="170" height="30" as="geometry" />
+          <mxGeometry x="150" y="50" width="170" height="30" as="geometry" />
         </mxCell>
         <mxCell id="Cfb6odIDkDicDTQsMnT--3" value="Supervisor" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
-          <mxGeometry x="40" y="80" width="30" height="60" as="geometry" />
+          <mxGeometry x="50" y="210" width="30" height="60" as="geometry" />
         </mxCell>
         <mxCell id="Cfb6odIDkDicDTQsMnT--4" value="Manage Meeting Request" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="290" y="190" width="120" height="60" as="geometry" />
@@ -63,7 +63,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="oNpj9O5SAv9oY-jx8ZRF-6" value="Student" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
-          <mxGeometry x="50" y="240" width="30" height="60" as="geometry" />
+          <mxGeometry x="50" y="90" width="30" height="60" as="geometry" />
         </mxCell>
         <mxCell id="oNpj9O5SAv9oY-jx8ZRF-7" value="" style="endArrow=none;html=1;rounded=0;exitX=0.5;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="oNpj9O5SAv9oY-jx8ZRF-6" target="Cfb6odIDkDicDTQsMnT--6">
           <mxGeometry width="50" height="50" relative="1" as="geometry">
