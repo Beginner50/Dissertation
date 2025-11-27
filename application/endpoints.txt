@@ -1,0 +1,103 @@
+The bearer auth token will need to store:
+	- UserID
+	- Role
+	- ProjectIDs
+ProjectIDs to account for supervisors having multiple projects
+New access token will need to be resent at project creation
+
+
+Meeting Endpoints:
+Authorization checks are performed at the controller/services level rather than at the middleware level.
+
+Get supervisor's meetings:
+	GET /meetings
+
+	Standard auth check
+
+Book a meeting:
+	POST /projects/1/meetings
+	
+	ProjectID from params compared with that in access token
+
+Edit a meeting's description:
+	PATCH /projects/1/meetings/1
+
+	ProjectID from bearer auth will be compared against that of the meeting before edit
+	ProjecID is unique to a supervisor-student pair and therefore only allows them to edit.
+
+Cancel a meeting:
+	DELETE /meetings/1
+
+	UserID from bearer auth is OrganizerID and will be checked for validity before proceding
+	with meeting cancellation.
+
+Accept a meeting:
+	POST /meetings/1/accept
+
+	UserID from bearer auth is AttendeeID and will be checked for validity before proceeding
+	to accept meeting.
+
+Reject a meeting:
+	POST /meetings/1/reject
+
+	UserID from bearer auth is AttendeeID and will be checked for validity before proceeding
+	to reject meeting.
+
+Postpone a meeting:
+	POST /meetings/1/postpone
+
+	UserID from bearer auth is AttendeeID and will be checked for validity before proceeding
+	to postpone meeting.
+
+
+Project:
+Get Projects
+	GET /projects
+
+	Only allowed for GetProjects Permission (Supervisors & Admins)
+
+Get Project
+	GET /projects/1
+
+	ProjectID from bearer auth will be compared with url params
+	(Client Side Logic for Student - projectIDs empty in access token will force re-login)
+
+Create a Project:
+	POST /projects
+	
+	Only allowed for CreateProjects permission (Supervisors & Admins)
+	Student Assignment only allowed at creation for simplicity
+
+Edit a Project:
+	PATCH /users/1/projects/1
+
+	Edit a project's title or description
+	Students will not be able to edit the project
+	
+Archive a Project
+	DELETE /users/1/projects/1
+
+	Archive a project
+
+
+Task:
+Get Tasks:
+	/projects/1/tasks
+
+	Project Auth Check
+
+Get Task:
+	/projects/1/tasks/1
+
+	Project Auth Check
+
+Create a Task:
+	/users/1/projects/1/tasks
+
+	User + Project Auth Check (Supervisor which owns project)
+
+Edit a Task:
+	/users/1/projects/1/tasks
+	
+	User + Project Auth Check (Supervisor which owns project)
+	
