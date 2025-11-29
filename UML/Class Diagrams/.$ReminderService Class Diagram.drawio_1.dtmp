@@ -1,6 +1,6 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" modified="2025-11-29T09:17:52.224Z" etag="-8JWuBtOCP2QDtRyI_-P" version="21.6.8" type="device">
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" modified="2025-11-29T08:27:08.139Z" etag="ZCN85LTwF6M5V_OqZArS" version="21.6.8" type="device">
   <diagram name="Page-1" id="1JRuO4VKOA4PlabRyaYc">
-    <mxGraphModel dx="2317" dy="3072" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1730" dy="2723" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -17,7 +17,7 @@
           <mxGeometry y="110.8" width="199" height="37" as="geometry" />
         </mxCell>
         <mxCell id="wf5Sm37YZ6X_TI-4fznI-11" value="ReminderService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-730" y="-950" width="220" height="270" as="geometry">
+          <mxGeometry x="-730" y="-940" width="220" height="214" as="geometry">
             <mxRectangle x="1200" y="-250.00000000000003" width="110" height="30" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
@@ -30,23 +30,17 @@
         <mxCell id="ZSWFDKqyqXjq_YTXTtkI-1" value="+GetReminder(User): Reminder" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
           <mxGeometry y="64" width="220" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="wf5Sm37YZ6X_TI-4fznI-13" value="+CreateTaskReminder(target: User, Task): Reminder" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
+        <mxCell id="wf5Sm37YZ6X_TI-4fznI-13" value="+CreateTaskReminder(User, Task): Reminder" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
           <mxGeometry y="90" width="220" height="34" as="geometry" />
         </mxCell>
-        <mxCell id="GEnIacvpTiuVwZNlTnGm-1" value="+CreateMeetingReminder(target: User, Meeting): Reminder" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
+        <mxCell id="GEnIacvpTiuVwZNlTnGm-1" value="+CreateMeetingReminder(User, Meeting): Reminder" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
           <mxGeometry y="124" width="220" height="34" as="geometry" />
         </mxCell>
-        <mxCell id="iir-w6cY0mqgrQU5qM4l-1" value="+UpdateTaskReminder(Task)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
+        <mxCell id="iir-w6cY0mqgrQU5qM4l-1" value="+UpdateReminder(Reminder)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
           <mxGeometry y="158" width="220" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="ZwTIwdjv7YLnPpYpJ2MK-1" value="+UpdateMeetingReminder(Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="wf5Sm37YZ6X_TI-4fznI-11">
-          <mxGeometry y="184" width="220" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="wf5Sm37YZ6X_TI-4fznI-15" value="+DeleteTaskReminder(Task)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
-          <mxGeometry y="210" width="220" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="ZwTIwdjv7YLnPpYpJ2MK-2" value="+DeleteMeetingReminder(Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="wf5Sm37YZ6X_TI-4fznI-11">
-          <mxGeometry y="240" width="220" height="30" as="geometry" />
+        <mxCell id="wf5Sm37YZ6X_TI-4fznI-15" value="+DeleteReminder(Reminder)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
+          <mxGeometry y="184" width="220" height="30" as="geometry" />
         </mxCell>
         <mxCell id="wf5Sm37YZ6X_TI-4fznI-17" value="Use" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;" parent="1" source="wf5Sm37YZ6X_TI-4fznI-11" target="OO5TiGTs0DRHU5MTwZrG-11" edge="1">
           <mxGeometry width="160" relative="1" as="geometry">

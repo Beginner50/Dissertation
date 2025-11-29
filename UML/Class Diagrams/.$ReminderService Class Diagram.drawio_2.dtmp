@@ -1,11 +1,11 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" modified="2025-11-29T09:17:52.224Z" etag="-8JWuBtOCP2QDtRyI_-P" version="21.6.8" type="device">
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" modified="2025-11-29T11:44:48.685Z" etag="vCvnw8ZTUE6Ro4Xfsdzq" version="21.6.8" type="device">
   <diagram name="Page-1" id="1JRuO4VKOA4PlabRyaYc">
-    <mxGraphModel dx="2317" dy="3072" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1730" dy="2723" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="OO5TiGTs0DRHU5MTwZrG-11" value="Reminder" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=36.8;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;" parent="1" vertex="1">
-          <mxGeometry x="-719.5" y="-1160" width="199" height="147.8" as="geometry" />
+          <mxGeometry x="-719.5" y="-1190" width="199" height="147.8" as="geometry" />
         </mxCell>
         <mxCell id="OO5TiGTs0DRHU5MTwZrG-12" value="+ReminderID" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" parent="OO5TiGTs0DRHU5MTwZrG-11" vertex="1">
           <mxGeometry y="36.8" width="199" height="37" as="geometry" />
@@ -17,7 +17,7 @@
           <mxGeometry y="110.8" width="199" height="37" as="geometry" />
         </mxCell>
         <mxCell id="wf5Sm37YZ6X_TI-4fznI-11" value="ReminderService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-730" y="-950" width="220" height="270" as="geometry">
+          <mxGeometry x="-730" y="-950" width="220" height="210" as="geometry">
             <mxRectangle x="1200" y="-250.00000000000003" width="110" height="30" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
@@ -39,14 +39,8 @@
         <mxCell id="iir-w6cY0mqgrQU5qM4l-1" value="+UpdateTaskReminder(Task)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
           <mxGeometry y="158" width="220" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="ZwTIwdjv7YLnPpYpJ2MK-1" value="+UpdateMeetingReminder(Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="wf5Sm37YZ6X_TI-4fznI-11">
+        <mxCell id="ZwTIwdjv7YLnPpYpJ2MK-1" value="+UpdateMeetingReminder(Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
           <mxGeometry y="184" width="220" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="wf5Sm37YZ6X_TI-4fznI-15" value="+DeleteTaskReminder(Task)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-11" vertex="1">
-          <mxGeometry y="210" width="220" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="ZwTIwdjv7YLnPpYpJ2MK-2" value="+DeleteMeetingReminder(Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="wf5Sm37YZ6X_TI-4fznI-11">
-          <mxGeometry y="240" width="220" height="30" as="geometry" />
         </mxCell>
         <mxCell id="wf5Sm37YZ6X_TI-4fznI-17" value="Use" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;" parent="1" source="wf5Sm37YZ6X_TI-4fznI-11" target="OO5TiGTs0DRHU5MTwZrG-11" edge="1">
           <mxGeometry width="160" relative="1" as="geometry">
@@ -119,37 +113,34 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="eB3aUwrvuRvjtyApSYsa-1" value="MeetingService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-740" y="-620" width="240" height="332" as="geometry" />
+          <mxGeometry x="-740" y="-620" width="240" height="292" as="geometry" />
         </mxCell>
         <mxCell id="eB3aUwrvuRvjtyApSYsa-2" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="eB3aUwrvuRvjtyApSYsa-1" vertex="1">
           <mxGeometry y="26" width="240" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="eB3aUwrvuRvjtyApSYsa-3" value="-CreateMeetingRequest(organizer: User, attendee: User, Project): Meeting" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="eB3aUwrvuRvjtyApSYsa-1" vertex="1">
-          <mxGeometry y="34" width="240" height="40" as="geometry" />
-        </mxCell>
         <mxCell id="eB3aUwrvuRvjtyApSYsa-4" value="+GetMeeting(): Meeting" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="eB3aUwrvuRvjtyApSYsa-1" vertex="1">
-          <mxGeometry y="74" width="240" height="30" as="geometry" />
+          <mxGeometry y="34" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="eB3aUwrvuRvjtyApSYsa-5" value="+GetMeetings(): Meeting[]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="eB3aUwrvuRvjtyApSYsa-1" vertex="1">
-          <mxGeometry y="104" width="240" height="30" as="geometry" />
+          <mxGeometry y="64" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="eB3aUwrvuRvjtyApSYsa-6" value="+BookMeeting(organizer: User, Project): Meeting" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="eB3aUwrvuRvjtyApSYsa-1" vertex="1">
-          <mxGeometry y="134" width="240" height="40" as="geometry" />
+          <mxGeometry y="94" width="240" height="40" as="geometry" />
         </mxCell>
         <mxCell id="eB3aUwrvuRvjtyApSYsa-7" value="+CancelMeeting(organizer: User, Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="eB3aUwrvuRvjtyApSYsa-1" vertex="1">
-          <mxGeometry y="174" width="240" height="30" as="geometry" />
+          <mxGeometry y="134" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="eB3aUwrvuRvjtyApSYsa-8" value="+RejectMeeting(attendee: User, Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="eB3aUwrvuRvjtyApSYsa-1" vertex="1">
-          <mxGeometry y="204" width="240" height="30" as="geometry" />
+          <mxGeometry y="164" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="eB3aUwrvuRvjtyApSYsa-9" value="+AcceptMeeting(attendee: User, Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="eB3aUwrvuRvjtyApSYsa-1" vertex="1">
-          <mxGeometry y="234" width="240" height="30" as="geometry" />
+          <mxGeometry y="194" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="eB3aUwrvuRvjtyApSYsa-10" value="+PostponeMeeting(attendee: User, Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="eB3aUwrvuRvjtyApSYsa-1" vertex="1">
-          <mxGeometry y="264" width="240" height="38" as="geometry" />
+          <mxGeometry y="224" width="240" height="38" as="geometry" />
         </mxCell>
         <mxCell id="eB3aUwrvuRvjtyApSYsa-11" value="+EditMeetingDescription(Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="eB3aUwrvuRvjtyApSYsa-1" vertex="1">
-          <mxGeometry y="302" width="240" height="30" as="geometry" />
+          <mxGeometry y="262" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="teXQdbUnNsqNKEsFQ4ks-1" value="TaskService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="-330" y="-700" width="160" height="142" as="geometry">

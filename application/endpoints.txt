@@ -23,31 +23,27 @@ Edit a meeting's description:
 	PATCH /projects/1/meetings/1
 
 	ProjectID from bearer auth will be compared against that of the meeting before edit
-	ProjecID is unique to a supervisor-student pair and therefore only allows them to edit.
+	ProjectID is unique to a supervisor-student pair and therefore only allows them to edit.
 
 Cancel a meeting:
-	DELETE /meetings/1
+	DELETE /organizers/1/meetings/1
 
-	UserID from bearer auth is OrganizerID and will be checked for validity before proceding
-	with meeting cancellation.
+	UserID (token) compared against userID (params)
 
 Accept a meeting:
-	POST /meetings/1/accept
+	POST /attendees/1/meetings/1/accept
 
-	UserID from bearer auth is AttendeeID and will be checked for validity before proceeding
-	to accept meeting.
+	UserID (token) compared against userID (params)
 
 Reject a meeting:
-	POST /meetings/1/reject
+	POST /attendees/1/meetings/1/reject
 
-	UserID from bearer auth is AttendeeID and will be checked for validity before proceeding
-	to reject meeting.
+	UserID (token) compared against userID (params)
 
 Postpone a meeting:
-	POST /meetings/1/postpone
+	POST /attendees/1/meetings/1/postpone
 
-	UserID from bearer auth is AttendeeID and will be checked for validity before proceeding
-	to postpone meeting.
+	UserID (token) compared against userID (params)
 
 
 Project:
@@ -60,44 +56,104 @@ Get Project
 	GET /projects/1
 
 	ProjectID from bearer auth will be compared with url params
-	(Client Side Logic for Student - projectIDs empty in access token will force re-login)
 
 Create a Project:
-	POST /projects
+	POST /users/1/projects
 	
-	Only allowed for CreateProjects permission (Supervisors & Admins)
-	Student Assignment only allowed at creation for simplicity
-
+	UserID (token) checked against userID (params)
+	Database constraints ensure that Students can conduct only 1 project
+	
 Edit a Project:
 	PATCH /users/1/projects/1
 
 	Edit a project's title or description
-	Students will not be able to edit the project
+	Allowed for both Students & Supervisors
 	
+Join a Project:
+	POST /supervisors/1/projects/1/join
+
+	UserID (token) checked against supervisorID (params) &
+	role (token) checked against supervisor
+
+Assign a Student to Project:
+	POST /supervisors/1/projects/1/assign/1
+
+	UserID (token) checked against supervisorID (params) &
+	ProjectID (token) checked against projectID (params) & 
+	role (token) checked against supervisor
+
 Archive a Project
-	DELETE /users/1/projects/1
+	DELETE /supervisors/1/projects/1
 
 	Archive a project
 
 
 Task:
 Get Tasks:
-	/projects/1/tasks
+	GET /projects/1/tasks
 
 	Project Auth Check
 
 Get Task:
-	/projects/1/tasks/1
+	GET /projects/1/tasks/1
 
 	Project Auth Check
 
 Create a Task:
-	/users/1/projects/1/tasks
+	POST /supervisors/1/projects/1/tasks
 
-	User + Project Auth Check (Supervisor which owns project)
+	UserID (token) checked against supervisorID (params) &
+	ProjectID (token) checked against projectID (params) & 
+	role (token) checked against supervisor
+
 
 Edit a Task:
-	/users/1/projects/1/tasks
+	PATCH /supervisors/1/projects/1/tasks/1
 	
-	User + Project Auth Check (Supervisor which owns project)
+	UserID (token) checked against supervisorID (params) &
+	ProjectID (token) checked against projectID (params) & 
+	role (token) checked against supervisor
+
 	
+Delete a Task:
+	DELETE /supervisors/1/projects/1/tasks/1
+	
+	UserID (token) checked against supervisorID (params) &
+	ProjectID (token) checked against projectID (params) & 
+	role (token) checked against supervisor
+
+
+
+TaskDeliverable:
+Get Submitted Deliverable:
+	GET /projects/1/tasks/1/deliverables/submitted
+
+Get Unsubmitted Deliverable:
+	GET /students/1/projects/1/tasks/1/deliverable/unsubmitted
+
+	UserID (token) checked against studentID (params) &
+	ProjectID (token) checked against projectID (params) & 
+	role (token) checked against student
+
+Upload Task Deliverable:
+	POST /students/1/projects/1/tasks/1/deliverables/unsubmitted
+
+Remove Unsubmitted Task Deliverable:
+	DELETE /students/1/projects/1/tasks/1/deliverables/unsubmitted
+	
+Verify Unsubmitted Task Deliverable:
+	GET /students/1/projects/1/tasks/1/deliverables/unsubmitted/verify-feedback
+
+Submit Unsubmitted Task Deliverable:
+	POST /students/1/projects/1/tasks/1/deliverables/unsubmitted/submit
+
+
+Feedback:
+Get Latest Deliverable Feedback:
+	GET /projects/1/tasks/1/latest-deliverable/feedback
+
+Create Feedback on Latest Deliverable:
+	POST /supervisors/1/projects/1/tasks/1/latest-deliverable/feedback
+
+Edit Feedback on Latest Deliverable:
+	PATCH /supervisors/1/projects/1/tasks/1/latest-deliverable/feedback

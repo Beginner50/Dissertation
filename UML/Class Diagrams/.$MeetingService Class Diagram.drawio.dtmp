@@ -1,6 +1,6 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" modified="2025-11-29T11:44:19.413Z" etag="BaOF2RLdhB6vALq_3fDC" version="21.6.8" type="device">
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" modified="2025-11-29T09:08:42.012Z" etag="5tzBfvB4Z7XhpsbhfMsd" version="21.6.8" type="device">
   <diagram name="Page-1" id="1JRuO4VKOA4PlabRyaYc">
-    <mxGraphModel dx="1885" dy="1715" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1730" dy="1623" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -26,34 +26,37 @@
           <mxGeometry y="209.66666666666666" width="170" height="35" as="geometry" />
         </mxCell>
         <mxCell id="wf5Sm37YZ6X_TI-4fznI-19" value="MeetingService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-500" y="-684.5" width="240" height="292" as="geometry" />
+          <mxGeometry x="-500" y="-684.5" width="240" height="332" as="geometry" />
         </mxCell>
         <mxCell id="wf5Sm37YZ6X_TI-4fznI-20" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="wf5Sm37YZ6X_TI-4fznI-19" vertex="1">
           <mxGeometry y="26" width="240" height="8" as="geometry" />
         </mxCell>
+        <mxCell id="i5NLWu8FNjToPH12wN6L-8" value="-CreateMeetingRequest(organizer: User, attendee: User, Project): Meeting" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-19" vertex="1">
+          <mxGeometry y="34" width="240" height="40" as="geometry" />
+        </mxCell>
         <mxCell id="0z7h_63PHrha87gyjYxu-6" value="+GetMeeting(): Meeting" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-19" vertex="1">
-          <mxGeometry y="34" width="240" height="30" as="geometry" />
+          <mxGeometry y="74" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="i5NLWu8FNjToPH12wN6L-20" value="+GetMeetings(): Meeting[]" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-19" vertex="1">
-          <mxGeometry y="64" width="240" height="30" as="geometry" />
+          <mxGeometry y="104" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="wf5Sm37YZ6X_TI-4fznI-21" value="+BookMeeting(organizer: User, Project): Meeting" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-19" vertex="1">
-          <mxGeometry y="94" width="240" height="40" as="geometry" />
+          <mxGeometry y="134" width="240" height="40" as="geometry" />
         </mxCell>
         <mxCell id="1NIwTRiIeGJwOUcRJ4MU-1" value="+CancelMeeting(organizer: User, Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-19" vertex="1">
-          <mxGeometry y="134" width="240" height="30" as="geometry" />
+          <mxGeometry y="174" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="wf5Sm37YZ6X_TI-4fznI-22" value="+RejectMeeting(attendee: User, Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-19" vertex="1">
-          <mxGeometry y="164" width="240" height="30" as="geometry" />
+          <mxGeometry y="204" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="wf5Sm37YZ6X_TI-4fznI-23" value="+AcceptMeeting(attendee: User, Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-19" vertex="1">
-          <mxGeometry y="194" width="240" height="30" as="geometry" />
+          <mxGeometry y="234" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="wf5Sm37YZ6X_TI-4fznI-24" value="+PostponeMeeting(attendee: User, Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-19" vertex="1">
-          <mxGeometry y="224" width="240" height="38" as="geometry" />
+          <mxGeometry y="264" width="240" height="38" as="geometry" />
         </mxCell>
         <mxCell id="6Blpq7UbKiBDaj8pOJSg-1" value="+EditMeetingDescription(Project, Meeting)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="wf5Sm37YZ6X_TI-4fznI-19" vertex="1">
-          <mxGeometry y="262" width="240" height="30" as="geometry" />
+          <mxGeometry y="302" width="240" height="30" as="geometry" />
         </mxCell>
         <mxCell id="wf5Sm37YZ6X_TI-4fznI-30" value="Use" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;" parent="1" source="wf5Sm37YZ6X_TI-4fznI-19" target="HRc7jTODjwlK1Bjwdrn0-21" edge="1">
           <mxGeometry width="160" relative="1" as="geometry">
@@ -166,7 +169,7 @@
         <mxCell id="AGVxo1BU-yAPfKYgDWSL-9" value="+AssignStudentToProject(Project, student: User)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="AGVxo1BU-yAPfKYgDWSL-2" vertex="1">
           <mxGeometry y="162" width="280" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="AGVxo1BU-yAPfKYgDWSL-10" value="+JoinProject(supervisor: User, Project)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="AGVxo1BU-yAPfKYgDWSL-2" vertex="1">
+        <mxCell id="AGVxo1BU-yAPfKYgDWSL-10" value="+JoinProject(Project)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="AGVxo1BU-yAPfKYgDWSL-2" vertex="1">
           <mxGeometry y="188" width="280" height="26" as="geometry" />
         </mxCell>
       </root>
