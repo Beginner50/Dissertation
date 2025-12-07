@@ -1,0 +1,16 @@
+.navigation-container[b-skfyn9hy5d] {
+    margin-left: 2rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    column-gap: 1rem;
+}
+
+.navigation-container a[b-skfyn9hy5d] {
+    text-decoration: none;
+    color: hsla(0, 0%, 0%, 60%);
+}
+
+.navigation-container a:hover[b-skfyn9hy5d] {
+    color: hsla(0, 0%, 0%, 70%);
+}

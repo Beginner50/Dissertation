@@ -1,0 +1,184 @@
+/* --- 1. Main Dashboard Layout --- */
+
+.main-dashboard {
+    display: flex;
+    flex-direction: row;
+    height: 89vh;
+    margin-top: 2vh;
+    column-gap: 15px;
+    padding: 0 10px;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+    color: #444;
+}
+
+/* --- 2. Vertical Toolbar Area (Invisible Container) --- */
+
+.project-toolbar-area {
+    flex-grow: 1.2;
+    max-width: 150px;
+    border: none;
+    padding: 15px 0 0 0;
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+}
+
+.toolbar-button {
+    background-color: #388e3c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    width: 100%;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toolbar-button:hover {
+    background-color: #2e6d32;
+}
+
+
+/* --- 3. Projects List Container (Middle) --- */
+
+.projects-list-container {
+    flex-grow: 3;
+    background-color: #f7f7f7;
+    border-radius: 6px;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.project-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    background-color: white;
+    border-radius: 4px;
+    border: 1px solid #c0c0c0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s, border-color 0.2s;
+    cursor: default;
+}
+
+.project-entry:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.project-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.project-name-link {
+    text-decoration: none;
+    /* Remove default underline */
+    color: #0077cc;
+    /* Default link color (blue) */
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.project-name-link:hover {
+    /* Highlight the link text on hover */
+    color: #0056b3;
+    /* Slightly darker blue */
+    text-decoration: underline;
+    /* Add underline on hover for clarity */
+}
+
+.project-student {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.more-options-button {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+    /* Prevent the button click from triggering the parent link (requires JS for full stop) */
+    z-index: 10;
+}
+
+.more-options-button:hover {
+    background-color: #e9ecef;
+    color: #0077cc;
+    border-radius: 50%;
+    transition: backgro0und-color 0.2s, color 0.2s;
+}
+
+
+/* --- 4. Reminders Area (Right) --- */
+
+.reminders-area {
+    flex-grow: 1.5;
+    /* Styled container */
+    background-color: #f7f7f7;
+    border-radius: 6px;
+    padding: 15px;
+    overflow-y: auto;
+    max-width: 300px;
+}
+
+.reminder-entry {
+    border-left: 4px solid #f9a825;
+    padding: 10px 10px 10px 15px;
+    margin-bottom: 10px;
+    background-color: white;
+    /* Changed to white for better contrast/visibility */
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    /* Ensures text can be crossed out */
+}
+
+.reminder-datetime {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.reminder-time {
+    font-weight: 700;
+    color: #333;
+}
+
+.reminder-description {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+/* Style for Completed/Inapplicable Reminders */
+.reminder-entry.completed {
+    border-left-color: #ccc;
+    /* Lighter color for completed/inactive */
+    opacity: 0.6;
+    /* Slight fade */
+}
+
+.reminder-entry.completed .reminder-description,
+.reminder-entry.completed .reminder-time,
+.reminder-entry.completed .reminder-date {
+    text-decoration: line-through;
+    color: #999;
+}

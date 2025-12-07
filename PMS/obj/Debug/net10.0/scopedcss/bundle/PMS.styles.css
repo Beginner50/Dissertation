@@ -1,0 +1,257 @@
+/* /Views/Projects/Components/Navigation/Default.cshtml.rz.scp.css */
+.navigation-container[b-skfyn9hy5d] {
+    margin-left: 2rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    column-gap: 1rem;
+}
+
+.navigation-container a[b-skfyn9hy5d] {
+    text-decoration: none;
+    color: hsla(0, 0%, 0%, 60%);
+}
+
+.navigation-container a:hover[b-skfyn9hy5d] {
+    color: hsla(0, 0%, 0%, 70%);
+}
+/* /Views/Projects/Index.cshtml.rz.scp.css */
+/* --- 1. Main Dashboard Layout --- */
+
+.main-dashboard[b-x42ch63rka] {
+    display: flex;
+    flex-direction: row;
+    height: 89vh;
+    margin-top: 2vh;
+    column-gap: 15px;
+    padding: 0 10px;
+}
+
+.section-title[b-x42ch63rka] {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #eee;
+    color: #444;
+}
+
+/* --- 2. Vertical Toolbar Area (Invisible Container) --- */
+
+.project-toolbar-area[b-x42ch63rka] {
+    flex-grow: 1.2;
+    max-width: 150px;
+    border: none;
+    padding: 15px 0 0 0;
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+}
+
+.toolbar-button[b-x42ch63rka] {
+    background-color: #388e3c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    width: 100%;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toolbar-button:hover[b-x42ch63rka] {
+    background-color: #2e6d32;
+}
+
+
+/* --- 3. Projects List Container (Middle) --- */
+
+.projects-list-container[b-x42ch63rka] {
+    flex-grow: 3;
+    background-color: #f7f7f7;
+    border-radius: 6px;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.project-entry[b-x42ch63rka] {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    background-color: white;
+    border-radius: 4px;
+    border: 1px solid #c0c0c0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.2s, border-color 0.2s;
+    cursor: default;
+}
+
+.project-entry:hover[b-x42ch63rka] {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.project-info[b-x42ch63rka] {
+    display: flex;
+    flex-direction: column;
+}
+
+.project-name-link[b-x42ch63rka] {
+    text-decoration: none;
+    /* Remove default underline */
+    color: #0077cc;
+    /* Default link color (blue) */
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.project-name-link:hover[b-x42ch63rka] {
+    /* Highlight the link text on hover */
+    color: #0056b3;
+    /* Slightly darker blue */
+    text-decoration: underline;
+    /* Add underline on hover for clarity */
+}
+
+.project-student[b-x42ch63rka] {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.more-options-button[b-x42ch63rka] {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+    /* Prevent the button click from triggering the parent link (requires JS for full stop) */
+    z-index: 10;
+}
+
+.more-options-button:hover[b-x42ch63rka] {
+    background-color: #e9ecef;
+    color: #0077cc;
+    border-radius: 50%;
+    transition: backgro0und-color 0.2s, color 0.2s;
+}
+
+
+/* --- 4. Reminders Area (Right) --- */
+
+.reminders-area[b-x42ch63rka] {
+    flex-grow: 1.5;
+    /* Styled container */
+    background-color: #f7f7f7;
+    border-radius: 6px;
+    padding: 15px;
+    overflow-y: auto;
+    max-width: 300px;
+}
+
+.reminder-entry[b-x42ch63rka] {
+    border-left: 4px solid #f9a825;
+    padding: 10px 10px 10px 15px;
+    margin-bottom: 10px;
+    background-color: white;
+    /* Changed to white for better contrast/visibility */
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    /* Ensures text can be crossed out */
+}
+
+.reminder-datetime[b-x42ch63rka] {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.reminder-time[b-x42ch63rka] {
+    font-weight: 700;
+    color: #333;
+}
+
+.reminder-description[b-x42ch63rka] {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+/* Style for Completed/Inapplicable Reminders */
+.reminder-entry.completed[b-x42ch63rka] {
+    border-left-color: #ccc;
+    /* Lighter color for completed/inactive */
+    opacity: 0.6;
+    /* Slight fade */
+}
+
+.reminder-entry.completed .reminder-description[b-x42ch63rka],
+.reminder-entry.completed .reminder-time[b-x42ch63rka],
+.reminder-entry.completed .reminder-date[b-x42ch63rka] {
+    text-decoration: line-through;
+    color: #999;
+}
+/* /Views/Shared/_Layout.cshtml.rz.scp.css */
+.pms-header[b-lf0bxrfgim] {
+  background-color: white;
+  border-bottom: 1px solid #e5e5e5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 0;
+  width: 100vw;
+}
+
+.pms-navbar[b-lf0bxrfgim] {
+  display: flex;
+  align-items: center;
+  min-height: 50px;
+}
+
+.pms-brand[b-lf0bxrfgim] {
+  text-decoration: none;
+  font-weight: 600;
+  color: #333;
+  font-size: 1.25rem;
+  padding-right: 1rem;
+  padding-left: 1rem;
+}
+
+.logout-button[b-lf0bxrfgim] {
+  margin-left: auto;
+
+  margin-right: 2rem;
+  background-color: #dc3545;
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  transition: background-color 0.15s ease-in-out;
+}
+
+.logout-button:hover[b-lf0bxrfgim] {
+  background-color: #c82333;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+}
+
+.logout-button:active[b-lf0bxrfgim] {
+  background-color: #c82333;
+  transform: translateY(0.5px);
+}
+
+.pms-main-container[b-lf0bxrfgim] {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
