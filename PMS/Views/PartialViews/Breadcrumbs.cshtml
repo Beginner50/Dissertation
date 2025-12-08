@@ -1,0 +1,23 @@
+@model IEnumerable<(string href, string label)>
+
+@{
+    var breadcrumbs = Model ?? Enumerable.Empty<(string href, string label)>();
+    var count = breadcrumbs.Count();
+}
+
+<nav class="page-breadcrumbs">
+    @for (int i = 0; i < count; i++)
+    {
+        var breadcrumb = breadcrumbs.ElementAt(i);
+
+        if (i < count - 1)
+        {
+            <a class="crumb-link" href="@breadcrumb.href">@breadcrumb.label</a>
+            <span class="crumb-separator">/</span>
+        }
+        else
+        {
+            <a class="crumb-link current" href="@breadcrumb.href">@breadcrumb.label</a>
+        }
+    }
+</nav>

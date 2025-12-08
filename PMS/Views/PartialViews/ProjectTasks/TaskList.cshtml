@@ -1,0 +1,57 @@
+<div class="tasks-list-container">
+    <div class="section-header">
+        <h2 class="section-title">Project Tasks</h2>
+
+        <div class="task-actions">
+            <button type="button" class="task-action-button primary-action">
+                <i class="bi bi-plus-circle"></i>
+                Create Task
+            </button>
+        </div>
+    </div>
+
+    @* --- Sample Task Entry (Replace with Loop) --- *@
+
+    @* Task 1: Pending Status *@
+    <div class="task-entry pending">
+        <div class="task-header">
+            @* Task Title is now a link *@
+            <a class="task-title-link" href="/projects/@ViewBag.ProjectID/tasks/501">
+                Review UI/UX Mockups
+            </a>
+            <span class="task-status status-pending">
+                <i class="bi bi-hourglass-split"></i> Pending
+            </span>
+        </div>
+
+        @* The task description is removed here *@
+
+        <div class="task-details">
+            <span class="task-deadline">
+                Deadline: <strong>2026-01-15</strong>
+            </span>
+            <partial name="~/Views/PartialViews/MoreOptionsButton.cshtml" />
+        </div>
+    </div>
+
+    @* Task 2: Completed Status (Note the 'completed' class for fading) *@
+    <div class="task-entry completed">
+        <div class="task-header">
+            <a class="task-title-link" href="/projects/@ViewBag.ProjectID/tasks/502">
+                Setup CI/CD Pipeline
+            </a>
+            <span class="task-status status-completed">
+                <i class="bi bi-check-circle-fill"></i> Completed
+            </span>
+        </div>
+
+        <div class="task-details">
+            <span class="task-deadline striked">
+                Deadline: 2025-12-05
+            </span>
+            <partial name="~/Views/PartialViews/MoreOptionsButton.cshtml" />
+        </div>
+    </div>
+
+    @* --------------------------------------------- *@
+</div>

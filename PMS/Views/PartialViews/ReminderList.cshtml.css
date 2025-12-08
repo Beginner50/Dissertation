@@ -1,0 +1,86 @@
+/* --- Reminders Area Container --- */
+.reminders-area {
+    flex-grow: 1.5;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 12px;
+    overflow-y: auto;
+    max-width: 300px;
+    height: 60%;
+    border: 1px solid var(--border-soft);
+    box-shadow: 0 4px 12px rgba(17, 24, 39, 0.08);
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--text-strong);
+}
+
+/* --- Default Entry Styling (Used for old/seen items) --- */
+.reminder-entry {
+    border-left: 3px solid #e5e7eb;
+    padding: 6px 8px 6px 10px;
+    margin-bottom: 6px;
+    background: #fafafa;
+    border-radius: 4px;
+
+    /* DEFAULT STATE: Slightly faded */
+    opacity: 0.8;
+    transition: all 0.2s ease-in-out;
+}
+
+.reminder-datetime {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+    color: #999;
+}
+
+.reminder-time {
+    font-weight: 600;
+}
+
+.reminder-description {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-strong);
+}
+
+/* --- Status State 1: New / Unseen (Prominent) --- */
+.reminder-entry.new {
+    border-left-color: #007bff;
+    /* Blue indicator */
+    background-color: #ffffff;
+    opacity: 1;
+    /* Full visibility */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.reminder-entry.new .reminder-datetime {
+    color: #555;
+    /* Less faded time/date */
+}
+
+/* --- Status State 2: Completed (Faded, NO Strikethrough) --- */
+.reminder-entry.completed {
+    border-left-color: #ccc;
+    opacity: 0.5;
+    /* Heavily faded */
+    background-color: #f3f3f3;
+}
+
+/* 🛑 REVISED: Completed items simply use a muted color and NO text decoration */
+.reminder-entry.completed .reminder-description,
+.reminder-entry.completed .reminder-datetime,
+.reminder-entry.completed .reminder-time,
+.reminder-entry.completed .reminder-date {
+    text-decoration: none;
+    /* Explicitly ensure no strikethrough */
+    color: #999 !important;
+    /* Muted color for all text elements */
+}

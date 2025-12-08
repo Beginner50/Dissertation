@@ -1,0 +1,48 @@
+.main-dashboard {
+    display: flex;
+    flex-direction: row;
+    height: 89vh;
+    column-gap: 15px;
+    padding: 0 10px;
+}
+
+.left-section {
+    flex: 1.2;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.divider {
+    margin: 0.5rem;
+    margin-top: 1rem;
+    border-bottom: 1px solid #dad8d8;
+    width: 90%;
+}
+
+.progress-log-button {
+    display: inline-flex;
+    gap: 8px;
+    padding: 10px 14px;
+    width: fit-content;
+    border-radius: 8px;
+    border: 1px solid #2563eb;
+    background: #2563eb;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.1s ease-in-out;
+}
+
+.progress-log-button:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.28);
+}
+
+.progress-log-button:active {
+    transform: translateY(1px);
+}

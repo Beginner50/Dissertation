@@ -1,0 +1,79 @@
+/* --- Core Container Styles (Already Provided) --- */
+.project-summary {
+    min-height: 45%;
+    height: fit-content;
+    background-color: #ffffffbb;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid var(--border-soft);
+    box-shadow: 0 4px 12px rgba(17, 24, 39, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #dad8d8;
+    color: #444;
+}
+
+.project-summary-body {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex-grow: 1;
+}
+
+.project-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.project-description {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+.project-stakeholders {
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px dashed #eee;
+    display: flex;
+    flex-direction: column;
+    row-gap: 5px;
+}
+
+.stakeholder-item {
+    display: flex;
+    justify-self: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.stakeholder-role {
+    font-weight: 600;
+    color: #333;
+    width: 100px;
+    /* border: 1px solid red; */
+}
+
+.stakeholder-name {
+    font-weight: 400;
+    color: #1f2937;
+    flex-grow: 1;
+}
+
+.stakeholder-id {
+    margin-left: 1rem;
+    text-align: right;
+    font-family: monospace;
+}

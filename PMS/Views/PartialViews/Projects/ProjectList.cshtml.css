@@ -1,0 +1,116 @@
+.section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--text-strong);
+}
+
+.projects-list-container {
+    flex-grow: 3;
+    height: 89%;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 16px;
+    overflow-y: auto;
+    border: 1px solid var(--border-soft);
+    box-shadow: 0 4px 12px rgba(17, 24, 39, 0.08);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.section-header .section-title {
+    margin-bottom: 0;
+}
+
+.project-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.action-button i {
+    font-size: 1rem;
+}
+
+.primary-action {
+    background-color: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.primary-action:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.ghost-action {
+    background-color: transparent;
+    color: #2563eb;
+    border-color: #2563eb;
+}
+
+.ghost-action:hover {
+    background-color: #e0ebff;
+}
+
+.project-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background-color: #ffffff;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
+    transition: box-shadow 0.2s, border-color 0.2s;
+    cursor: default;
+}
+
+.project-entry:hover {
+    box-shadow: 0 3px 10px rgba(17, 24, 39, 0.12);
+    border-color: #d1d5db;
+}
+
+.project-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.project-name-link {
+    text-decoration: none;
+    color: #0077cc;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.project-name-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.project-student {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
