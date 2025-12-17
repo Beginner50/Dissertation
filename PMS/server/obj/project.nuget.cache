@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "2w7jk5EzDb4=",
+  "success": true,
+  "projectFilePath": "/home/jatooUOM/Desktop/Dissertation/PMS/server/PMS.csproj",
+  "expectedPackageFiles": [
+    "/home/jatooUOM/.nuget/packages/microsoft.aspnetcore.openapi/10.0.1/microsoft.aspnetcore.openapi.10.0.1.nupkg.sha512",
+    "/home/jatooUOM/.nuget/packages/microsoft.openapi/2.0.0/microsoft.openapi.2.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

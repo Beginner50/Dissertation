@@ -1,0 +1,103 @@
+-------------------------------------- Introduction ---------------------------------------
+
+The following document will serve as a guide for understanding the project.
+
+Based on the choice of the architecture (microservices) elaborated in the Analysis section
+of this dissertation, the project will be divided into 2 parts:
+    - client  (This will host the code pertinent to the website/interface including data access)
+    - server  (This will host the code pertinent to the services as described in the UML design
+               section, made accessible via REST apis)
+
+
+DOCKER ORCHESTRATION:
+For the sake of making deployment easy, Docker (w/ Docker Compose) will be used to host and
+orchestrate the different components of the system (client, server, database) in one single
+command. As such, no other configurations will be required when setting up the project in
+another machine, be it windows or linux.
+
+To start the website fully, simply run the following command:
+
+        docker compose up
+
+
+----------------------------------------- Client -------------------------------------------
+
+The client facing part of the website will be made using React along with the following
+dependencies listed below:
+    - Typescript       (A superset of javascript that includes type safety to improve code
+                        readability, maintenance and debugging)
+    - Vite             (Provides a development server and bundler to convert the React code 
+                        + Typescript code into javascript, which the web browser can understand)
+    - Tanstack Router  (A routing library that allows for routing without resulting in a full 
+                        page reload)
+    - React Auth Kit   (An authentication library for abstracting the process of JWT authentication)
+    - Material UI      (React UI library that provides components for structuring UI)
+
+
+PROJECT STRUCTURE: 
+        .
+        ├── eslint.config.js
+        ├── index.html
+        ├── package.json
+        ├── package-lock.json
+        ├── prettier.config.js
+        ├── public
+        ├── README.md
+        ├── src
+        │   ├── components
+        │   │   └── Header.tsx
+        │   ├── integrations
+        │   │   └── tanstack-query
+        │   │       ├── devtools.tsx
+        │   │       └── root-provider.tsx
+        │   ├── logo.svg
+        │   ├── main.tsx
+        │   ├── reportWebVitals.ts
+        │   ├── routes
+        │   │   ├── demo
+        │   │   │   └── tanstack-query.tsx
+        │   │   ├── index.tsx
+        │   │   └── __root.tsx
+        │   ├── routeTree.gen.ts
+        │   └── styles.css
+        ├── tsconfig.json
+        └── vite.config.ts
+
+I will mainly elaborate on the src/ directory since the rest are essentially configuration files
+for the package manager (npm) or code editor, and have little bearing on the project.
+
+IMPORTANT FILES:
+1) src/routes/
+   Tanstack router uses file-based routing, and therefore the structure of the routes directory
+   and a given route (page) within it reflects the url segment that it will take. For example,
+    src/routes/index        -> http://website/
+    src/routes/demo/        -> http://website/demo
+    src/routes/demo/$id     -> http://website/demo/{id} (id can be any integer here)
+
+    When building the project (npm run build), vite will analyse the routes directory and convert
+    these file-based routes into actual routes in routeTree.gen.ts. The application will then only
+    need to read routeTree.gen.ts
+
+2) src/main.tsx
+   This will be the entrypoint of the application and it serves 2 purposes:
+   -  It creates the router and performs some configuration to make it type-safe.
+   -  It will render the entire react application inside index.html 
+
+3) index.html
+    When hosting the application, the web server will only need to host this static index.html
+    file. After building the application, it will contain the necessary scripts that will
+    populate it with the elements from the React application
+
+4) src/components
+    This is the directory for storing the components of the application (used in the routes)
+
+5) src/integrations
+    This is a directory that connects external libraries with the React + Tanstack Router
+    framework.
+
+
+SPECIAL ROUTE FILES:
+Tanstack file-based routing provides special files to allow users to define how the url segments
+map to the each route file. The Tanstack Router documentation provides more information on this:
+    https://tanstack.com/router/latest/docs/framework/react/routing/routing-concepts
+
