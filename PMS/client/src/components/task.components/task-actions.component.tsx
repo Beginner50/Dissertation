@@ -1,4 +1,4 @@
-import { theme } from "@/lib/theme";
+import { theme } from "../../lib/theme";
 import { Box, Button, Divider, Typography, type SxProps } from "@mui/material";
 import type { Theme } from "@emotion/react";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";

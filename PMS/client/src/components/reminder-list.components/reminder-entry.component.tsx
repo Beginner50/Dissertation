@@ -1,5 +1,5 @@
-import { theme } from "@/lib/theme";
-import type { Reminder } from "@/lib/types";
+import { theme } from "../../lib/theme";
+import type { Reminder } from "../../lib/types";
 import { Box, Typography } from "@mui/material";
 
 function getStatusColor(status: Reminder["status"], type: "text" | "background") {

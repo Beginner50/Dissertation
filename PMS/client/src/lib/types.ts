@@ -1,5 +1,6 @@
 export type User = {
     id: number;
+    role: string;
     name: string;
     email: string;
     projectIDs: number[];
@@ -10,6 +11,27 @@ export interface Project {
     name: string;
     student: string;
 }
+
+// Aligned with server/src/DTOs/GetMeetings.DTO.cs
+export interface Meeting {
+    meetingID: number;
+    start: Date;
+    end: Date;
+    description: string;
+    project: { projectID: number, title: string };
+    organizer: { userID: number, name: string, email: string };
+    attendee: { userID: number, name: string, email: string };
+    status: "accepted" | "pending"
+}
+
+export type MeetingFormData = {
+    description: string,
+    startTime: string,
+    endTime: string,
+    attendeeID: number,
+    projectID: number,
+    projectTitle: string,
+};
 
 export interface Reminder {
     id: number;
@@ -25,13 +47,13 @@ export interface Task {
     title: string;
     status: 'pending' | 'completed' | 'missing';
     deadline: string;
-    projectId: number;
+    projectID: number;
 }
 
 export interface Stakeholder {
     role: string;
     name: string;
-    id: string;
+    id: number;
 }
 
 export interface ProjectDetailsData {

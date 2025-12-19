@@ -2,9 +2,9 @@ import type { Theme } from "@emotion/react";
 import { Box, Button, Typography, type SxProps } from "@mui/material";
 import { AddCircleOutline, GroupAdd } from "@mui/icons-material";
 import type { ReactNode } from "react";
-import type { Project } from "@/lib/types";
+import type { Project } from "../../lib/types";
 import { ListHeader } from "../base.components/list-header.component";
-import { theme } from "@/lib/theme";
+import { theme } from "../../lib/theme";
 import InteractiveListEntry from "../base.components/list-entry-interactive.component";
 
 export function ProjectList({ projectList, sx, children }: { projectList?: Project[], sx?: SxProps<Theme> | undefined, children?: ReactNode }) {

@@ -1,8 +1,8 @@
 import type { Theme } from "@emotion/react";
 import { Box, type SxProps } from "@mui/material";
 import { ListHeader } from "../base.components/list-header.component";
-import { theme } from "@/lib/theme";
-import type { Reminder } from "@/lib/types";
+import { theme } from "../../lib/theme";
+import type { Reminder } from "../../lib/types";
 import ReminderEntry from "./reminder-entry.component";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";

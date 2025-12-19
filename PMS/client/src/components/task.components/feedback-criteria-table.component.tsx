@@ -1,5 +1,5 @@
-import { theme } from "@/lib/theme";
-import type { FeedbackCriteria } from "@/lib/types";
+import { theme } from "../../lib/theme";
+import type { FeedbackCriteria } from "../../lib/types";
 import { Box, IconButton, Table, TableBody, TableCell, TableHead, TableRow, type SxProps } from "@mui/material";
 
 import CheckIcon from '@mui/icons-material/Check';

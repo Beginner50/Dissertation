@@ -2,8 +2,7 @@
 
 The following document will serve as a guide for understanding the project.
 
-Based on the choice of the architecture (microservices) elaborated in the Analysis section
-of this dissertation, the project will be divided into 2 parts:
+The project will be divided into 2 parts:
     - client  (This will host the code pertinent to the website/interface including data access)
     - server  (This will host the code pertinent to the services as described in the UML design
                section, made accessible via REST apis)
@@ -15,9 +14,11 @@ orchestrate the different components of the system (client, server, database) in
 command. As such, no other configurations will be required when setting up the project in
 another machine, be it windows or linux.
 
-To start the website fully, simply run the following command:
+To run the website (production)
+    docker compose --profiles production up
 
-        docker compose up
+To run the tests
+    docker compose --profiles test up
 
 
 ----------------------------------------- Client -------------------------------------------
@@ -101,3 +102,7 @@ Tanstack file-based routing provides special files to allow users to define how 
 map to the each route file. The Tanstack Router documentation provides more information on this:
     https://tanstack.com/router/latest/docs/framework/react/routing/routing-concepts
 
+
+Server:
+    Create a migration:
+        dotnet ef migrations add InitialCreate

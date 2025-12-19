@@ -1,4 +1,4 @@
-import { theme } from "@/lib/theme";
+import { theme } from "../../lib/theme";
 import { CheckCircleOutline, ErrorOutline, HourglassEmpty } from "@mui/icons-material";
 import { Box } from "@mui/material";
 

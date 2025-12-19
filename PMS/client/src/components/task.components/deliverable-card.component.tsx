@@ -1,4 +1,4 @@
-import { theme } from "@/lib/theme";
+import { theme } from "../../lib/theme";
 import type { Theme } from "@emotion/react";
 import { Description, Download } from "@mui/icons-material";
 import { Box, IconButton, Typography, type SxProps } from "@mui/material";

@@ -1,4 +1,4 @@
-import { theme } from "@/lib/theme";
+import { theme } from "../../lib/theme";
 import { Box, Button, Divider, Stack, TextField, Typography } from "@mui/material";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
@@ -45,43 +45,39 @@ SchedulerActions.Header = ({ title }: { title: string }) => {
     </>
 }
 
-SchedulerActions.CancelMeeting = ({ handleCancel }: {
-    handleCancel: () => void
+SchedulerActions.BookedMeetingActions = ({ isOrganizer, isAttendee, handleCancel, handleAccept, handleReject }: {
+    isOrganizer: boolean,
+    isAttendee: boolean,
+    handleCancel: () => void,
+    handleAccept: () => void,
+    handleReject: () => void,
 }) => {
-    return <Button
-        variant="contained"
-        color="error"
-        onClick={handleCancel}
-        fullWidth
-    >
-        Cancel Meeting
-    </Button>
+    if (isOrganizer)
+        return <Button
+            variant="contained"
+            color="error"
+            onClick={handleCancel}
+            fullWidth
+        >
+            Cancel Meeting
+        </Button>
+    else if (isAttendee)
+        return <Stack direction="row" spacing={1}>
+            <Button
+                variant="contained"
+                color="success"
+                onClick={handleAccept}
+            >
+                Accept
+            </Button>
+            <Button
+                variant="outlined"
+                color="error"
+                onClick={handleReject}
+            >
+                Reject
+            </Button>
+        </Stack>
+    return <></>
 }
 
-SchedulerActions.AttendeeMeetingButtons = ({ handleAccept, handlePostpone, handleReject }:
-    { handleAccept: () => void, handlePostpone: () => void, handleReject: () => void }
-) => {
-    return <Stack direction="row" spacing={1}>
-        <Button
-            variant="contained"
-            color="success"
-            onClick={handleAccept}
-        >
-            Accept
-        </Button>
-        <Button
-            variant="outlined"
-            color="warning"
-            onClick={handlePostpone}
-        >
-            Postpone
-        </Button>
-        <Button
-            variant="outlined"
-            color="error"
-            onClick={handleReject}
-        >
-            Reject
-        </Button>
-    </Stack>
-}

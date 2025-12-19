@@ -1,6 +1,6 @@
 import { Box, Typography, Button, type SxProps, type Theme, Divider } from "@mui/material";
-import { theme } from "@/lib/theme";
-import type { ProjectDetailsData, Stakeholder } from "@/lib/types";
+import { theme } from "../../lib/theme";
+import type { ProjectDetailsData } from "../../lib/types";
 
 // --- Hardcoded Primary Colors (MUI Defaults) ---
 const PRIMARY_MAIN_COLOR = '#1976d2';
@@ -8,13 +8,11 @@ const PRIMARY_DARK_COLOR = '#115293';
 
 // --- Internal Stakeholder Component ---
 
-interface StakeholderItemProps {
+const StakeholderItem = ({ role, name, id }: {
     role: string;
     name: string;
-    id: string;
-}
-
-const StakeholderItem = ({ role, name, id }: StakeholderItemProps) => (
+    id: number;
+}) => (
     <Box sx={{
         // Corresponds to .stakeholder-item
         display: 'flex',
@@ -58,12 +56,10 @@ const StakeholderItem = ({ role, name, id }: StakeholderItemProps) => (
 );
 
 
-interface ProjectDetailsProps {
-    data: ProjectDetailsData;
-    sx?: SxProps<Theme> | undefined;
-}
-
-export function ProjectDetails({ data, sx }: ProjectDetailsProps) {
+export function ProjectDetails({ data, sx }: {
+    data: ProjectDetailsData,
+    sx?: SxProps<Theme> | undefined
+}) {
     const {
         projectId,
         projectTitle,
