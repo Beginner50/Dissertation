@@ -3,26 +3,21 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { MeetingFormData } from "../../lib/types";
 
 const MeetingFormContext = createContext<
-    MeetingFormData &
-    {
-        start: Date,
-        end: Date,
-        setFormData: Dispatch<SetStateAction<MeetingFormData>>
-    }
+    { formData: MeetingFormData } &
+    { setFormData: Dispatch<SetStateAction<MeetingFormData>> }
     | null>(null);
 
 export function BookMeetingForm(
     { start, end, children }: {
-
         start: Date,
         end: Date,
         children?: ReactNode
     }) {
-    // (Re-)Initialize when slot changes
+    // (Re-)Initialize when start and end time changes
     const [formData, setFormData] = useState<MeetingFormData>({
         description: "",
-        startTime: start.toTimeString().slice(0, 5) ?? "",
-        endTime: end.toTimeString().slice(0, 5) ?? "",
+        start: start,
+        end: end,
         attendeeID: 0,
         projectID: 0,
         projectTitle: ""
@@ -30,13 +25,13 @@ export function BookMeetingForm(
     useEffect(() => {
         setFormData(prev => ({
             ...prev,
-            startTime: start.toTimeString().slice(0, 5) ?? "",
-            endTime: end.toTimeString().slice(0, 5) ?? "",
+            start: start,
+            end: end,
         }))
     }, [start, end])
 
 
-    return <MeetingFormContext.Provider value={{ ...formData, setFormData, start, end }}>
+    return <MeetingFormContext.Provider value={{ formData, setFormData }}>
         <Stack sx={{
             display: "flex",
             flexDirection: "column",
@@ -64,8 +59,16 @@ export function BookMeetingForm(
                 <TextField
                     label="Start Time"
                     type="time"
-                    value={formData.startTime}
-                    onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                    value={formData.start.toTimeString().slice(0, 5) ?? ""}
+                    onChange={(e) => setFormData(prev => {
+                        let start = prev.start;
+                        const [hourHand, minuteHand] =
+                            [parseInt(e.target.value.slice(0, 2)),
+                            parseInt(e.target.value.slice(3, 5))]
+
+                        start.setHours(hourHand, minuteHand);
+                        return { ...prev, start: start }
+                    })}
                     required
                     fullWidth
                     size="small"
@@ -73,8 +76,16 @@ export function BookMeetingForm(
                 <TextField
                     label="End Time"
                     type="time"
-                    value={formData.endTime}
-                    onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+                    value={formData.end.toTimeString().slice(0, 5) ?? ""}
+                    onChange={(e) => setFormData(prev => {
+                        let end = prev.end;
+                        const [hourHand, minuteHand] =
+                            [parseInt(e.target.value.slice(0, 2)),
+                            parseInt(e.target.value.slice(3, 5))]
+
+                        end.setHours(hourHand, minuteHand);
+                        return { ...prev, end: end }
+                    })}
                     required
                     fullWidth
                     size="small"
@@ -97,6 +108,7 @@ BookMeetingForm.AttendeeSelect = ({ otherMeetingUsers }: {
 }) => {
     const context = useContext(MeetingFormContext);
     if (!context) return null;
+    const { formData } = context;
 
     useEffect(() => {
         context.setFormData(prev => ({
@@ -124,7 +136,7 @@ BookMeetingForm.AttendeeSelect = ({ otherMeetingUsers }: {
             <InputLabel id="attendee-select-label">Select Attendee</InputLabel>
             <Select
                 labelId="attendee-select-label"
-                value={context.attendeeID}
+                value={formData.attendeeID ?? ""}
                 label="Select Attendee"
                 onChange={(e) => handleChange(e.target.value as number)}
             >
@@ -146,29 +158,17 @@ BookMeetingForm.SubmitButton = ({
 }: {
     handleBookMeeting: (meetingData: MeetingFormData) => void
 }) => {
-    const formData = useContext(MeetingFormContext);
-    if (formData == null) return <></>
+    const context = useContext(MeetingFormContext);
+    if (!context) return null;
+    const { formData } = context;
 
     // Pre-processing is done to recombine the date and the time from start and end
     const onBookMeetingClick = useCallback(() => {
         if (formData?.start && formData?.end) {
-            let startDate = formData.start;
-            let endDate = formData.end;
-
-            startDate.setHours(parseInt(formData.startTime.slice(0, 2)),
-                parseInt(formData.startTime.slice(3, 5)));
-            endDate.setHours(parseInt(formData.endTime.slice(0, 2)),
-                parseInt(formData.endTime.slice(3, 5)));
-
-            if (startDate >= endDate) {
-                alert('End time must be after the start time.');
-                return;
-            }
-
             const newMeeting: MeetingFormData = {
                 description: formData.description,
-                startTime: formData.startTime,
-                endTime: formData.endTime,
+                start: formData.start,
+                end: formData.end,
                 attendeeID: formData.attendeeID,
                 projectID: formData.projectID,
                 projectTitle: formData.projectTitle
@@ -188,6 +188,7 @@ BookMeetingForm.SubmitButton = ({
         })
         return a;
     }, [formData])
+
 
     return <Button
         type="submit"

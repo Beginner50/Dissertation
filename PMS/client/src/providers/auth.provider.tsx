@@ -3,7 +3,7 @@
     It provides all the functionalities that deal with authentication like sign-in, sign-out,
     and making authorized API requests.
 */
-import type { User } from "@/lib/types";
+import type { User } from "../lib/types";
 import { useContext, createContext, useState, useCallback, useMemo } from "react";
 import ky from "ky";
 

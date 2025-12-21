@@ -1,15 +1,17 @@
 export type User = {
-    id: number;
+    userID: number;
     role: string;
     name: string;
     email: string;
-    projectIDs: number[];
+    projectIDs?: number[];
 };
 
 export interface Project {
-    id: number;
-    name: string;
-    student: string;
+    projectID: number;
+    title: string;
+    description: string;
+    student?: User;
+    supervisor?: User;
 }
 
 // Aligned with server/src/DTOs/GetMeetings.DTO.cs
@@ -26,8 +28,8 @@ export interface Meeting {
 
 export type MeetingFormData = {
     description: string,
-    startTime: string,
-    endTime: string,
+    start: Date,
+    end: Date,
     attendeeID: number,
     projectID: number,
     projectTitle: string,

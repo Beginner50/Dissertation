@@ -12,16 +12,16 @@ public class MeetingsController : ControllerBase
     protected readonly ProjectService projectService;
 
 
-    public MeetingsController(MeetingService _meetingService, ProjectService _projectService)
+    public MeetingsController(MeetingService meetingService, ProjectService projectService)
     {
-        meetingService = _meetingService;
-        projectService = _projectService;
+        this.meetingService = meetingService;
+        this.projectService = projectService;
     }
 
     // [Authorize]
     [Route("api/users/{userID}/[controller]")]
     [HttpGet]
-    public async Task<IActionResult> GetMeetings(
+    public async Task<IActionResult> GetSupervisorMeetings(
         [FromRoute] long userID
     )
     {
@@ -67,26 +67,24 @@ public class MeetingsController : ControllerBase
     }
 
     [Route("api/users/{userID}/[controller]/{meetingID}/edit-description")]
-    [HttpPost]
-    public async Task<IActionResult> CancelMeeting(
+    [HttpPut]
+    public async Task<IActionResult> EditMeetingDescription(
                     [FromRoute] long userID,
                     [FromRoute] long meetingID,
-                    [FromBody] string description
+                    [FromBody] EditMeetingDescriptionDTO editMeetingDescriptionDTO
                 )
     {
         if (await meetingService.EditMeetingDescription(
             userID: userID,
             meetingID: meetingID,
-            description: description
+            description: editMeetingDescriptionDTO.Description
         ))
             return NoContent();
         return BadRequest();
     }
 
-
-
     [Route("api/users/{userID}/[controller]/{meetingID}/cancel")]
-    [HttpPost]
+    [HttpDelete]
     public async Task<IActionResult> CancelMeeting(
                     [FromRoute] long userID,
                     [FromRoute] long meetingID
@@ -98,7 +96,7 @@ public class MeetingsController : ControllerBase
     }
 
     [Route("api/users/{userID}/[controller]/{meetingID}/accept")]
-    [HttpPost]
+    [HttpPut]
     public async Task<IActionResult> AcceptMeeting(
         [FromRoute] long userID,
         [FromRoute] long meetingID
@@ -110,7 +108,7 @@ public class MeetingsController : ControllerBase
     }
 
     [Route("api/users/{userID}/[controller]/{meetingID}/reject")]
-    [HttpPost]
+    [HttpDelete]
     public async Task<IActionResult> RejectMeeting(
             [FromRoute] long userID,
             [FromRoute] long meetingID

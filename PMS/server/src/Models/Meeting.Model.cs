@@ -1,19 +1,25 @@
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace PMS.Models;
 
 public class Meeting
 {
     public long MeetingID { get; set; }
-    public DateTime Start { get; set; }
-    public DateTime End { get; set; }
+    public required DateTime Start { get; set; }
+    public required DateTime End { get; set; }
     public string? Description { get; set; }
     public required string Status { get; set; }
 
     public required long OrganizerID { get; set; }
-    public User? Organizer;
+    [ForeignKey("OrganizerID")]
+    public User Organizer { get; init; }
 
     public required long AttendeeID { get; set; }
-    public User? Attendee;
+    [ForeignKey("AttendeeID")]
+    public User Attendee { get; init; }
 
     public required long ProjectID { get; set; }
-    public Project? Project;
+    [ForeignKey("ProjectID")]
+    public Project Project { get; init; }
 }

@@ -1,6 +1,6 @@
 import { Box, Button, Divider, IconButton, Stack, TextField, Typography } from "@mui/material";
 import { Edit, Save, Close } from "@mui/icons-material"; // Added icons
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Meeting } from "../../lib/types";
 
 const MeetingDetailsContext = createContext<Meeting | null>(null);
@@ -44,8 +44,10 @@ export function MeetingDetails(
 }
 
 MeetingDetails.DescriptionSection = ({
+    isMeetingParticipant,
     handleUpdateDescription
 }: {
+    isMeetingParticipant: boolean,
     handleUpdateDescription: (description: string) => void
 }) => {
     const meetingEvent = useContext(MeetingDetailsContext);
@@ -53,6 +55,9 @@ MeetingDetails.DescriptionSection = ({
 
     const [isEditing, setIsEditing] = useState(false);
     const [tempDescription, setTempDescription] = useState(meetingEvent.description);
+    useEffect(() => {
+        setTempDescription(meetingEvent.description);
+    }, [meetingEvent.description]);
 
     const handleSave = () => {
         handleUpdateDescription(tempDescription);
@@ -68,14 +73,14 @@ MeetingDetails.DescriptionSection = ({
         <Divider sx={{ my: 2 }} />
         <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
             <Typography variant="body1" sx={{ fontWeight: 'bold' }}>Description:</Typography>
-            {!isEditing && (
+            {!isEditing && isMeetingParticipant && (
                 <IconButton size="small" onClick={() => setIsEditing(true)}>
                     <Edit fontSize="small" />
                 </IconButton>
             )}
         </Stack>
 
-        {isEditing ? (
+        {isEditing && isMeetingParticipant ? (
             <Stack spacing={1} sx={{ mt: 1 }}>
                 <TextField
                     fullWidth

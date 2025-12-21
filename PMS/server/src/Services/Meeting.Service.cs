@@ -9,47 +9,69 @@ namespace PMS.Services;
 public class MeetingService
 {
     protected readonly PMSDbContext dbContext;
-    public MeetingService(PMSDbContext _dbContext)
+    public MeetingService(PMSDbContext dbContext)
     {
-        dbContext = _dbContext;
+        this.dbContext = dbContext;
     }
 
     public async Task<Meeting?> GetMeeting(long meetingID)
     {
-        return await dbContext.Meetings.FindAsync(meetingID);
+        var meeting = await dbContext.Meetings.FindAsync(meetingID) ?? throw new
+                            InvalidOperationException("Meeting Not Found!");
+
+        /*
+            If the meeting has been past its end, update its Status
+
+            While it breaks the idempotency principle for GET requests in REST, the alternative
+            requires cron job scheduling for updating the status, which might be overkill for
+            this dissertation project (can be suggested as an improvement).
+        */
+        if (meeting.End < DateTime.UtcNow && meeting.Status.Equals("Pending"))
+            meeting.Status = "Missed";
+
+        return meeting;
     }
 
     public async Task<IEnumerable<GetMeetingsDTO>> GetSupervisorMeetings(long supervisorID)
     {
-        return await dbContext.Meetings
+        var meetings = await dbContext.Meetings
                     .Where(m => m.AttendeeID == supervisorID || m.OrganizerID == supervisorID)
-                    .Select(m => new GetMeetingsDTO
-                    {
-                        MeetingID = m.MeetingID,
-                        Start = m.Start,
-                        End = m.End,
-                        Description = m.Description,
-                        Project = new ProjectLookupDTO
-                        {
-                            ProjectID = m.Project.ProjectID,
-                            Title = m.Project.Title
-                        },
-                        Organizer = new UserLookupDTO
-                        {
-                            UserID = m.Organizer.UserID,
-                            Name = m.Organizer.Name,
-                            Email = m.Organizer.Email
-                        },
-                        Attendee = new UserLookupDTO
-                        {
-                            UserID = m.Attendee.UserID,
-                            Name = m.Attendee.Name,
-                            Email = m.Attendee.Email
-                        },
-                        Status = m.Status
-                    })
-                    .Distinct()
                     .ToListAsync();
+
+        // See GetMeeting above to see why GetSupervisorMeetings is not idempotent
+        foreach (var meeting in meetings)
+        {
+            if (meeting.End < DateTime.UtcNow && meeting.Status.Equals("Pending"))
+                meeting.Status = "Missed";
+        }
+        await dbContext.SaveChangesAsync();
+
+        return meetings.Select(m => new GetMeetingsDTO
+        {
+            MeetingID = m.MeetingID,
+            Start = m.Start,
+            End = m.End,
+            Description = m.Description,
+            Project = new ProjectLookupDTO
+            {
+                ProjectID = m.Project.ProjectID,
+                Title = m.Project.Title
+            },
+            Organizer = new UserLookupDTO
+            {
+                UserID = m.Organizer.UserID,
+                Name = m.Organizer.Name,
+                Email = m.Organizer.Email
+            },
+            Attendee = new UserLookupDTO
+            {
+                UserID = m.Attendee.UserID,
+                Name = m.Attendee.Name,
+                Email = m.Attendee.Email
+            },
+            Status = m.Status
+        })
+        .Distinct();
     }
 
     public async Task<Meeting> BookMeeting(
@@ -65,60 +87,66 @@ public class MeetingService
             Description = description,
             Start = start,
             End = end,
-            Status = "pending"
+            Status = "Pending"
         };
-
         dbContext.Meetings.Add(entity: newMeeting);
+
 
         await dbContext.SaveChangesAsync();
 
         return newMeeting;
     }
-    public async Task<bool> EditMeetingDescription(long userID, long meetingID, string description)
+
+    public async Task EditMeetingDescription(
+        long userID,
+        long meetingID,
+        string description
+    )
     {
         var meeting = await dbContext.Meetings.Where(m =>
                 m.MeetingID == meetingID && (m.AttendeeID == userID || m.OrganizerID == userID
-            )).FirstAsync();
-        if (meeting == null)
-            return false;
+            )).FirstOrDefaultAsync()
+            ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
         meeting.Description = description;
         await dbContext.SaveChangesAsync();
-        return true;
     }
 
-    public async Task<bool> CancelMeeting(long organizerID, long meetingID)
+    public async Task CancelMeeting(long organizerID, long meetingID)
     {
-        var meeting = await dbContext.Meetings.FindAsync(meetingID);
-        if (meeting == null || meeting.OrganizerID != organizerID) return false;
+        var meeting = await dbContext.Meetings.Where(m =>
+            m.MeetingID == meetingID &&
+                m.OrganizerID == organizerID)
+            .FirstOrDefaultAsync()
+            ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
         dbContext.Remove(meeting);
         await dbContext.SaveChangesAsync();
-        return true;
     }
 
-    public async Task<bool> AcceptMeeting(long attendeeID, long meetingID)
+    public async Task AcceptMeeting(long attendeeID, long meetingID)
     {
-        var meeting = await dbContext.Meetings.FindAsync(meetingID);
-        if (meeting == null || meeting.AttendeeID != attendeeID) return false;
+        var meeting = await dbContext.Meetings.Where(m =>
+            m.MeetingID == meetingID &&
+                m.AttendeeID == attendeeID)
+            .FirstOrDefaultAsync()
+            ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
-        meeting.Status = "accepted";
+
+        meeting.Status = "Accepted";
         await dbContext.SaveChangesAsync();
-        return true;
     }
 
-    public async Task<bool> RejectMeeting(long attendeeID, long meetingID)
+    public async Task RejectMeeting(long attendeeID, long meetingID)
     {
-        var meeting = await dbContext.Meetings.FindAsync(meetingID);
-        if (meeting == null || meeting.AttendeeID != attendeeID) return false;
+        var meeting = await dbContext.Meetings.Where(m =>
+          m.MeetingID == meetingID &&
+              m.AttendeeID == attendeeID)
+          .FirstOrDefaultAsync()
+          ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
+
 
         dbContext.Remove(meeting);
         await dbContext.SaveChangesAsync();
-        return true;
-    }
-
-    public void PostponeMeeting(long attendeeID, long meetingID)
-    {
-
     }
 }

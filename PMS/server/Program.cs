@@ -81,6 +81,9 @@ AddSingleton:
 builder.Services.AddSingleton<TokenService>();
 builder.Services.AddScoped<ProjectService>();
 builder.Services.AddScoped<MeetingService>();
+builder.Services.AddScoped<ProjectTaskService>();
+builder.Services.AddScoped<TaskDeliverableService>();
+
 
 // Database Context Registration
 builder.Services.AddDbContext<PMSDbContext>();
