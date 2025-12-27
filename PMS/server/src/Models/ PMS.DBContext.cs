@@ -30,7 +30,7 @@ public class PMSDbContext : DbContext
     public DbSet<Meeting> Meetings { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
     public DbSet<ProgressLogEntry> ProgressLogEntries { get; set; }
-    public DbSet<PMS.Models.ProjectTask> Tasks { get; set; }
+    public DbSet<ProjectTask> Tasks { get; set; }
     public DbSet<Deliverable> Deliverables { get; set; }
     public DbSet<FeedbackCriteria> FeedbackCriterias { get; set; }
 
@@ -65,7 +65,6 @@ public class PMSDbContext : DbContext
 
     protected void SeedData(ModelBuilder modelBuilder)
     {
-        // 1. Seed Users
         modelBuilder.Entity<User>().HasData(
             new User
             {
@@ -73,7 +72,7 @@ public class PMSDbContext : DbContext
                 Name = "Alice Student",
                 Email = "alice@uni.com",
                 Password = "hashed_password",
-                Role = "Student"
+                Role = "student"
             },
             new User
             {
@@ -81,7 +80,7 @@ public class PMSDbContext : DbContext
                 Name = "Dr. Smith",
                 Email = "smith@uni.com",
                 Password = "hashed_password",
-                Role = "Supervisor"
+                Role = "supervisor"
             },
             new User
             {
@@ -89,7 +88,7 @@ public class PMSDbContext : DbContext
                 Name = "Hashim",
                 Email = "hashim@uni.com",
                 Password = "hashed_password",
-                Role = "Student"
+                Role = "student"
             },
             new User
             {
@@ -97,7 +96,7 @@ public class PMSDbContext : DbContext
                 Name = "Charlie Student",
                 Email = "charlie@uni.com",
                 Password = "hashed_password",
-                Role = "Student"
+                Role = "student"
             },
             new User
             {
@@ -105,18 +104,17 @@ public class PMSDbContext : DbContext
                 Name = "Dr. Brown",
                 Email = "brown@uni.com",
                 Password = "hashed_password",
-                Role = "Supervisor"
+                Role = "supervisor"
             }
         );
 
-        // 2. Seed Project
         modelBuilder.Entity<Project>().HasData(
             new Project
             {
                 ProjectID = 1,
                 Title = "AI Research",
                 Description = "Research on AI algorithms",
-                Status = "Active",
+                Status = "active",
                 StudentID = 1,     // Matches Alice
                 SupervisorID = 2   // Matches Dr. Smith
             }, new Project
@@ -124,7 +122,7 @@ public class PMSDbContext : DbContext
                 ProjectID = 2,
                 Title = "OCR Research",
                 Description = "Research on Optical Character Recognition",
-                Status = "Active",
+                Status = "active",
                 StudentID = 3,     // Matches Hashim
                 SupervisorID = 2   // Matches Dr. Smith
             },
@@ -133,7 +131,7 @@ public class PMSDbContext : DbContext
                 ProjectID = 3,
                 Title = "Blockchain Dev",
                 Description = "Development of Blockchain applications",
-                Status = "Active",
+                Status = "active",
                 StudentID = 4,
                 SupervisorID = 5
             }
@@ -236,5 +234,74 @@ public class PMSDbContext : DbContext
                 End = new DateTime(2025, 12, 24, 11, 0, 0, DateTimeKind.Utc)
             }
         );
+
+        modelBuilder.Entity<ProjectTask>().HasData(
+            // Tasks for Project 1: AI Research
+            new ProjectTask
+            {
+                ProjectTaskID = 1,
+                ProjectID = 1,
+                Title = "Literature Review",
+                Description = "Review current papers on Transformer models.",
+                AssignedDate = new DateTime(2025, 11, 1, 0, 0, 0, DateTimeKind.Utc),
+                DueDate = new DateTime(2025, 11, 15, 0, 0, 0, DateTimeKind.Utc),
+                Status = "completed"
+            },
+            new ProjectTask
+            {
+                ProjectTaskID = 2,
+                ProjectID = 1,
+                Title = "Dataset Collection",
+                Description = "Gather and clean the training dataset.",
+                AssignedDate = new DateTime(2025, 11, 16, 0, 0, 0, DateTimeKind.Utc),
+                DueDate = new DateTime(2025, 12, 10, 0, 0, 0, DateTimeKind.Utc),
+                Status = "pending"
+            },
+            new ProjectTask
+            {
+                ProjectTaskID = 3,
+                ProjectID = 1,
+                Title = "Proposal Submission",
+                Description = "Submit the formal research proposal.",
+                AssignedDate = new DateTime(2025, 10, 1, 0, 0, 0, DateTimeKind.Utc),
+                DueDate = new DateTime(2025, 10, 15, 0, 0, 0, DateTimeKind.Utc),
+                Status = "missing"
+            },
+
+            // Tasks for Project 2: OCR Research
+            new ProjectTask
+            {
+                ProjectTaskID = 4,
+                ProjectID = 2,
+                Title = "Algorithm Selection",
+                Description = "Compare Tesseract vs EasyOCR.",
+                AssignedDate = new DateTime(2025, 12, 1, 0, 0, 0, DateTimeKind.Utc),
+                DueDate = new DateTime(2025, 12, 15, 0, 0, 0, DateTimeKind.Utc),
+                Status = "pending"
+            },
+            new ProjectTask
+            {
+                ProjectTaskID = 5,
+                ProjectID = 2,
+                Title = "Initial Prototype",
+                Description = "Develop a basic Python script for image-to-text conversion.",
+                AssignedDate = new DateTime(2025, 11, 1, 0, 0, 0, DateTimeKind.Utc),
+                DueDate = new DateTime(2025, 11, 20, 0, 0, 0, DateTimeKind.Utc),
+                Status = "completed"
+            },
+
+            // Tasks for Project 3: Blockchain Dev
+            new ProjectTask
+            {
+                ProjectTaskID = 6,
+                ProjectID = 3,
+                Title = "Smart Contract Design",
+                Description = "Architect the voting system contract in Solidity.",
+                AssignedDate = new DateTime(2025, 12, 5, 0, 0, 0, DateTimeKind.Utc),
+                DueDate = new DateTime(2025, 12, 20, 0, 0, 0, DateTimeKind.Utc),
+                Status = "pending"
+            }
+        );
+
     }
 }

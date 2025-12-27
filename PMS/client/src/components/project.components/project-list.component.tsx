@@ -1,10 +1,11 @@
 import type { Theme } from "@emotion/react";
 import { Box, Button, Divider, Typography, type SxProps } from "@mui/material";
-import { AddCircleOutline, GroupAdd } from "@mui/icons-material";
+import { AddCircleOutline, Description, GroupAdd } from "@mui/icons-material";
 import { type ReactNode } from "react";
-import type { Project } from "../../lib/types";
+import type { Project, ProjectFormData } from "../../lib/types";
 import { theme } from "../../lib/theme";
 import ProjectListEntry from "./project-list-entry.component";
+import { user } from "../../lib/temp";
 
 export function ProjectList({
   sx,
@@ -84,48 +85,45 @@ ProjectList.Header = ({
   );
 };
 
-ProjectList.Actions = ({
-  onCreateProjectButtonClick,
-  onJoinProjectButtonClick,
-}: {
-  onCreateProjectButtonClick: () => void;
-  onJoinProjectButtonClick: () => void;
-}) => {
+ProjectList.CreateProjectButton = ({ onClick }: { onClick: () => void }) => {
   return (
-    <>
-      <Button
-        color="primary"
-        sx={{
-          rowGap: "10px",
-        }}
-        variant="contained"
-        disableElevation
-        onClick={onCreateProjectButtonClick}
-      >
-        <AddCircleOutline sx={{ fontSize: "1rem" }} />
-        Create Project
-      </Button>
-      <Button
-        color="secondary"
-        disableElevation
-        variant="outlined"
-        onClick={onJoinProjectButtonClick}
-      >
-        <GroupAdd sx={{ fontSize: "1rem" }} />
-        Join Project
-      </Button>
-    </>
+    <Button
+      color="primary"
+      sx={{
+        rowGap: "10px",
+      }}
+      variant="contained"
+      disableElevation
+      onClick={onClick}
+    >
+      <AddCircleOutline sx={{ fontSize: "1rem" }} />
+      Create Project
+    </Button>
   );
 };
 
-ProjectList.Content = ({
+ProjectList.JoinProjectButton = ({ onClick }: { onClick: () => void }) => {
+  return (
+    <Button
+      color="secondary"
+      disableElevation
+      variant="outlined"
+      onClick={onClick}
+    >
+      <GroupAdd sx={{ fontSize: "1rem" }} />
+      Join Project
+    </Button>
+  );
+};
+
+ProjectList.List = ({
   projects,
-  onEditButtonClick,
-  onArchiveButtonClick,
+  handleEditProjectClick,
+  handleArchiveProjectClick,
 }: {
   projects: Project[];
-  onEditButtonClick: () => void;
-  onArchiveButtonClick: () => void;
+  handleEditProjectClick: (project: Project) => void;
+  handleArchiveProjectClick: (project: Project) => void;
 }) => {
   return (
     <Box
@@ -134,19 +132,25 @@ ProjectList.Content = ({
       }}
     >
       {projects.length > 0 ? (
-        projects.map((project) => (
-          <ProjectListEntry key={project.projectID}>
-            <ProjectListEntry.Link
-              title={project.title}
-              url={`/projects/${project.projectID}/tasks`}
-              student={project?.student ?? undefined}
-            />
-            <ProjectListEntry.MenuButton
-              onEditButtonClick={onEditButtonClick}
-              onArchiveButtonClick={onArchiveButtonClick}
-            />
-          </ProjectListEntry>
-        ))
+        projects
+          ?.filter((project) => project.status === "active")
+          .map((project) => (
+            <ProjectListEntry key={project.projectID}>
+              <ProjectListEntry.Link
+                title={project.title}
+                url={`/projects/${project.projectID}/tasks`}
+                student={project?.student ?? undefined}
+              />
+              {user.role == "supervisor" && (
+                <ProjectListEntry.MenuButton
+                  onEditButtonClick={() => handleEditProjectClick(project)}
+                  onArchiveButtonClick={() =>
+                    handleArchiveProjectClick(project)
+                  }
+                />
+              )}
+            </ProjectListEntry>
+          ))
       ) : (
         <Typography variant="body1" color="text.secondary">
           You are not a member of any projects yet.

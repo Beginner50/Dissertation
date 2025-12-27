@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PMS.DTOs;
 using PMS.Services;
 
 namespace PMS.Controllers;
@@ -20,10 +21,15 @@ public class TasksController : ControllerBase
         [FromRoute] long taskID
         )
     {
-        var task = await projectTaskService.GetProjectTask(userID, projectID, taskID);
-        if (task == null)
-            return NotFound();
-        return Ok(task);
+        try
+        {
+            var task = await projectTaskService.GetProjectTask(userID, projectID, taskID);
+            return Ok(task);
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
     }
 
     [Route("api/users/{userID}/projects/{projectID}/[controller]")]
@@ -33,7 +39,79 @@ public class TasksController : ControllerBase
         [FromRoute] long projectID
     )
     {
-        var tasks = await projectTaskService.GetProjectTasks(userID, projectID);
-        return Ok(tasks);
+        try
+        {
+            var tasks = await projectTaskService.GetProjectTasks(userID, projectID);
+            return Ok(tasks);
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
+    }
+
+    [Route("api/users/{userID}/projects/{projectID}/tasks")]
+    [HttpPost]
+    public async Task<IActionResult> CreateProjectTask(
+            [FromRoute] long userID,
+            [FromRoute] long projectID,
+            [FromBody] CreateProjectTaskDTO createProjectTaskDTO
+        )
+    {
+        try
+        {
+            await projectTaskService.CreateProjectTask(userID, projectID, createProjectTaskDTO);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
+    }
+
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}")]
+    [HttpPut]
+    public async Task<IActionResult> EditProjectTask(
+                [FromRoute] long userID,
+                [FromRoute] long projectID,
+                [FromRoute] long taskID,
+                [FromBody] EditProjectTaskDTO editProjectTaskDTO
+            )
+    {
+        try
+        {
+            await projectTaskService.EditProjectTask(
+                userID: userID,
+                projectID: projectID,
+                taskID: taskID,
+                dto: editProjectTaskDTO);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
+    }
+
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}")]
+    [HttpDelete]
+    public async Task<IActionResult> DeleteProjectTask(
+                    [FromRoute] long userID,
+                    [FromRoute] long projectID,
+                    [FromRoute] long taskID
+                )
+    {
+        try
+        {
+            await projectTaskService.DeleteProjectTask(
+                userID: userID,
+                projectID: projectID,
+                taskID: taskID);
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
     }
 }

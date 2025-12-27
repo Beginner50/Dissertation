@@ -1,6 +1,6 @@
 namespace PMS.DTOs;
 
-public class GetProjectTasksDTO
+public class GetProjectTaskDTO
 {
     public long TaskID { get; set; }
     public required string Title { get; set; }

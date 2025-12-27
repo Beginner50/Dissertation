@@ -24,17 +24,18 @@ public class ProjectService
         ?? throw new UnauthorizedAccessException("Unauthorized Access or Project Not Found!");
     }
 
-    public async Task<GetProjectsDTO?> GetProject(
-        long projectID, long userID
+    public async Task<GetProjectDTO> GetProject(
+         long userID, long projectID
     )
     {
         return await dbContext.Projects.Where(
             p => p.ProjectID == projectID && (p.SupervisorID == userID || p.StudentID == userID)
-        ).Select(p => new GetProjectsDTO
+        ).Select(p => new GetProjectDTO
         {
             ProjectID = p.ProjectID,
             Title = p.Title,
             Description = p.Description,
+            Status = p.Status,
             Student = p.Student != null ? new UserLookupDTO
             {
                 UserID = p.Student.UserID,
@@ -46,7 +47,7 @@ public class ProjectService
                 UserID = p.Supervisor.UserID,
                 Name = p.Supervisor.Name,
                 Email = p.Supervisor.Email
-            } : null
+            } : null,
         })
         .FirstOrDefaultAsync()
         ?? throw new UnauthorizedAccessException("Unauthorized Access or Project Not Found!");
@@ -57,14 +58,15 @@ public class ProjectService
         A supervisor can supervise multiple projects, while a student can only conduct
         one project (ConductedProjects is a list for uniformity).
     */
-    public async Task<IEnumerable<GetProjectsDTO>> GetProjects(long userID)
+    public async Task<IEnumerable<GetProjectDTO>> GetProjects(long userID)
     {
         return await dbContext.Users.Where(u => u.UserID == userID)
             .SelectMany(u => u.ConductedProjects.Concat(u.SupervisedProjects))
-            .Select(p => new GetProjectsDTO
+            .Select(p => new GetProjectDTO
             {
                 ProjectID = p.ProjectID,
                 Title = p.Title,
+                Status = p.Status,
                 Description = p.Description,
                 Supervisor = p.Supervisor != null ? new UserLookupDTO
                 {
@@ -97,7 +99,7 @@ public class ProjectService
     // Both supervisors and students can create project (only 1 for student)
     public async Task CreateProject(long userID, string role, CreateProjectDTO dto)
     {
-        if (role.Equals("Student"))
+        if (role.Equals("student"))
         {
             var existingProject = await dbContext.Projects.Where(p =>
                     p.StudentID == userID).FirstOrDefaultAsync();
@@ -109,9 +111,9 @@ public class ProjectService
         {
             Title = dto.Title,
             Description = dto.Description,
-            Status = dto.Status,
-            StudentID = role.Equals("Student") ? userID : null,
-            SupervisorID = role.Equals("Supervisor") ? userID : null
+            Status = "active",
+            StudentID = role.Equals("student") ? userID : null,
+            SupervisorID = role.Equals("supervisor") ? userID : null
         };
 
         dbContext.Projects.Add(newProject);

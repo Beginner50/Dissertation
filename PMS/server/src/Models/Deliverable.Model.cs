@@ -8,15 +8,7 @@ public class Deliverable
     public required string Filename { get; set; }
     public required byte[] File { get; set; }
     public required string ContentType { get; set; }
-
-    /*
-        This data annotation ensures that the SubmissionDate is automatically set to the
-        current date and time when a new Deliverable is created in the database.
-
-        https://learn.microsoft.com/en-us/ef/core/modeling/generated-properties?tabs=data-annotations
-    */
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public DateTime SubmissionTimestamp { get; set; }
+    public DateTime SubmissionTimestamp { get; set; } = DateTime.UtcNow;
 
     public required long TaskID { get; set; }
     [ForeignKey("TaskID")]

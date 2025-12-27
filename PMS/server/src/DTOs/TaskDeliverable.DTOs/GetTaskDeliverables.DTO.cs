@@ -1,10 +1,14 @@
+using PMS.Models;
+
 namespace PMS.DTOs;
 
 public class GetTaskDeliverablesDTO
 {
-    public required long DeliverableID { get; set; }
-    public required string Filename { get; set; }
-    public required DateTime SubmissionTimestamp { get; set; }
-    public required long TaskID { get; set; }
-    public required UserLookupDTO SubmittedBy { get; set; }
+    public long DeliverableID { get; set; }
+    public string Filename { get; set; }
+    public DateTime SubmissionTimestamp { get; set; }
+    public long TaskID { get; set; }
+    public UserLookupDTO SubmittedBy { get; set; }
+
+    public List<FeedbackCriteria> FeedbackCriterias { get; set; }
 }

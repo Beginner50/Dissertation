@@ -26,8 +26,8 @@ public class MeetingService
             requires cron job scheduling for updating the status, which might be overkill for
             this dissertation project (can be suggested as an improvement).
         */
-        if (meeting.End < DateTime.UtcNow && meeting.Status.Equals("Pending"))
-            meeting.Status = "Missed";
+        if (meeting.End < DateTime.UtcNow && meeting.Status.Equals("pending"))
+            meeting.Status = "missed";
 
         return meeting;
     }
@@ -35,14 +35,17 @@ public class MeetingService
     public async Task<IEnumerable<GetMeetingsDTO>> GetSupervisorMeetings(long supervisorID)
     {
         var meetings = await dbContext.Meetings
+                    .Include(m => m.Project)
+                    .Include(m => m.Organizer)
+                    .Include(m => m.Attendee)
                     .Where(m => m.AttendeeID == supervisorID || m.OrganizerID == supervisorID)
                     .ToListAsync();
 
         // See GetMeeting above to see why GetSupervisorMeetings is not idempotent
         foreach (var meeting in meetings)
         {
-            if (meeting.End < DateTime.UtcNow && meeting.Status.Equals("Pending"))
-                meeting.Status = "Missed";
+            if (meeting.End < DateTime.UtcNow && meeting.Status.Equals("pending"))
+                meeting.Status = "missed";
         }
         await dbContext.SaveChangesAsync();
 
@@ -87,7 +90,7 @@ public class MeetingService
             Description = description,
             Start = start,
             End = end,
-            Status = "Pending"
+            Status = "pending"
         };
         dbContext.Meetings.Add(entity: newMeeting);
 
@@ -133,7 +136,7 @@ public class MeetingService
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
 
-        meeting.Status = "Accepted";
+        meeting.Status = "accepted";
         await dbContext.SaveChangesAsync();
     }
 

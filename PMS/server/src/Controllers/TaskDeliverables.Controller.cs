@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using PMS.Migrations;
 using PMS.Services;
 
 namespace PMS.Controllers;
@@ -7,31 +6,59 @@ namespace PMS.Controllers;
 [ApiController]
 public class TaskDeliverablesController : ControllerBase
 {
-    private readonly TaskDeliverableService deliverableService;
-    public TaskDeliverablesController(TaskDeliverableService deliverableService)
+    private readonly TaskDeliverableService taskDeliverableService;
+    public TaskDeliverablesController(TaskDeliverableService taskDeliverableService)
     {
-        this.deliverableService = deliverableService;
+        this.taskDeliverableService = taskDeliverableService;
     }
 
-    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staging-deliverable")]
-    public async Task<IActionResult> GetStagingDeliverable(
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable")]
+    [HttpGet]
+    public async Task<IActionResult> GetStagedDeliverable(
         [FromRoute] long userID,
         [FromRoute] long projectID,
-        [FromRoute] long taskID
+        [FromRoute] long taskID,
+        [FromQuery] bool file = false
     )
     {
-        var stagingDeliverable = await deliverableService.GetStagedDeliverable(userID, projectID, taskID);
-        return Ok(stagingDeliverable);
+        try
+        {
+            if (file)
+            {
+                var result = await taskDeliverableService.GetStagedDeliverableFile(userID, projectID, taskID);
+                return File(result.File, result.ContentType, result.Filename);
+            }
+            var stagedDeliverable = await taskDeliverableService.GetStagedDeliverable(userID, projectID, taskID);
+            return Ok(stagedDeliverable);
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
     }
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/submitted-deliverable")]
+    [HttpGet]
     public async Task<IActionResult> GetSubmittedDeliverable(
             [FromRoute] long userID,
             [FromRoute] long projectID,
-            [FromRoute] long taskID
+            [FromRoute] long taskID,
+            [FromQuery] bool file = false
         )
     {
-        var stagingDeliverable = await deliverableService.GetSubmittedDeliverable(userID, projectID, taskID);
-        return Ok(stagingDeliverable);
+        try
+        {
+            if (file)
+            {
+                var result = await taskDeliverableService.GetSubmittedDeliverableFile(userID, projectID, taskID);
+                return File(result.File, result.ContentType, result.Filename);
+            }
+            var submittedDeliverable = await taskDeliverableService.GetSubmittedDeliverable(userID, projectID, taskID);
+            return Ok(submittedDeliverable);
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
     }
 }

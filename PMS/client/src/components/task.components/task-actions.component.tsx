@@ -7,136 +7,184 @@ import PolicyIcon from "@mui/icons-material/Policy";
 import SendIcon from "@mui/icons-material/Send";
 import type { ReactNode } from "react";
 
-export default function TaskActions({ sx, children }:
-    { sx?: SxProps<Theme> | undefined, children?: ReactNode }) {
-    return (
-        <Box sx={{
-            padding: '1rem',
-            background: "white",
-            borderRadius: '8px',
-            overflowY: 'auto',
-            border: `1px solid ${theme.borderSoft}`,
-            boxShadow: theme.shadowSoft,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-            ...sx,
-        }}>
-            {children}
-        </Box>
-    );
+export default function TaskActions({
+  sx,
+  children,
+}: {
+  sx?: SxProps<Theme> | undefined;
+  children?: ReactNode;
+}) {
+  return (
+    <Box
+      sx={{
+        padding: "1rem",
+        background: "white",
+        borderRadius: "8px",
+        overflowY: "auto",
+        border: `1px solid ${theme.borderSoft}`,
+        boxShadow: theme.shadowSoft,
+        display: "flex",
+        flexDirection: "column",
+        gap: "1rem",
+        ...sx,
+      }}
+    >
+      {children}
+    </Box>
+  );
 }
 
 TaskActions.Header = ({ title }: { title: string }) => {
-    return <>
-        <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px',
-            paddingBottom: '0.5rem',
-        }}>
-            <Typography variant="h2" sx={{
-                fontSize: '1.2rem',
-                fontFamily: "sans-serif",
-                fontWeight: 600,
-                color: "black",
-                margin: 0,
-                padding: "2px",
-                alignSelf: "end"
-            }}>
-                {title}
-            </Typography>
-        </Box>
-        <Divider sx={{
-            marginBottom: "0.7rem"
-        }} />
+  return (
+    <>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "12px",
+          paddingBottom: "0.5rem",
+        }}
+      >
+        <Typography
+          variant="h2"
+          sx={{
+            fontSize: "1.2rem",
+            fontFamily: "sans-serif",
+            fontWeight: 600,
+            color: "black",
+            margin: 0,
+            padding: "2px",
+            alignSelf: "end",
+          }}
+        >
+          {title}
+        </Typography>
+      </Box>
+      <Divider
+        sx={{
+          marginBottom: "0.7rem",
+        }}
+      />
     </>
+  );
+};
 
-}
-
-TaskActions.DeliverableUpload = ({ handleFileUploadClick }
-    : { handleFileUploadClick: () => void }
-) => {
-    return <Box sx={{
+TaskActions.DeliverableUpload = ({
+  handleFileUploadClick,
+}: {
+  handleFileUploadClick: () => void;
+}) => {
+  return (
+    <Box
+      sx={{
         borderWidth: "2px",
         borderStyle: "dashed",
         borderColor: theme.link,
-        borderRadius: '8px',
-        padding: '16px',
-        textAlign: 'center',
-        cursor: 'pointer',
-        backgroundColor: '#f8fbfc',
-        transition: 'all 0.2s',
-        ':hover': {
-            borderColor: theme.linkFocused,
-            backgroundColor: '#f0f4f9',
-        }
-    }}
-        onClick={handleFileUploadClick}
+        borderRadius: "8px",
+        padding: "16px",
+        textAlign: "center",
+        cursor: "pointer",
+        backgroundColor: "#f8fbfc",
+        transition: "all 0.2s",
+        ":hover": {
+          borderColor: theme.linkFocused,
+          backgroundColor: "#f0f4f9",
+        },
+      }}
+      onClick={handleFileUploadClick}
     >
-        <CloudUploadIcon sx={{ color: theme.link, fontSize: '2rem' }} />
-        <Typography variant="body2" sx={{ color: theme.textNormal, fontWeight: 500, marginTop: '4px' }}>
-            Click or Drag to Upload Deliverable
-        </Typography>
-        <Typography variant="caption" sx={{ color: theme.textMuted }}>
-            Max file size: 100MB
-        </Typography>
-        <input type="file" hidden />
+      <CloudUploadIcon sx={{ color: theme.link, fontSize: "2rem" }} />
+      <Typography
+        variant="body2"
+        sx={{ color: theme.textNormal, fontWeight: 500, marginTop: "4px" }}
+      >
+        Click or Drag to Upload Deliverable
+      </Typography>
+      <Typography variant="caption" sx={{ color: theme.textMuted }}>
+        Max file size: 100MB
+      </Typography>
+      <input type="file" hidden />
     </Box>
-}
+  );
+};
 
 TaskActions.ActionButtonContainer = ({ children }: { children: ReactNode }) => {
-    return <Box sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-    }}>
-        {children}
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+      }}
+    >
+      {children}
     </Box>
-}
+  );
+};
 
-TaskActions.ProvideFeedbackButton = ({ handleProvideFeedbackClick, disabled = false }:
-    { handleProvideFeedbackClick: () => void, disabled?: boolean }) => {
-    return <Button
-        variant="outlined"
-        color="primary"
-        size="medium"
-        disabled={disabled}
-        fullWidth
-        startIcon={< CommentIcon />}
-        onClick={handleProvideFeedbackClick}
+TaskActions.ProvideFeedbackButton = ({
+  handleProvideFeedbackClick,
+  disabled = false,
+}: {
+  handleProvideFeedbackClick: () => void;
+  disabled?: boolean;
+}) => {
+  return (
+    <Button
+      variant="outlined"
+      color="primary"
+      size="medium"
+      disabled={disabled}
+      fullWidth
+      startIcon={<CommentIcon />}
+      onClick={handleProvideFeedbackClick}
     >
-        Provide Feedback
-    </Button >
-}
-
-TaskActions.CheckComplianceButton = ({ handleCheckComplianceClick, disabled = false }:
-    { handleCheckComplianceClick: () => void, disabled?: boolean }) => {
-    return <Button
-        variant="outlined"
-        color="secondary"
-        size="medium"
-        disabled={disabled}
-        fullWidth
-        startIcon={< PolicyIcon />}
-        onClick={handleCheckComplianceClick}
-    >
-        Check Compliance
+      Provide Feedback
     </Button>
-}
+  );
+};
 
-TaskActions.SubmitDeliverableButton = ({ handleSubmitDeliverableClick, disabled = false }:
-    { handleSubmitDeliverableClick: () => void, disabled?: boolean }) => {
-    return <Button
-        variant="contained"
-        color="success"
-        size="medium"
-        disabled={disabled}
-        fullWidth
-        startIcon={<SendIcon />}
-        onClick={handleSubmitDeliverableClick}
+TaskActions.CheckComplianceButton = ({
+  handleCheckComplianceClick,
+  disabled = false,
+}: {
+  handleCheckComplianceClick: () => void;
+  disabled?: boolean;
+}) => {
+  return (
+    <Button
+      variant="outlined"
+      color="secondary"
+      size="medium"
+      disabled={disabled}
+      fullWidth
+      startIcon={<PolicyIcon />}
+      onClick={handleCheckComplianceClick}
     >
-        Submit Deliverable
+      Check Compliance
     </Button>
-}
+  );
+};
+
+TaskActions.SubmitDeliverableButton = ({
+  handleSubmitDeliverableClick,
+  disabled = false,
+}: {
+  handleSubmitDeliverableClick: () => void;
+  disabled?: boolean;
+}) => {
+  return (
+    <Button
+      variant="contained"
+      color="success"
+      size="medium"
+      disabled={disabled}
+      fullWidth
+      startIcon={<SendIcon />}
+      onClick={handleSubmitDeliverableClick}
+    >
+      Submit Deliverable
+    </Button>
+  );
+};

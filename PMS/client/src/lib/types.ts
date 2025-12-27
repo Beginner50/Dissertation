@@ -6,15 +6,44 @@ export type User = {
     projectIDs?: number[];
 };
 
-export interface Project {
+export type Project = {
     projectID: number;
     title: string;
-    description: string;
+    description?: string;
+    status: string;
     student?: User;
     supervisor?: User;
 }
 
-// Aligned with server/src/DTOs/GetMeetings.DTO.cs
+export type ProjectFormData = Pick<Project, "projectID"| "title"| "description">;
+
+export type Task = {
+    taskID: number;
+    title: string;
+    description?: string;
+    status: 'pending' | 'completed' | 'missing';
+    assignedDate: string;
+    dueDate: string;
+}
+
+export type TaskFormData = Pick<Task, "taskID" | "title"| "description" | "dueDate">
+
+
+export type Deliverable = {
+    deliverableID: number;
+    filename: string;
+    submissionTimestamp: string;
+    taskID: number;
+    submittedBy: User;
+    feedbackCriterias?: FeedbackCriteria[]
+}
+
+export interface FeedbackCriteria {
+    feedbackCriteriaID: number;
+    description: string;
+    status: 'met' | 'unmet' | 'overridden';
+}
+
 export interface Meeting {
     meetingID: number;
     start: Date;
@@ -44,40 +73,6 @@ export interface Reminder {
     readStatus: "read" | "unread"
 }
 
-export interface Task {
-    id: number;
-    title: string;
-    status: 'pending' | 'completed' | 'missing';
-    deadline: string;
-    projectID: number;
-}
-
-export interface Stakeholder {
-    role: string;
-    name: string;
-    id: number;
-}
-
-export interface ProjectDetailsData {
-    projectId?: string | number;
-    projectTitle?: string;
-    projectDescription?: string;
-    student: Stakeholder;
-    supervisor: Stakeholder;
-}
-
-export interface FeedbackCriteria {
-    id: number;
-    text: string;
-    status: 'met' | 'unmet' | 'overridden';
-}
-
-export interface TaskDetailData {
-    taskTitle: string;
-    taskDeadline: string;
-    taskDescription: string;
-    feedbackCriteria: FeedbackCriteria[];
-}
 
 export interface DeliverableFile {
     fileName: string;

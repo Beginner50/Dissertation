@@ -1,45 +1,126 @@
-import ky from "ky";
 import { ProjectList } from "../../components/project.components/project-list.component";
 import { ReminderList } from "../../components/reminder-list.components/reminder-list.component";
-import type { Project } from "../../lib/types";
+import type { Project, ProjectFormData } from "../../lib/types";
 import { origin, user } from "../../lib/temp";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import ProjectActions from "../../components/project.components/project-list-entry.component";
+import { useState } from "react";
+import ProjectModal, {
+  type ProjectModalState,
+} from "../../components/project.components/project-modal.component";
+import { useProjectsMutation } from "../../lib/hooks/useProjectsMutation";
+import { useProjectsQuery } from "../../lib/hooks/useProjectsQuery";
+import { Selector } from "../../components/project.components/project-selectors.component";
 
 export default function DashboardProjectsRoute() {
-  const queryClient = useQueryClient();
-  const [modalState, setModalState] = useState<
-    "closed" | "create" | "edit" | "join" | "archive"
-  >("closed");
-
-  const { data: projects, isLoading: projectsLoading } = useQuery({
-    queryKey: ["projects"],
-    queryFn: async () => {
-      const response = await ky.get(
-        `${origin}/api/users/${user.userID}/projects`
-      );
-      if (!response.ok) throw new Error("Failed to fetch projects");
-
-      const projectData = (await response.json()) as Project[];
-      return projectData;
-    },
+  const [projectModalState, setProjectModalState] = useState<ProjectModalState>(
+    { mode: "create", open: false }
+  );
+  const [projectModalData, setProjectModalData] = useState<ProjectFormData>({
+    projectID: 0,
+    title: "",
+    description: "",
   });
+  const [projectSearchTerm, setProjectSearchTerm] = useState<string>("");
+  const [selectedProject, setSelectedProject] = useState<Project>();
+
+  const projectMutation = useProjectsMutation();
+  const { data: projects, isLoading: projectsLoading } = useProjectsQuery();
+
+  /* ---------------------------------------------------------------------------------- */
+
+  const handleSelectProject = (project: Project) => {
+    setSelectedProject(project);
+  };
+
+  const handleCreateProjectClick = () => {
+    setProjectModalState((ms) => ({ ...ms, mode: "create", open: true }));
+  };
+
+  const handleJoinProjectClick = () => {
+    setProjectModalState((ms) => ({ ...ms, mode: "join-project", open: true }));
+  };
+
+  const handleEditProjectClick = (projectData: ProjectFormData) => {
+    setProjectModalData(projectData);
+    setProjectModalState((ms) => ({ ...ms, mode: "edit", open: true }));
+  };
+
+  const handleArchiveProjectClick = (projectData: ProjectFormData) => {
+    setProjectModalData(projectData);
+    setProjectModalState((ms) => ({ ...ms, mode: "archive", open: true }));
+  };
+
+  const handleCancelClick = () => {
+    setProjectModalState((ms) => ({ ...ms, open: false }));
+    setProjectModalData({ projectID: 0, title: "", description: "" });
+  };
+
+  /* ---------------------------------------------------------------------------------- */
+
+  const handleTitleChange = (title: string) => {
+    setProjectModalData((p) => ({ ...p, title: title }));
+  };
+
+  const handleDescriptionChange = (description: string) => {
+    setProjectModalData((p) => ({
+      ...p,
+      description: description,
+    }));
+  };
+
+  const handleSearchChange = (searchTerm: string) => {
+    setProjectSearchTerm(searchTerm);
+  };
+
+  /* ---------------------------------------------------------------------------------- */
 
   const handleCreateProject = () => {
-    console.log("Create Project button clicked");
+    projectMutation.mutate({
+      method: "post",
+      url: `${origin}/api/users/${user.userID}/projects`,
+      data: projectModalData,
+    });
+    setProjectModalState((p) => ({ ...p, open: false }));
+  };
+
+  const handleEditProject = () => {
+    projectMutation.mutate({
+      method: "put",
+      url: `${origin}/api/users/${user.userID}/projects/${projectModalData.projectID}`,
+      data: projectModalData,
+    });
+    setProjectModalState((p) => ({ ...p, open: false }));
+  };
+
+  const handleArchiveProject = () => {
+    projectMutation.mutate({
+      method: "delete",
+      url: `${origin}/api/users/${user.userID}/projects/${projectModalData.projectID}`,
+      data: {},
+    });
+    setProjectModalState((p) => ({ ...p, open: false }));
   };
 
   const handleJoinProject = () => {
     console.log("Join Project button clicked");
+    setSelectedProject(undefined);
   };
 
-  const handleEditProject = () => {};
+  /* ---------------------------------------------------------------------------------- */
 
-  const handleArchiveProject = () => {};
+  const filteredProjects = projects?.filter(
+    (p) =>
+      p.title.toLowerCase().includes(projectSearchTerm.toLowerCase()) ||
+      p.student?.name.toLowerCase().includes(projectSearchTerm.toLowerCase())
+  );
+
+  const isFormInvalid = Object.entries(projectModalData).some(([key, val]) => {
+    if (typeof val == "number") return Number.isNaN(val);
+    return val == "";
+  });
 
   return (
     <>
+      {/* Project List */}
       <ProjectList
         sx={{
           flexGrow: 3,
@@ -48,24 +129,87 @@ export default function DashboardProjectsRoute() {
         }}
       >
         <ProjectList.Header>
-          <ProjectList.Actions
-            onCreateProjectButtonClick={() => setModalState("create")}
-            onJoinProjectButtonClick={() => setModalState("join")}
-          />
+          {user.role === "supervisor" && (
+            <>
+              <ProjectList.CreateProjectButton
+                onClick={handleCreateProjectClick}
+              />
+              <ProjectList.JoinProjectButton onClick={handleJoinProjectClick} />
+            </>
+          )}
         </ProjectList.Header>
 
-        <ProjectList.Content
-          projects={projects ?? []}
-          onEditButtonClick={() => setModalState("edit")}
-          onArchiveButtonClick={() => setModalState("archive")}
-        />
+        {!projectsLoading && (
+          <ProjectList.List
+            projects={projects ?? []}
+            handleEditProjectClick={handleEditProjectClick}
+            handleArchiveProjectClick={handleArchiveProjectClick}
+          />
+        )}
       </ProjectList>
 
+      {/* Reminder List */}
       <ReminderList
         sx={{
           flexGrow: 1,
         }}
       />
+
+      {/* Project Modal */}
+      <ProjectModal open={projectModalState.open}>
+        <ProjectModal.Header mode={projectModalState.mode} />
+
+        {(projectModalState.mode === "create" ||
+          projectModalState.mode === "edit") && (
+          <ProjectModal.Fields>
+            <ProjectModal.ProjectID
+              projectID={projectModalData?.projectID ?? 0}
+              visible={projectModalState.mode == "edit"}
+            />
+            <ProjectModal.ProjectTitle
+              title={projectModalData?.title ?? ""}
+              onTitleChange={handleTitleChange}
+            />
+            <ProjectModal.ProjectDescription
+              description={projectModalData?.description ?? ""}
+              onDescriptionChange={handleDescriptionChange}
+            />
+          </ProjectModal.Fields>
+        )}
+
+        {projectModalState.mode === "join-project" && (
+          <Selector>
+            <Selector.Search
+              placeholder="Search projects by title or student..."
+              searchTerm={projectSearchTerm}
+              handleSearchChange={handleSearchChange}
+            />
+            <Selector.ProjectList
+              selectedProject={selectedProject}
+              filteredProjects={filteredProjects}
+              handleSelectProject={handleSelectProject}
+            />
+          </Selector>
+        )}
+
+        {projectModalState.mode == "archive" && <ProjectModal.ArchiveWarning />}
+
+        <ProjectModal.Actions
+          mode={projectModalState.mode}
+          disabled={
+            (isFormInvalid &&
+              (projectModalState.mode == "create" ||
+                projectModalState.mode == "edit")) ||
+            (selectedProject == undefined &&
+              projectModalState.mode == "join-project")
+          }
+          handleCancelClick={handleCancelClick}
+          handleCreateProject={handleCreateProject}
+          handleEditProject={handleEditProject}
+          handleArchiveProject={handleArchiveProject}
+          handleJoinProject={handleJoinProject}
+        />
+      </ProjectModal>
     </>
   );
 }

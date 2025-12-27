@@ -78,12 +78,14 @@ AddSingleton:
     For example, if database context were to be a singleton, then all users might try to use
     the same database connection at the same time, leading to race conditions and crashes.
 */
-builder.Services.AddSingleton<TokenService>();
 builder.Services.AddScoped<ProjectService>();
-builder.Services.AddScoped<MeetingService>();
 builder.Services.AddScoped<ProjectTaskService>();
 builder.Services.AddScoped<TaskDeliverableService>();
-
+builder.Services.AddScoped<FeedbackService>();
+builder.Services.AddScoped<MeetingService>();
+builder.Services.AddScoped<ReminderService>();
+builder.Services.AddScoped<ProgressLogService>();
+builder.Services.AddSingleton<TokenService>();
 
 // Database Context Registration
 builder.Services.AddDbContext<PMSDbContext>();

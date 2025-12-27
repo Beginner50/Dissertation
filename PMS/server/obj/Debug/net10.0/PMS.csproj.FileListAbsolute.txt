@@ -186,3 +186,4 @@
 /home/jatooUOM/Desktop/Dissertation/PMS/server/obj/Debug/net10.0/PMS.genruntimeconfig.cache
 /home/jatooUOM/Desktop/Dissertation/PMS/server/obj/Debug/net10.0/ref/PMS.dll
 /home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/Scalar.AspNetCore.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/obj/Debug/net10.0/PMS.sourcelink.json

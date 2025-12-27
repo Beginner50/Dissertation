@@ -12,10 +12,10 @@ public class ProjectTaskService
         this.dbContext = dbContext;
     }
 
-    public async Task<GetProjectTasksDTO> GetProjectTask(long userID, long projectID, long taskID)
+    public async Task<GetProjectTaskDTO> GetProjectTask(long userID, long projectID, long taskID)
     {
         var task = await dbContext.Tasks.Where(
-            t => t.TaskID == taskID &&
+            t => t.ProjectTaskID == taskID &&
                 t.ProjectID == projectID &&
                     (t.Project.StudentID == userID || t.Project.SupervisorID == userID)
         ).FirstOrDefaultAsync()
@@ -28,13 +28,13 @@ public class ProjectTaskService
             requires cron job scheduling for updating the status, which might be overkill for
             this dissertation project (can be suggested as an improvement).
         */
-        if (task.DueDate < DateTime.UtcNow && task.Status.Equals("Pending"))
-            task.Status = "Missing";
+        if (task.DueDate < DateTime.UtcNow && task.Status.Equals("pending"))
+            task.Status = "missing";
         await dbContext.SaveChangesAsync();
 
-        return new GetProjectTasksDTO
+        return new GetProjectTaskDTO
         {
-            TaskID = task.TaskID,
+            TaskID = task.ProjectTaskID,
             Title = task.Title,
             Description = task.Description,
             AssignedDate = task.AssignedDate,
@@ -45,7 +45,7 @@ public class ProjectTaskService
         };
     }
 
-    public async Task<IEnumerable<GetProjectTasksDTO>> GetProjectTasks(long userID, long projectID)
+    public async Task<IEnumerable<GetProjectTaskDTO>> GetProjectTasks(long userID, long projectID)
     {
         var tasks = await dbContext.Tasks.Where(
             t => t.ProjectID == projectID &&
@@ -55,20 +55,20 @@ public class ProjectTaskService
         // See GetTask above for explanation for why GetTasks is not idempotent
         foreach (var task in tasks)
         {
-            if (task.DueDate < DateTime.UtcNow && task.Status.Equals("Pending"))
-                task.Status = "Missing";
+            if (task.DueDate < DateTime.UtcNow && task.Status.Equals("pending"))
+                task.Status = "missing";
         }
         await dbContext.SaveChangesAsync();
 
-        return tasks.Select(t => new GetProjectTasksDTO
+        return tasks.Select(t => new GetProjectTaskDTO
         {
-            TaskID = t.TaskID,
+            TaskID = t.ProjectTaskID,
             Title = t.Title,
             Description = t.Description,
             AssignedDate = t.AssignedDate,
             DueDate = t.DueDate,
             Status = t.Status
-        });
+        }).OrderByDescending(t => t.DueDate);
     }
 
     public async Task<Models.ProjectTask> CreateProjectTask(long userID, long projectID, CreateProjectTaskDTO dto)
@@ -84,7 +84,7 @@ public class ProjectTaskService
             Description = dto.Description,
             DueDate = dto.DueDate,
             ProjectID = projectID,
-            Status = "Pending",
+            Status = "pending",
         };
 
         dbContext.Tasks.Add(newTask);
@@ -95,16 +95,26 @@ public class ProjectTaskService
     public async Task EditProjectTask(long userID, long projectID, long taskID, EditProjectTaskDTO dto)
     {
         var task = await dbContext.Tasks.FirstOrDefaultAsync(t =>
-            t.TaskID == taskID && t.ProjectID == projectID && t.Project.SupervisorID == userID)
+            t.ProjectTaskID == taskID && t.ProjectID == projectID && t.Project.SupervisorID == userID)
             ?? throw new KeyNotFoundException("Unauthorized Access or Task Not Found.");
 
         task.Title = dto.Title;
         task.Description = dto.Description;
         task.DueDate = dto.DueDate;
 
-        if (task.DueDate < DateTime.UtcNow && task.Status.Equals("Pending"))
-            task.Status = "Missing";
+        if (task.DueDate < DateTime.UtcNow && task.Status.Equals("pending"))
+            task.Status = "missing";
 
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task DeleteProjectTask(long userID, long projectID, long taskID)
+    {
+        var task = await dbContext.Tasks.FirstOrDefaultAsync(t =>
+            t.ProjectTaskID == taskID && t.ProjectID == projectID && t.Project.SupervisorID == userID)
+            ?? throw new KeyNotFoundException("Unauthorized Access or Task Not Found.");
+
+        dbContext.Remove(task);
         await dbContext.SaveChangesAsync();
     }
 }

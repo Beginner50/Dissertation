@@ -20,7 +20,7 @@ public class TaskDeliverableService
     public async Task<GetTaskDeliverablesDTO> GetStagedDeliverable(long userID, long projectID, long taskID)
     {
         var result = await dbContext.Tasks
-            .Where(t => t.TaskID == taskID && t.ProjectID == projectID && t.Project.StudentID == userID)
+            .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID && t.Project.StudentID == userID)
             .Select(t => t.StagedDeliverable != null ? new GetTaskDeliverablesDTO
             {
                 DeliverableID = t.StagedDeliverable.DeliverableID,
@@ -32,7 +32,7 @@ public class TaskDeliverableService
                     Name = t.StagedDeliverable.SubmittedBy.Name,
                     Email = t.StagedDeliverable.SubmittedBy.Email
                 },
-                TaskID = t.TaskID
+                TaskID = t.ProjectTaskID,
             } : null)
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Staged Deliverable Not Found!");
@@ -43,7 +43,7 @@ public class TaskDeliverableService
     public async Task<GetTaskDeliverablesDTO> GetSubmittedDeliverable(long userID, long projectID, long taskID)
     {
         var result = await dbContext.Tasks.Where(t =>
-                t.TaskID == taskID &&
+                t.ProjectTaskID == taskID &&
                     t.ProjectID == projectID &&
                        (t.Project.StudentID == userID || t.Project.SupervisorID == userID))
             .Select(t => t.SubmittedDeliverable != null ? new GetTaskDeliverablesDTO
@@ -57,7 +57,41 @@ public class TaskDeliverableService
                     Name = t.SubmittedDeliverable.SubmittedBy.Name,
                     Email = t.SubmittedDeliverable.SubmittedBy.Email
                 },
-                TaskID = t.TaskID
+                TaskID = t.ProjectTaskID,
+                FeedbackCriterias = t.SubmittedDeliverable.FeedbackCriterias
+            } : null)
+            .FirstOrDefaultAsync()
+            ?? throw new UnauthorizedAccessException("Unauthorized Access or Submitted Deliverable Not Found!");
+
+        return result;
+    }
+
+    public async Task<GetTaskDeliverableFileDTO> GetStagedDeliverableFile(long userID, long projectID, long taskID)
+    {
+        var result = await dbContext.Tasks
+            .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID && t.Project.StudentID == userID)
+            .Select(t => t.StagedDeliverable != null ? new GetTaskDeliverableFileDTO
+            {
+                Filename = t.StagedDeliverable.Filename,
+                File = t.StagedDeliverable.File,
+                ContentType = t.StagedDeliverable.ContentType
+            } : null)
+            .FirstOrDefaultAsync()
+            ?? throw new UnauthorizedAccessException("Unauthorized Access or Staged Deliverable Not Found!");
+        return result;
+    }
+
+    public async Task<GetTaskDeliverableFileDTO> GetSubmittedDeliverableFile(long userID, long projectID, long taskID)
+    {
+        var result = await dbContext.Tasks.Where(t =>
+                t.ProjectTaskID == taskID &&
+                    t.ProjectID == projectID &&
+                     (t.Project.StudentID == userID || t.Project.SupervisorID == userID))
+            .Select(t => t.SubmittedDeliverable != null ? new GetTaskDeliverableFileDTO
+            {
+                Filename = t.SubmittedDeliverable.Filename,
+                File = t.SubmittedDeliverable.File,
+                ContentType = t.SubmittedDeliverable.ContentType
             } : null)
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Submitted Deliverable Not Found!");
@@ -73,7 +107,7 @@ public class TaskDeliverableService
     byte[] fileData, string filename, string contentType)
     {
         var task = await dbContext.Tasks.Where(t =>
-            t.TaskID == taskID &&
+            t.ProjectTaskID == taskID &&
                 t.ProjectID == projectID &&
                     t.Project.StudentID == userID)
             .FirstOrDefaultAsync()
@@ -101,7 +135,7 @@ public class TaskDeliverableService
     public async Task RemoveStagedDeliverable(long userID, long projectID, long taskID)
     {
         var task = await dbContext.Tasks.Where(t =>
-                t.TaskID == taskID &&
+                t.ProjectTaskID == taskID &&
                     t.ProjectID == projectID &&
                          t.Project.StudentID == userID)
             .Include(t => t.StagedDeliverable)
@@ -125,7 +159,7 @@ public class TaskDeliverableService
     public async Task SubmitStagedDeliverable(long userID, long projectID, long taskID)
     {
         var task = await dbContext.Tasks.Where(t =>
-                t.TaskID == taskID &&
+                t.ProjectTaskID == taskID &&
                     t.ProjectID == projectID &&
                         t.Project.StudentID == userID)
                 .Include(t => t.StagedDeliverable)
@@ -143,7 +177,7 @@ public class TaskDeliverableService
 
         task.SubmittedDeliverableID = task.StagedDeliverableID;
         task.StagedDeliverableID = null;
-        task.Status = "Completed";
+        task.Status = "completed";
 
         await dbContext.SaveChangesAsync();
     }

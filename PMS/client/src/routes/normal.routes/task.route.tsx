@@ -1,83 +1,89 @@
 import FeedbackCriteriaTable from "../../components/task.components/feedback-criteria-table.component";
 import TaskActions from "../../components/task.components/task-actions.component";
 import { TaskDetails } from "../../components/task.components/task-details.component";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DeliverableCard from "../../components/task.components/deliverable-card.component";
 import type {
+  Deliverable,
   DeliverableFile,
   FeedbackCriteria,
-  TaskDetailData,
+  Task,
 } from "../../lib/types";
-
-interface TaskDetailDataExtended extends TaskDetailData {
-  submittedDeliverableFile: DeliverableFile | null;
-  uploadedDeliverableFile: DeliverableFile | null;
-}
-
-const mockTaskData: TaskDetailDataExtended = {
-  taskTitle: "Implement Server-Side Rendering for Auth Pages",
-  taskDeadline: "2026-03-01",
-  taskDescription:
-    "The task requires implementing SSR for the user login and registration pages to improve SEO and initial load performance. All static assets must be cached efficiently. This description is long enough to push the deliverable file card down slightly, making the side-by-side layout effective.",
-  // submittedDeliverableFile: null,
-  uploadedDeliverableFile: null,
-  feedbackCriteria: [
-    { id: 1, text: "SSR is functional on local environment.", status: "met" },
-    { id: 2, text: "Page load time is under 1.5 seconds.", status: "unmet" },
-    {
-      id: 3,
-      text: "Caching layer correctly implemented.",
-      status: "overridden",
-    },
-    { id: 4, text: "All unit tests pass.", status: "met" },
-    { id: 5, text: "ll unit tests pass.", status: "met" },
-    { id: 6, text: "All unit tests pass.", status: "met" },
-  ],
-  submittedDeliverableFile: {
-    fileName: "auth-ssr-deliverable-v1.pdf",
-    url: "#",
-    uploadedAt: "2025-11-20",
-    sizeLabel: "1.2 MB",
-  },
-  // uploadedDeliverableFile: {
-  //   fileName: "auth-ssr-deliverable-v1.pdf",
-  //   url: "#",
-  //   uploadedAt: "2025-11-20",
-  //   sizeLabel: "1.2 MB",
-  // }
-};
+import { useQuery } from "@tanstack/react-query";
+import ky from "ky";
+import { user, origin } from "../../lib/temp";
+import { useParams } from "react-router";
+import { TryOutlined } from "@mui/icons-material";
 
 export default function TaskRoute() {
-  const [taskData, setTaskData] =
-    useState<TaskDetailDataExtended>(mockTaskData);
+  const [tempFeedbackCriteria, setTempFeedbackCriteria] = useState<
+    FeedbackCriteria[]
+  >([]);
+  const { projectID, taskID } = useParams();
 
-  const {
-    taskTitle,
-    taskDeadline,
-    taskDescription,
-    feedbackCriteria,
-    submittedDeliverableFile,
-    uploadedDeliverableFile,
-  } = taskData;
+  const { data: task, isLoading: taskLoading } = useQuery({
+    queryKey: ["tasks", taskID],
+    queryFn: async () =>
+      (await ky
+        .get(
+          `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`
+        )
+        .json()) as Task,
+  });
+
+  const { data: submittedDeliverable, isLoading: submittedLoading } = useQuery({
+    queryKey: ["submitted-deliverable"],
+    queryFn: async () => {
+      try {
+        const response = await ky.get(
+          `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable`
+        );
+        const submittedDeliverable = (await response.json()) as Deliverable;
+        return submittedDeliverable;
+      } catch {
+        return null;
+      }
+    },
+    retry: 1,
+  });
+
+  useEffect(() => {
+    setTempFeedbackCriteria(submittedDeliverable?.feedbackCriterias ?? []);
+  }, [submittedDeliverable]);
+
+  const { data: stagedDeliverable, isLoading: stagedLoading } = useQuery({
+    queryKey: ["unsubmitted-deliverable"],
+    queryFn: async () => {
+      try {
+        const response = await ky.get(
+          `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`
+        );
+        const stagedDeliverable = (await response.json()) as Deliverable;
+        return stagedDeliverable;
+      } catch (e) {
+        return null;
+      }
+    },
+    enabled: user.role === "student",
+    retry: 1,
+  });
 
   const handleOverrideToggle = (id: number) => {
-    setTaskData((prev) => ({
+    setTempFeedbackCriteria((prev) => ({
       ...prev,
-      feedbackCriteria: prev.feedbackCriteria.map(
-        (criterion: FeedbackCriteria) => {
-          if (criterion.id !== id) return criterion;
+      feedbackCriteria: prev.map((criterion: FeedbackCriteria) => {
+        if (criterion.feedbackCriteriaID !== id) return criterion;
 
-          if (criterion.status === "unmet") {
-            return { ...criterion, status: "overridden" };
-          }
-
-          if (criterion.status === "overridden") {
-            return { ...criterion, status: "unmet" };
-          }
-
-          return criterion;
+        if (criterion.status === "unmet") {
+          return { ...criterion, status: "overridden" };
         }
-      ),
+
+        if (criterion.status === "overridden") {
+          return { ...criterion, status: "unmet" };
+        }
+
+        return criterion;
+      }),
     }));
   };
 
@@ -96,31 +102,25 @@ export default function TaskRoute() {
       <TaskDetails
         sx={{
           flexGrow: 3,
+          display: "flex",
+          flexDirection: "column",
           maxWidth: "65vw",
+          maxHeight: "78vh",
+          overflowY: "scroll",
         }}
       >
         <TaskDetails.Header
-          title={taskTitle}
-          deadline={taskDeadline}
-        ></TaskDetails.Header>
+          title={task?.title ?? "Task Title"}
+          deadline={task?.dueDate ?? "Due Date"}
+        />
 
         <TaskDetails.Content>
-          <TaskDetails.Description> {taskDescription} </TaskDetails.Description>
-
-          {submittedDeliverableFile && (
-            <DeliverableCard
-              text="Submitted Deliverable"
-              sx={{
-                width: "18vw",
-              }}
-              deliverableFile={submittedDeliverableFile}
-            />
-          )}
+          <TaskDetails.Description>{task?.description}</TaskDetails.Description>
         </TaskDetails.Content>
 
-        {feedbackCriteria.length > 0 && (
+        {tempFeedbackCriteria.length > 0 && (
           <FeedbackCriteriaTable
-            criteria={feedbackCriteria}
+            criteria={tempFeedbackCriteria}
             onOverrideToggle={handleOverrideToggle}
           />
         )}
@@ -129,18 +129,23 @@ export default function TaskRoute() {
       <TaskActions
         sx={{
           flexGrow: 1,
+          maxWidth: "25vw",
           background: "hsla(0,0%,100%,50%)",
         }}
       >
         <TaskActions.Header title="Task Actions" />
-
-        {uploadedDeliverableFile ? (
+        {submittedDeliverable && (
           <DeliverableCard
-            text="Uploaded Deliverable"
-            sx={{
-              width: "100%",
-            }}
-            deliverableFile={uploadedDeliverableFile}
+            cardDescription="Submitted Deliverable"
+            url={`${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable?file=true`}
+            deliverable={submittedDeliverable}
+          />
+        )}
+        {stagedDeliverable ? (
+          <DeliverableCard
+            cardDescription="Staged Deliverable"
+            url={`${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`}
+            deliverable={stagedDeliverable}
           />
         ) : (
           <TaskActions.DeliverableUpload
@@ -150,17 +155,17 @@ export default function TaskRoute() {
 
         <TaskActions.ActionButtonContainer>
           <TaskActions.ProvideFeedbackButton
-            disabled={!uploadedDeliverableFile}
+            disabled={!submittedDeliverable}
             handleProvideFeedbackClick={handleProvideFeedbackClick}
           />
           <TaskActions.CheckComplianceButton
-            disabled={!uploadedDeliverableFile}
+            disabled={!stagedDeliverable || tempFeedbackCriteria.length == 0}
             handleCheckComplianceClick={handleCheckComplianceClick}
           />
           <TaskActions.SubmitDeliverableButton
             disabled={
-              !uploadedDeliverableFile ||
-              feedbackCriteria.some((c) => c.status === "unmet")
+              !stagedDeliverable ||
+              tempFeedbackCriteria.some((c) => c.status === "unmet")
             }
             handleSubmitDeliverableClick={handleSubmitDeliverableClick}
           />

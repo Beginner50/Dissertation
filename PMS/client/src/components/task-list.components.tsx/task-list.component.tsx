@@ -1,52 +1,15 @@
 import {
   Box,
+  Button,
   Divider,
-  IconButton,
   Typography,
   type SxProps,
   type Theme,
 } from "@mui/material";
 import { theme } from "../../lib/theme";
-import type { Task } from "../../lib/types";
-import {
-  CompletedVariant1,
-  MissingVariant1,
-  PendingVariant1,
-} from "../base.components/status-tags.component";
+import type { Task, TaskFormData } from "../../lib/types";
 import { type ReactNode } from "react";
-import { Link } from "react-router";
-import { MoreVert } from "@mui/icons-material";
-
-const mockTasks: Task[] = [
-  {
-    id: 501,
-    title: "Finalize Component Architecture",
-    status: "pending",
-    deadline: "2026-01-15",
-    projectID: 101,
-  },
-  {
-    id: 503,
-    title: "Review Security Audit Report",
-    status: "completed",
-    deadline: "2025-12-05",
-    projectID: 101,
-  },
-  {
-    id: 504,
-    title: "Implement UI/UX Feedback Loop",
-    status: "missing",
-    deadline: "2025-01-20",
-    projectID: 101,
-  },
-  {
-    id: 502,
-    title: "Set up CI/CD Pipeline",
-    status: "completed",
-    deadline: "2025-12-05",
-    projectID: 101,
-  },
-];
+import TaskListEntry from "./task-list-entry.component";
 
 export function TaskList({
   children,
@@ -117,7 +80,17 @@ TaskList.Header = ({ children }: { children?: ReactNode }) => {
   );
 };
 
-TaskList.Content = () => {
+TaskList.List = ({
+  projectID,
+  tasks,
+  handleEditTaskClick,
+  handleDeleteTaskClick,
+}: {
+  projectID: number;
+  tasks: Task[];
+  handleEditTaskClick: (data: TaskFormData) => void;
+  handleDeleteTaskClick: (data: TaskFormData) => void;
+}) => {
   return (
     <Box
       sx={{
@@ -125,115 +98,43 @@ TaskList.Content = () => {
         flexDirection: "column",
       }}
     >
-      {mockTasks.map((task) => {
+      {tasks.map((task) => {
         return (
-          <TaskList.ListEntry
-            key={task.id}
-            title={task.title}
-            url={`/projects/${task.projectID}/tasks/${task.id}`}
-            dueDate={task.deadline}
-            status={task.status}
-          />
+          <TaskListEntry key={task.taskID} status={task.status}>
+            <TaskListEntry.Link
+              title={task.title}
+              url={`/projects/${projectID}/tasks/${task.taskID}`}
+              dueDate={task.dueDate}
+            />
+            <TaskListEntry.MenuButton
+              onEditButtonClick={() =>
+                handleEditTaskClick({
+                  taskID: task.taskID,
+                  title: task.title,
+                  description: task.description,
+                  dueDate: task.dueDate,
+                })
+              }
+              onDeleteButtonClick={() => {
+                handleDeleteTaskClick({
+                  taskID: task.taskID,
+                  title: task.title,
+                  description: task.description,
+                  dueDate: task.dueDate,
+                });
+              }}
+            />
+          </TaskListEntry>
         );
       })}
     </Box>
   );
 };
 
-TaskList.ListEntry = ({
-  status,
-  title,
-  dueDate,
-  url,
-}: {
-  status: string;
-  title: string;
-  dueDate: string;
-  url: string;
-}) => {
-  const deadline = new Date(dueDate);
-  const isDeadlinePast =
-    !Number.isNaN(deadline.getTime()) && deadline.getTime() < Date.now();
-
+TaskList.CreateTaskButton = ({ onClick }: { onClick: () => void }) => {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        padding: "10px 12px",
-        marginBottom: "8px",
-        background: "hsl(0,0%,99.5%)",
-        borderRadius: "8px",
-        borderWidth: "1px",
-        borderStyle: "solid",
-        borderColor: theme.borderNormal,
-        boxShadow: theme.shadowMuted,
-        transition:
-          "box-shadow 0.2s, border-color 0.2s, opacity 0.3s, transform 0.1s",
-        gap: "14px",
-
-        "&:hover": {
-          borderColor: theme.borderNormal,
-          boxShadow: theme.shadowSoft,
-        },
-      }}
-    >
-      {status === "completed" ? (
-        <CompletedVariant1 />
-      ) : status === "missing" ? (
-        <MissingVariant1 />
-      ) : (
-        <PendingVariant1 />
-      )}
-
-      <Box
-        sx={{
-          flexGrow: 1,
-          marginRight: "auto",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Link to={url} style={{ textDecoration: "none" }}>
-          <Typography
-            component="span"
-            sx={{
-              textDecoration: "none",
-              color: theme.link,
-              fontWeight: 600,
-              fontSize: "1rem",
-              transition: "color 0.2s",
-              "&:hover": {
-                color: theme.linkFocused,
-                textDecoration: "underline",
-              },
-            }}
-          >
-            {title}
-          </Typography>
-        </Link>
-
-        <Typography
-          component="span"
-          sx={{
-            fontSize: "0.85rem",
-            color: theme.textNormal,
-            textDecoration: isDeadlinePast ? "line-through" : "none",
-          }}
-        >
-          Deadline:{" "}
-          {isDeadlinePast ? (
-            dueDate
-          ) : (
-            <strong style={{ fontWeight: 600 }}>{dueDate}</strong>
-          )}
-        </Typography>
-      </Box>
-
-      <IconButton>
-        <MoreVert fontSize="inherit" />
-      </IconButton>
-    </Box>
+    <Button variant="contained" onClick={onClick}>
+      Create Task
+    </Button>
   );
 };

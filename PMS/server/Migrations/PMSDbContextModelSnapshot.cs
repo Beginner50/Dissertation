@@ -30,6 +30,10 @@ namespace PMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("DeliverableID"));
 
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<byte[]>("File")
                         .IsRequired()
                         .HasColumnType("bytea");
@@ -38,8 +42,7 @@ namespace PMS.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("SubmissionDate")
-                        .ValueGeneratedOnAdd()
+                    b.Property<DateTime>("SubmissionTimestamp")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("SubmittedByID")
@@ -243,7 +246,6 @@ namespace PMS.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("Timestamp")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("ProgressLogEntryID");
@@ -296,7 +298,7 @@ namespace PMS.Migrations
                         {
                             ProjectID = 1L,
                             Description = "Research on AI algorithms",
-                            Status = "Active",
+                            Status = "active",
                             StudentID = 1L,
                             SupervisorID = 2L,
                             Title = "AI Research"
@@ -305,7 +307,7 @@ namespace PMS.Migrations
                         {
                             ProjectID = 2L,
                             Description = "Research on Optical Character Recognition",
-                            Status = "Active",
+                            Status = "active",
                             StudentID = 3L,
                             SupervisorID = 2L,
                             Title = "OCR Research"
@@ -314,10 +316,121 @@ namespace PMS.Migrations
                         {
                             ProjectID = 3L,
                             Description = "Development of Blockchain applications",
-                            Status = "Active",
+                            Status = "active",
                             StudentID = 4L,
                             SupervisorID = 5L,
                             Title = "Blockchain Dev"
+                        });
+                });
+
+            modelBuilder.Entity("PMS.Models.ProjectTask", b =>
+                {
+                    b.Property<long>("ProjectTaskID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("ProjectTaskID"));
+
+                    b.Property<DateTime>("AssignedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("ProjectID")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("StagedDeliverableID")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("StagingDeliverableID")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long?>("SubmittedDeliverableID")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("ProjectTaskID");
+
+                    b.HasIndex("ProjectID");
+
+                    b.HasIndex("StagingDeliverableID");
+
+                    b.HasIndex("SubmittedDeliverableID");
+
+                    b.ToTable("Tasks");
+
+                    b.HasData(
+                        new
+                        {
+                            ProjectTaskID = 1L,
+                            AssignedDate = new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Review current papers on Transformer models.",
+                            DueDate = new DateTime(2025, 11, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ProjectID = 1L,
+                            Status = "completed",
+                            Title = "Literature Review"
+                        },
+                        new
+                        {
+                            ProjectTaskID = 2L,
+                            AssignedDate = new DateTime(2025, 11, 16, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Gather and clean the training dataset.",
+                            DueDate = new DateTime(2025, 12, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ProjectID = 1L,
+                            Status = "pending",
+                            Title = "Dataset Collection"
+                        },
+                        new
+                        {
+                            ProjectTaskID = 3L,
+                            AssignedDate = new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Submit the formal research proposal.",
+                            DueDate = new DateTime(2025, 10, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ProjectID = 1L,
+                            Status = "missing",
+                            Title = "Proposal Submission"
+                        },
+                        new
+                        {
+                            ProjectTaskID = 4L,
+                            AssignedDate = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Compare Tesseract vs EasyOCR.",
+                            DueDate = new DateTime(2025, 12, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ProjectID = 2L,
+                            Status = "pending",
+                            Title = "Algorithm Selection"
+                        },
+                        new
+                        {
+                            ProjectTaskID = 5L,
+                            AssignedDate = new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Develop a basic Python script for image-to-text conversion.",
+                            DueDate = new DateTime(2025, 11, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ProjectID = 2L,
+                            Status = "completed",
+                            Title = "Initial Prototype"
+                        },
+                        new
+                        {
+                            ProjectTaskID = 6L,
+                            AssignedDate = new DateTime(2025, 12, 5, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Architect the voting system contract in Solidity.",
+                            DueDate = new DateTime(2025, 12, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            ProjectID = 3L,
+                            Status = "pending",
+                            Title = "Smart Contract Design"
                         });
                 });
 
@@ -345,6 +458,10 @@ namespace PMS.Migrations
                     b.Property<long?>("TaskID")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime>("Timestamp")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("ReminderID");
 
                     b.HasIndex("MeetingID");
@@ -354,53 +471,6 @@ namespace PMS.Migrations
                     b.HasIndex("TaskID");
 
                     b.ToTable("Reminders");
-                });
-
-            modelBuilder.Entity("PMS.Models.Task", b =>
-                {
-                    b.Property<long>("TaskID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("TaskID"));
-
-                    b.Property<DateTime>("AssignedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("DueDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("ProjectID")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("StagingDeliverableID")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long?>("SubmittedDeliverableID")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("TaskID");
-
-                    b.HasIndex("ProjectID");
-
-                    b.HasIndex("StagingDeliverableID");
-
-                    b.HasIndex("SubmittedDeliverableID");
-
-                    b.ToTable("Tasks");
                 });
 
             modelBuilder.Entity("PMS.Models.User", b =>
@@ -442,7 +512,7 @@ namespace PMS.Migrations
                             IsDeleted = false,
                             Name = "Alice Student",
                             Password = "hashed_password",
-                            Role = "Student"
+                            Role = "student"
                         },
                         new
                         {
@@ -451,7 +521,7 @@ namespace PMS.Migrations
                             IsDeleted = false,
                             Name = "Dr. Smith",
                             Password = "hashed_password",
-                            Role = "Supervisor"
+                            Role = "supervisor"
                         },
                         new
                         {
@@ -460,7 +530,7 @@ namespace PMS.Migrations
                             IsDeleted = false,
                             Name = "Hashim",
                             Password = "hashed_password",
-                            Role = "Student"
+                            Role = "student"
                         },
                         new
                         {
@@ -469,7 +539,7 @@ namespace PMS.Migrations
                             IsDeleted = false,
                             Name = "Charlie Student",
                             Password = "hashed_password",
-                            Role = "Student"
+                            Role = "student"
                         },
                         new
                         {
@@ -478,7 +548,7 @@ namespace PMS.Migrations
                             IsDeleted = false,
                             Name = "Dr. Brown",
                             Password = "hashed_password",
-                            Role = "Supervisor"
+                            Role = "supervisor"
                         });
                 });
 
@@ -490,7 +560,7 @@ namespace PMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PMS.Models.Task", "Task")
+                    b.HasOne("PMS.Models.ProjectTask", "Task")
                         .WithMany("AllDeliverables")
                         .HasForeignKey("TaskID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -559,7 +629,7 @@ namespace PMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PMS.Models.Task", "Task")
+                    b.HasOne("PMS.Models.ProjectTask", "Task")
                         .WithMany("ProgressLogEntries")
                         .HasForeignKey("TaskID");
 
@@ -585,6 +655,29 @@ namespace PMS.Migrations
                     b.Navigation("Supervisor");
                 });
 
+            modelBuilder.Entity("PMS.Models.ProjectTask", b =>
+                {
+                    b.HasOne("PMS.Models.Project", "Project")
+                        .WithMany("Tasks")
+                        .HasForeignKey("ProjectID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PMS.Models.Deliverable", "StagedDeliverable")
+                        .WithMany()
+                        .HasForeignKey("StagingDeliverableID");
+
+                    b.HasOne("PMS.Models.Deliverable", "SubmittedDeliverable")
+                        .WithMany()
+                        .HasForeignKey("SubmittedDeliverableID");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("StagedDeliverable");
+
+                    b.Navigation("SubmittedDeliverable");
+                });
+
             modelBuilder.Entity("PMS.Models.Reminder", b =>
                 {
                     b.HasOne("PMS.Models.Meeting", "Meeting")
@@ -597,7 +690,7 @@ namespace PMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PMS.Models.Task", "Task")
+                    b.HasOne("PMS.Models.ProjectTask", "Task")
                         .WithMany("Reminders")
                         .HasForeignKey("TaskID");
 
@@ -606,29 +699,6 @@ namespace PMS.Migrations
                     b.Navigation("Recipient");
 
                     b.Navigation("Task");
-                });
-
-            modelBuilder.Entity("PMS.Models.Task", b =>
-                {
-                    b.HasOne("PMS.Models.Project", "Project")
-                        .WithMany("Tasks")
-                        .HasForeignKey("ProjectID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PMS.Models.Deliverable", "StagingDeliverable")
-                        .WithMany()
-                        .HasForeignKey("StagingDeliverableID");
-
-                    b.HasOne("PMS.Models.Deliverable", "SubmittedDeliverable")
-                        .WithMany()
-                        .HasForeignKey("SubmittedDeliverableID");
-
-                    b.Navigation("Project");
-
-                    b.Navigation("StagingDeliverable");
-
-                    b.Navigation("SubmittedDeliverable");
                 });
 
             modelBuilder.Entity("PMS.Models.Deliverable", b =>
@@ -645,7 +715,7 @@ namespace PMS.Migrations
                     b.Navigation("Tasks");
                 });
 
-            modelBuilder.Entity("PMS.Models.Task", b =>
+            modelBuilder.Entity("PMS.Models.ProjectTask", b =>
                 {
                     b.Navigation("AllDeliverables");
 

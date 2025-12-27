@@ -4,11 +4,11 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS base
 WORKDIR /app
 
 # Copy only the project file with the dependencies before copying the rest of the project
-COPY *.csproj ./
+COPY *.csproj .
 # This way, the dependencies will only be restored from a cache instead of re-downloading them
 RUN dotnet restore
 
-COPY . ./
+COPY . .
 
 FROM base AS development
 EXPOSE 5081

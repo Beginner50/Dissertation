@@ -14,7 +14,7 @@ public class FeedbackService
         this.dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<GetFeedbackDTO>> GetFeedback(long userID, long projectID, long taskID, long deliverableID)
+    public async Task<IEnumerable<FeedbackCriteria>> GetFeedback(long userID, long projectID, long taskID, long deliverableID)
     {
         return await dbContext.FeedbackCriterias
                     .Where(f => f.DeliverableID == deliverableID &&
@@ -22,14 +22,7 @@ public class FeedbackService
                                         f.Deliverable.Task.ProjectID == projectID &&
                                             (f.Deliverable.Task.Project.StudentID == userID ||
                                             f.Deliverable.Task.Project.SupervisorID == userID))
-                    .Select(f => new GetFeedbackDTO
-                    {
-                        FeedbackCriteriaID = f.FeedbackCriteriaID,
-                        Description = f.Description,
-                        Status = f.Status,
-                        DeliverableID = f.DeliverableID,
-                        ProvidedByID = f.ProvidedByID
-                    }).ToListAsync();
+                    .ToListAsync();
     }
 
     public async Task CreateFeedback(
@@ -48,7 +41,7 @@ public class FeedbackService
         var newCriteria = feedbackList.Select(dto => new FeedbackCriteria
         {
             Description = dto.Description,
-            Status = dto.Status ?? "Pending",
+            Status = dto.Status ?? "pending",
             DeliverableID = deliverableID,
             ProvidedByID = userID
         });
@@ -86,7 +79,7 @@ public class FeedbackService
 
         foreach (var feedbackCriteria in feedbackCriterias)
         {
-            feedbackCriteria.Status = "Overriden";
+            feedbackCriteria.Status = "overriden";
         }
 
         await dbContext.SaveChangesAsync();
@@ -98,7 +91,7 @@ public class FeedbackService
             return false;
 
         return !feedbackCriteria.Any(c =>
-            c.Status.Equals("Unmet"));
+            c.Status.Equals("unmet"));
     }
 
     public async Task<bool> AIFeedbackComplianceCheck()

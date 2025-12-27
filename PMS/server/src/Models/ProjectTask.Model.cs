@@ -1,21 +1,14 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PMS.Models;
 
 public class ProjectTask
 {
-    public long TaskID { get; set; }
+    public long ProjectTaskID { get; set; }
     public required string Title { get; set; }
     public required string Description { get; set; }
-
-    /*
-        This data annotation ensures that the AssignedDate is automatically set to the
-        current date and time when a new Task is created in the database.
-
-        https://learn.microsoft.com/en-us/ef/core/modeling/generated-properties?tabs=data-annotations
-    */
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public DateTime AssignedDate { get; set; }
+    public DateTime AssignedDate { get; set; } = DateTime.UtcNow;
     public required DateTime DueDate { get; set; }
     public required string Status { get; set; }
 

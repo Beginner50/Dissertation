@@ -2,8 +2,6 @@ import { type ReactNode } from "react";
 import { theme } from "../../lib/theme";
 import { Box, Typography, type SxProps, IconButton } from "@mui/material";
 import type { Theme } from "@emotion/react";
-import DescriptionIcon from "@mui/icons-material/Description";
-import DownloadIcon from "@mui/icons-material/Download";
 
 export function TaskDetails({
   sx,

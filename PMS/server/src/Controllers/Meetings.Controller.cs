@@ -25,23 +25,32 @@ public class MeetingsController : ControllerBase
         [FromRoute] long userID
     )
     {
-        var project = await projectService.GetProject(userID: userID);
-        if (project == null || project.SupervisorID == null)
-            return NotFound();
-
-        var meetings = await meetingService.GetSupervisorMeetings(supervisorID:
-                                (long)project.SupervisorID);
-        return Ok(meetings);
+        try
+        {
+            var project = await projectService.GetProject(userID: userID);
+            var meetings = await meetingService.GetSupervisorMeetings(supervisorID:
+                                                    (long)project.SupervisorID);
+            return Ok(meetings);
+        }
+        catch (Exception e)
+        {
+            return NotFound(e);
+        }
     }
 
     [Route("api/[controller]/{meetingID}")]
     [HttpGet]
     public async Task<IActionResult> GetMeeting([FromRoute] long meetingID)
     {
-        var meeting = await meetingService.GetMeeting(meetingID);
-        if (meeting == null)
-            return NotFound();
-        return Ok(meeting);
+        try
+        {
+            var meeting = await meetingService.GetMeeting(meetingID);
+            return Ok(meeting);
+        }
+        catch (Exception e)
+        {
+            return NotFound(e);
+        }
     }
 
     [Route("api/users/{userID}/projects/{projectID}/[controller]")]
@@ -51,19 +60,22 @@ public class MeetingsController : ControllerBase
         [FromRoute] long projectID,
         [FromBody] BookMeetingDTO bookMeetingDTO)
     {
-        var meeting = await meetingService.BookMeeting(
-            projectID: projectID, organizerID: userID,
-            attendeeID: bookMeetingDTO.AttendeeID,
-            description: bookMeetingDTO.Description,
-            start: bookMeetingDTO.Start,
-            end: bookMeetingDTO.End
-        );
+        try
+        {
+            await meetingService.BookMeeting(
+                projectID: projectID, organizerID: userID,
+                attendeeID: bookMeetingDTO.AttendeeID,
+                description: bookMeetingDTO.Description,
+                start: bookMeetingDTO.Start,
+                end: bookMeetingDTO.End
+            );
 
-        /*
-            This method returns a 201 Created status code and tells the client where it can
-            find the new resource (meeting at GetMeeting endpoint with the new meetingID)
-        */
-        return CreatedAtAction(nameof(GetMeeting), new { meetingID = meeting.MeetingID }, meeting);
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e);
+        }
     }
 
     [Route("api/users/{userID}/[controller]/{meetingID}/edit-description")]
@@ -74,13 +86,19 @@ public class MeetingsController : ControllerBase
                     [FromBody] EditMeetingDescriptionDTO editMeetingDescriptionDTO
                 )
     {
-        if (await meetingService.EditMeetingDescription(
-            userID: userID,
-            meetingID: meetingID,
-            description: editMeetingDescriptionDTO.Description
-        ))
+        try
+        {
+            await meetingService.EditMeetingDescription(
+                userID: userID,
+                meetingID: meetingID,
+                description: editMeetingDescriptionDTO.Description
+            );
             return NoContent();
-        return BadRequest();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e);
+        }
     }
 
     [Route("api/users/{userID}/[controller]/{meetingID}/cancel")]
@@ -90,9 +108,15 @@ public class MeetingsController : ControllerBase
                     [FromRoute] long meetingID
                 )
     {
-        if (await meetingService.CancelMeeting(organizerID: userID, meetingID: meetingID))
+        try
+        {
+            await meetingService.CancelMeeting(organizerID: userID, meetingID: meetingID);
             return NoContent();
-        return BadRequest();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e);
+        }
     }
 
     [Route("api/users/{userID}/[controller]/{meetingID}/accept")]
@@ -102,9 +126,15 @@ public class MeetingsController : ControllerBase
         [FromRoute] long meetingID
     )
     {
-        if (await meetingService.AcceptMeeting(attendeeID: userID, meetingID: meetingID))
+        try
+        {
+            await meetingService.AcceptMeeting(attendeeID: userID, meetingID: meetingID);
             return NoContent();
-        return BadRequest();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e);
+        }
     }
 
     [Route("api/users/{userID}/[controller]/{meetingID}/reject")]
@@ -114,8 +144,14 @@ public class MeetingsController : ControllerBase
             [FromRoute] long meetingID
         )
     {
-        if (await meetingService.RejectMeeting(attendeeID: userID, meetingID: meetingID))
+        try
+        {
+            await meetingService.RejectMeeting(attendeeID: userID, meetingID: meetingID);
             return NoContent();
-        return BadRequest();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e);
+        }
     }
 }

@@ -1,13 +1,5 @@
 import {
-  AddCircleOutline,
-  Archive,
-  Edit,
-  GroupAdd,
-  MoreVert,
-} from "@mui/icons-material";
-import {
   Box,
-  Button,
   Divider,
   IconButton,
   ListItemIcon,
@@ -17,14 +9,21 @@ import {
   MenuList,
   Typography,
 } from "@mui/material";
-import { useRef, useState, type ReactNode, type RefObject } from "react";
-import { Link } from "react-router";
 import { theme } from "../../lib/theme";
-import type { User } from "../../lib/types";
+import {
+  CompletedVariant1,
+  MissingVariant1,
+  PendingVariant1,
+} from "../base.components/status-tags.component";
+import { Link } from "react-router";
+import { Delete, Edit, MoreVert } from "@mui/icons-material";
+import { useRef, useState, type ReactNode } from "react";
 
-export default function ProjectListEntry({
+export default function TaskListEntry({
+  status,
   children,
 }: {
+  status: string;
   children?: ReactNode;
 }) {
   return (
@@ -45,26 +44,37 @@ export default function ProjectListEntry({
           "box-shadow 0.2s, border-color 0.2s, opacity 0.3s, transform 0.1s",
         gap: "14px",
 
-        ":hover": {
+        "&:hover": {
           borderColor: theme.borderNormal,
           boxShadow: theme.shadowSoft,
         },
       }}
     >
+      {status === "completed" ? (
+        <CompletedVariant1 />
+      ) : status === "missing" ? (
+        <MissingVariant1 />
+      ) : (
+        <PendingVariant1 />
+      )}
       {children}
     </Box>
   );
 }
 
-ProjectListEntry.Link = ({
+TaskListEntry.Link = ({
   title,
   url,
-  student,
+  dueDate,
 }: {
   title: string;
   url: string;
-  student?: User;
+  dueDate: string;
 }) => {
+  const deadline = new Date(dueDate);
+  const isDeadlinePast =
+    !Number.isNaN(deadline.getTime()) && deadline.getTime() < Date.now();
+
   return (
     <Box
       sx={{
@@ -92,25 +102,34 @@ ProjectListEntry.Link = ({
           {title}
         </Typography>
       </Link>
+
       <Typography
         component="span"
         sx={{
           fontSize: "0.85rem",
-          color: theme.textMuted,
+          color: theme.textNormal,
+          textDecoration: isDeadlinePast ? "line-through" : "none",
         }}
       >
-        Student: <strong>{student?.name ?? "N/A"}</strong>
+        Deadline:
+        {isDeadlinePast ? (
+          deadline.toLocaleDateString("en-GB")
+        ) : (
+          <strong style={{ fontWeight: 600 }}>
+            {deadline.toLocaleDateString("en-GB")}
+          </strong>
+        )}
       </Typography>
     </Box>
   );
 };
 
-ProjectListEntry.MenuButton = ({
+TaskListEntry.MenuButton = ({
   onEditButtonClick,
-  onArchiveButtonClick,
+  onDeleteButtonClick,
 }: {
   onEditButtonClick: () => void;
-  onArchiveButtonClick: () => void;
+  onDeleteButtonClick: () => void;
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -120,16 +139,16 @@ ProjectListEntry.MenuButton = ({
       <IconButton ref={buttonRef} onClick={() => setMenuOpen((prev) => !prev)}>
         <MoreVert fontSize="inherit" />
       </IconButton>
-      <ProjectListEntry.Menu
-        open={menuOpen}
+      <TaskListEntry.Menu
         anchorElement={buttonRef.current}
+        open={menuOpen}
         onClose={() => setMenuOpen(false)}
         onEditButtonClick={() => {
           onEditButtonClick();
           setMenuOpen(false);
         }}
-        onArchiveButtonClick={() => {
-          onArchiveButtonClick();
+        onDeleteButtonClick={() => {
+          onDeleteButtonClick();
           setMenuOpen(false);
         }}
       />
@@ -137,18 +156,18 @@ ProjectListEntry.MenuButton = ({
   );
 };
 
-ProjectListEntry.Menu = ({
+TaskListEntry.Menu = ({
   anchorElement,
   open,
   onClose,
   onEditButtonClick,
-  onArchiveButtonClick,
+  onDeleteButtonClick,
 }: {
   anchorElement: HTMLElement | null;
   open: boolean;
   onClose?: () => void;
   onEditButtonClick: () => void;
-  onArchiveButtonClick: () => void;
+  onDeleteButtonClick: () => void;
 }) => {
   return (
     <Menu
@@ -168,12 +187,12 @@ ProjectListEntry.Menu = ({
           <ListItemText>Edit</ListItemText>
         </MenuItem>
         <Divider />
-        <MenuItem onClick={onArchiveButtonClick}>
+        <MenuItem onClick={onDeleteButtonClick}>
           <ListItemIcon>
-            <Archive sx={{ fontSize: "1.2rem" }} color="error" />
+            <Delete sx={{ fontSize: "1.2rem" }} color="error" />
           </ListItemIcon>
           <ListItemText sx={{ color: "hsl(0, 96.80%, 36.90%)" }}>
-            Archive
+            Delete
           </ListItemText>
         </MenuItem>
       </MenuList>
