@@ -23,6 +23,7 @@ export function useProjectsMutation() {
         refetchType: "all",
         exact: true,
       });
+      queryClient.invalidateQueries({ queryKey: ["unsupervised-projects"] });
     },
     onError: (error) => {
       console.error("Project Mutation error", error);

@@ -3,6 +3,26 @@ import ky from "ky";
 import { user, origin } from "../temp";
 import type { Project } from "../types";
 
+export function useUnsupervisedProjectsQuery({
+  disabled,
+}: {
+  disabled?: boolean;
+}) {
+  return useQuery({
+    queryKey: ["unsupervised-projects"],
+    queryFn: async () => {
+      const response = await ky.get(`${origin}/api/projects`);
+      if (!response.ok)
+        throw new Error("Failed to fetch unsupervised projects");
+
+      const unsupervisedProjectData = (await response.json()) as Project[];
+      console.log("UPD: ", unsupervisedProjectData);
+      return unsupervisedProjectData;
+    },
+    enabled: disabled ? !disabled : true,
+  });
+}
+
 export function useProjectsQuery() {
   return useQuery({
     queryKey: ["projects"],
@@ -18,7 +38,11 @@ export function useProjectsQuery() {
   });
 }
 
-export function useSingleProjectQuery(projectID: string | number | undefined) {
+export function useSingleProjectQuery({
+  projectID,
+}: {
+  projectID: string | number | undefined;
+}) {
   return useQuery({
     queryKey: ["projects", projectID],
     queryFn: async () => {

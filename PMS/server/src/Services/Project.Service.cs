@@ -84,14 +84,27 @@ public class ProjectService
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<ProjectLookupDTO>> GetAllUnsupervisedProjects()
+    public async Task<IEnumerable<GetProjectDTO>> GetAllUnsupervisedProjects()
     {
         return await dbContext.Projects.Where(p =>
                 p.Supervisor == null)
-            .Select(p => new ProjectLookupDTO
+            .Select(p => new GetProjectDTO
             {
                 ProjectID = p.ProjectID,
                 Title = p.Title,
+                Status = p.Status,
+                Student = p.Student != null ? new UserLookupDTO
+                {
+                    UserID = p.Student.UserID,
+                    Name = p.Student.Name,
+                    Email = p.Student.Email
+                } : null,
+                Supervisor = p.Supervisor != null ? new UserLookupDTO
+                {
+                    UserID = p.Supervisor.UserID,
+                    Name = p.Supervisor.Name,
+                    Email = p.Supervisor.Email
+                } : null
             })
             .ToListAsync();
     }

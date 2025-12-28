@@ -1,23 +1,15 @@
+import { Edit, Archive, MoreVert } from "@mui/icons-material";
 import {
-  AddCircleOutline,
-  Archive,
-  Edit,
-  GroupAdd,
-  MoreVert,
-} from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  Divider,
-  IconButton,
-  ListItemIcon,
+  ListItem,
   ListItemText,
+  ListItemIcon,
+  IconButton,
   Menu,
   MenuItem,
-  MenuList,
   Typography,
+  Divider,
 } from "@mui/material";
-import { useRef, useState, type ReactNode, type RefObject } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { theme } from "../../lib/theme";
 import type { User } from "../../lib/types";
@@ -28,31 +20,29 @@ export default function ProjectListEntry({
   children?: ReactNode;
 }) {
   return (
-    <Box
+    <ListItem
       sx={{
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        padding: "10px 12px",
-        marginBottom: "8px",
-        background: "hsl(0,0%,99.5%)",
-        borderRadius: "8px",
-        borderWidth: "1px",
-        borderStyle: "solid",
-        borderColor: theme.borderNormal,
+        gap: 2,
+        p: "8px 16px",
+        mb: 1.5,
+        bgcolor: "hsl(0,0%,99.5%)",
+        borderRadius: 2,
+        border: "1px solid",
+        borderColor: theme.borderNormal || "divider",
         boxShadow: theme.shadowMuted,
-        transition:
-          "box-shadow 0.2s, border-color 0.2s, opacity 0.3s, transform 0.1s",
-        gap: "14px",
 
-        ":hover": {
-          borderColor: theme.borderNormal,
-          boxShadow: theme.shadowSoft,
+        transition: "all 0.2s ease-in-out",
+        "&:hover": {
+          borderColor: "primary.main",
+          boxShadow: theme.shadowSoft || 2,
         },
       }}
     >
       {children}
-    </Box>
+    </ListItem>
   );
 }
 
@@ -64,46 +54,38 @@ ProjectListEntry.Link = ({
   title: string;
   url: string;
   student?: User;
-}) => {
-  return (
-    <Box
-      sx={{
-        flexGrow: 1,
-        marginRight: "auto",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+}) => (
+  <ListItemText
+    sx={{ flexGrow: 1 }}
+    primary={
       <Link to={url} style={{ textDecoration: "none" }}>
         <Typography
+          variant="body1"
           component="span"
           sx={{
-            textDecoration: "none",
-            color: theme.link,
             fontWeight: 600,
-            fontSize: "1rem",
-            transition: "color 0.2s",
-            "&:hover": {
-              color: theme.linkFocused,
-              textDecoration: "underline",
-            },
+            color: theme.link || "primary.main",
+            "&:hover": { textDecoration: "underline" },
           }}
         >
           {title}
         </Typography>
       </Link>
+    }
+    secondary={
       <Typography
+        variant="body2"
         component="span"
-        sx={{
-          fontSize: "0.85rem",
-          color: theme.textMuted,
-        }}
+        sx={{ color: "text.secondary", mt: 0.5, display: "block" }}
       >
-        Student: <strong>{student?.name ?? "N/A"}</strong>
+        Student:{" "}
+        <strong style={{ color: "text.primary" }}>
+          {student?.name ?? "N/A"}
+        </strong>
       </Typography>
-    </Box>
-  );
-};
+    }
+  />
+);
 
 ProjectListEntry.MenuButton = ({
   onEditButtonClick,
@@ -112,71 +94,55 @@ ProjectListEntry.MenuButton = ({
   onEditButtonClick: () => void;
   onArchiveButtonClick: () => void;
 }) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleOpen = (e: React.MouseEvent<HTMLButtonElement>) =>
+    setAnchorEl(e.currentTarget);
+  const handleClose = () => setAnchorEl(null);
 
   return (
     <>
-      <IconButton ref={buttonRef} onClick={() => setMenuOpen((prev) => !prev)}>
-        <MoreVert fontSize="inherit" />
+      <IconButton onClick={handleOpen} size="small">
+        <MoreVert />
       </IconButton>
-      <ProjectListEntry.Menu
-        open={menuOpen}
-        anchorElement={buttonRef.current}
-        onClose={() => setMenuOpen(false)}
-        onEditButtonClick={() => {
-          onEditButtonClick();
-          setMenuOpen(false);
-        }}
-        onArchiveButtonClick={() => {
-          onArchiveButtonClick();
-          setMenuOpen(false);
-        }}
-      />
-    </>
-  );
-};
 
-ProjectListEntry.Menu = ({
-  anchorElement,
-  open,
-  onClose,
-  onEditButtonClick,
-  onArchiveButtonClick,
-}: {
-  anchorElement: HTMLElement | null;
-  open: boolean;
-  onClose?: () => void;
-  onEditButtonClick: () => void;
-  onArchiveButtonClick: () => void;
-}) => {
-  return (
-    <Menu
-      anchorEl={anchorElement}
-      open={open}
-      onClose={onClose}
-      anchorOrigin={{
-        horizontal: "right",
-        vertical: "top",
-      }}
-    >
-      <MenuList sx={{ padding: 0, borderRadius: "0.4rem" }}>
-        <MenuItem onClick={onEditButtonClick}>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      >
+        <MenuItem
+          onClick={() => {
+            onEditButtonClick();
+            handleClose();
+          }}
+          sx={{ minWidth: 120 }}
+        >
           <ListItemIcon>
-            <Edit sx={{ fontSize: "1.2rem" }} />
+            <Edit fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Edit</ListItemText>
+          <Typography variant="body2">Edit</Typography>
         </MenuItem>
+
         <Divider />
-        <MenuItem onClick={onArchiveButtonClick}>
+
+        <MenuItem
+          onClick={() => {
+            onArchiveButtonClick();
+            handleClose();
+          }}
+        >
           <ListItemIcon>
-            <Archive sx={{ fontSize: "1.2rem" }} color="error" />
+            <Archive fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText sx={{ color: "hsl(0, 96.80%, 36.90%)" }}>
+          <Typography variant="body2" color="error">
             Archive
-          </ListItemText>
+          </Typography>
         </MenuItem>
-      </MenuList>
-    </Menu>
+      </Menu>
+    </>
   );
 };

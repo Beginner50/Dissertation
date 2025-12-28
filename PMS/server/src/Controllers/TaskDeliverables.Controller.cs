@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PMS.DTOs;
 using PMS.Services;
 
 namespace PMS.Controllers;
@@ -59,6 +60,34 @@ public class TaskDeliverablesController : ControllerBase
         catch (Exception e)
         {
             return NotFound(e.Message);
+        }
+    }
+
+
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable")]
+    [HttpPost]
+    public async Task<IActionResult> UploadStagedDeliverable(
+        [FromRoute] long userID,
+        [FromRoute] long projectID,
+        [FromRoute] long taskID,
+        [FromBody] TaskDeliverableFileDTO taskDeliverableFileDTO
+    )
+    {
+        try
+        {
+            await taskDeliverableService.UploadDeliverable(
+                userID,
+                projectID,
+                taskID,
+                filename: taskDeliverableFileDTO.Filename,
+                fileData: taskDeliverableFileDTO.File,
+                contentType: taskDeliverableFileDTO.ContentType
+            );
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
         }
     }
 }

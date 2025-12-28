@@ -15,6 +15,22 @@ public class ProjectsController : ControllerBase
         this.projectService = projectService;
     }
 
+    [Route("/api/projects")]
+    [HttpGet]
+    public async Task<IActionResult> GetUnsupervisedProjects()
+    {
+        try
+        {
+
+            var projects = await projectService.GetAllUnsupervisedProjects();
+            return Ok(projects);
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
+    }
+
     [Route("api/users/{userID}/[controller]")]
     [HttpGet]
     public async Task<IActionResult> GetProjectsByUser(
@@ -28,7 +44,7 @@ public class ProjectsController : ControllerBase
         }
         catch (Exception e)
         {
-            return NotFound(e);
+            return NotFound(e.Message);
         }
     }
 
@@ -102,6 +118,24 @@ public class ProjectsController : ControllerBase
         catch (Exception e)
         {
             return Conflict(e);
+        }
+    }
+
+    [Route("api/users/{userID}/projects/{projectID}/join")]
+    [HttpPut]
+    public async Task<IActionResult> JoinProject(
+        [FromRoute] long userID,
+        [FromRoute] long projectID
+    )
+    {
+        try
+        {
+            await projectService.JoinProject(userID: userID, projectID: projectID); ;
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
         }
     }
 }

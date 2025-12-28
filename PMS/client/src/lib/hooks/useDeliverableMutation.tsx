@@ -1,10 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import ky from "ky";
 
-export function useTaskMutation() {
+export function useDeliverableMutation() {
   const queryClient = useQueryClient();
-
-  return useMutation({
+  const deliverableMutation = useMutation({
     mutationFn: async ({
       method,
       url,
@@ -20,11 +19,12 @@ export function useTaskMutation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["tasks"],
+        queryKey: ["deliverables"],
       });
     },
     onError: (error) => {
-      console.error("Task Mutation error", error);
+      console.error("Project Mutation error", error);
     },
   });
+  return deliverableMutation;
 }

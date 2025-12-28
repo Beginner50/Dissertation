@@ -2,13 +2,16 @@ import { ProjectList } from "../../components/project.components/project-list.co
 import { ReminderList } from "../../components/reminder-list.components/reminder-list.component";
 import type { Project, ProjectFormData } from "../../lib/types";
 import { origin, user } from "../../lib/temp";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import ProjectModal, {
-  type ProjectModalState,
+  type ModalState as ProjectModalState,
 } from "../../components/project.components/project-modal.component";
 import { useProjectsMutation } from "../../lib/hooks/useProjectsMutation";
-import { useProjectsQuery } from "../../lib/hooks/useProjectsQuery";
-import { Selector } from "../../components/project.components/project-selectors.component";
+import {
+  useProjectsQuery,
+  useUnsupervisedProjectsQuery,
+} from "../../lib/hooks/useProjectsQuery";
+import { Selector } from "../../components/base.components/selector.component";
 
 export default function DashboardProjectsRoute() {
   const [projectModalState, setProjectModalState] = useState<ProjectModalState>(
@@ -24,6 +27,8 @@ export default function DashboardProjectsRoute() {
 
   const projectMutation = useProjectsMutation();
   const { data: projects, isLoading: projectsLoading } = useProjectsQuery();
+  const { data: unsupervisedProjects, isLoading: unsupervisedProjectsLoading } =
+    useUnsupervisedProjectsQuery({ disabled: user.role !== "supervisor" });
 
   /* ---------------------------------------------------------------------------------- */
 
@@ -56,20 +61,18 @@ export default function DashboardProjectsRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const handleTitleChange = (title: string) => {
+  const handleTitleChange = useCallback((title: string) => {
     setProjectModalData((p) => ({ ...p, title: title }));
-  };
-
-  const handleDescriptionChange = (description: string) => {
+  }, []);
+  const handleDescriptionChange = useCallback((description: string) => {
     setProjectModalData((p) => ({
       ...p,
       description: description,
     }));
-  };
-
-  const handleSearchChange = (searchTerm: string) => {
+  }, []);
+  const handleSearchChange = useCallback((searchTerm: string) => {
     setProjectSearchTerm(searchTerm);
-  };
+  }, []);
 
   /* ---------------------------------------------------------------------------------- */
 
@@ -101,13 +104,18 @@ export default function DashboardProjectsRoute() {
   };
 
   const handleJoinProject = () => {
-    console.log("Join Project button clicked");
+    projectMutation.mutate({
+      method: "put",
+      url: `${origin}/api/users/${user.userID}/projects/${selectedProject?.projectID}/join`,
+      data: {},
+    });
     setSelectedProject(undefined);
+    setProjectModalState((p) => ({ ...p, open: false }));
   };
 
   /* ---------------------------------------------------------------------------------- */
 
-  const filteredProjects = projects?.filter(
+  const filteredProjects = unsupervisedProjects?.filter(
     (p) =>
       p.title.toLowerCase().includes(projectSearchTerm.toLowerCase()) ||
       p.student?.name.toLowerCase().includes(projectSearchTerm.toLowerCase())
@@ -168,11 +176,11 @@ export default function DashboardProjectsRoute() {
             />
             <ProjectModal.ProjectTitle
               title={projectModalData?.title ?? ""}
-              onTitleChange={handleTitleChange}
+              handleTitleChange={handleTitleChange}
             />
             <ProjectModal.ProjectDescription
               description={projectModalData?.description ?? ""}
-              onDescriptionChange={handleDescriptionChange}
+              handleDescriptionChange={handleDescriptionChange}
             />
           </ProjectModal.Fields>
         )}
@@ -184,11 +192,19 @@ export default function DashboardProjectsRoute() {
               searchTerm={projectSearchTerm}
               handleSearchChange={handleSearchChange}
             />
-            <Selector.ProjectList
-              selectedProject={selectedProject}
-              filteredProjects={filteredProjects}
-              handleSelectProject={handleSelectProject}
-            />
+            <Selector.List>
+              {filteredProjects && filteredProjects.length > 0 ? (
+                filteredProjects.map((p) => (
+                  <Selector.ProjectListEntry
+                    project={p}
+                    isSelected={p.projectID == selectedProject?.projectID}
+                    handleSelectProject={() => handleSelectProject(p)}
+                  />
+                ))
+              ) : (
+                <Selector.NotFound placeholder="No projects match your search" />
+              )}
+            </Selector.List>
           </Selector>
         )}
 

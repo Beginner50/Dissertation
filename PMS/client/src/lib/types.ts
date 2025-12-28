@@ -3,7 +3,6 @@ export type User = {
     role: string;
     name: string;
     email: string;
-    projectIDs?: number[];
 };
 
 export type Project = {
@@ -73,11 +72,9 @@ export interface Reminder {
     readStatus: "read" | "unread"
 }
 
-
 export interface DeliverableFile {
-    fileName: string;
-    url: string;
-    uploadedAt: string;
-    sizeLabel: string;
+    filename: string;
+    file: string,
+    contentType: string
 }
 

@@ -5,7 +5,8 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CommentIcon from "@mui/icons-material/Comment";
 import PolicyIcon from "@mui/icons-material/Policy";
 import SendIcon from "@mui/icons-material/Send";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import type { DeliverableFile } from "../../lib/types";
 
 export default function TaskActions({
   sx,
@@ -71,10 +72,12 @@ TaskActions.Header = ({ title }: { title: string }) => {
 };
 
 TaskActions.DeliverableUpload = ({
-  handleFileUploadClick,
+  handleFileUpload,
 }: {
-  handleFileUploadClick: () => void;
+  handleFileUpload: (file: File) => void;
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   return (
     <Box
       sx={{
@@ -92,19 +95,29 @@ TaskActions.DeliverableUpload = ({
           backgroundColor: "#f0f4f9",
         },
       }}
-      onClick={handleFileUploadClick}
+      onClick={() => fileInputRef.current?.click()}
     >
       <CloudUploadIcon sx={{ color: theme.link, fontSize: "2rem" }} />
       <Typography
         variant="body2"
         sx={{ color: theme.textNormal, fontWeight: 500, marginTop: "4px" }}
       >
-        Click or Drag to Upload Deliverable
+        Click to Upload Deliverable
       </Typography>
       <Typography variant="caption" sx={{ color: theme.textMuted }}>
-        Max file size: 100MB
+        File Type: .pdf
       </Typography>
-      <input type="file" hidden />
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e) => {
+          const file = e.currentTarget.files?.[0];
+          if (file) handleFileUpload(file);
+          e.target.value = "";
+        }}
+        hidden
+        accept=".pdf"
+      />
     </Box>
   );
 };

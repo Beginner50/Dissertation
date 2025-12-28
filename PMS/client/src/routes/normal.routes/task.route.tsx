@@ -1,19 +1,18 @@
 import FeedbackCriteriaTable from "../../components/task.components/feedback-criteria-table.component";
+import * as base64js from "base64-js";
 import TaskActions from "../../components/task.components/task-actions.component";
 import { TaskDetails } from "../../components/task.components/task-details.component";
 import { useEffect, useState } from "react";
 import DeliverableCard from "../../components/task.components/deliverable-card.component";
-import type {
-  Deliverable,
-  DeliverableFile,
-  FeedbackCriteria,
-  Task,
-} from "../../lib/types";
-import { useQuery } from "@tanstack/react-query";
-import ky from "ky";
+import type { DeliverableFile, FeedbackCriteria } from "../../lib/types";
 import { user, origin } from "../../lib/temp";
 import { useParams } from "react-router";
-import { TryOutlined } from "@mui/icons-material";
+import { useSingleTaskQuery } from "../../lib/hooks/useTasksQuery";
+import {
+  useStagedDeliverableQuery,
+  useSubmittedDeliverableQuery,
+} from "../../lib/hooks/useDeliverablesQuery";
+import { useDeliverableMutation } from "../../lib/hooks/useDeliverableMutation";
 
 export default function TaskRoute() {
   const [tempFeedbackCriteria, setTempFeedbackCriteria] = useState<
@@ -21,52 +20,29 @@ export default function TaskRoute() {
   >([]);
   const { projectID, taskID } = useParams();
 
-  const { data: task, isLoading: taskLoading } = useQuery({
-    queryKey: ["tasks", taskID],
-    queryFn: async () =>
-      (await ky
-        .get(
-          `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`
-        )
-        .json()) as Task,
-  });
+  const deliverableMutation = useDeliverableMutation();
 
-  const { data: submittedDeliverable, isLoading: submittedLoading } = useQuery({
-    queryKey: ["submitted-deliverable"],
-    queryFn: async () => {
-      try {
-        const response = await ky.get(
-          `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable`
-        );
-        const submittedDeliverable = (await response.json()) as Deliverable;
-        return submittedDeliverable;
-      } catch {
-        return null;
-      }
-    },
-    retry: 1,
+  const { data: task, isLoading: taskLoading } = useSingleTaskQuery({
+    projectID,
+    taskID,
   });
+  const { data: submittedDeliverable, isLoading: submittedLoading } =
+    useSubmittedDeliverableQuery({
+      projectID,
+      taskID,
+    });
+  const { data: stagedDeliverable, isLoading: stagedLoading } =
+    useStagedDeliverableQuery({
+      projectID,
+      taskID,
+      disabled: user.role != "student",
+    });
 
   useEffect(() => {
     setTempFeedbackCriteria(submittedDeliverable?.feedbackCriterias ?? []);
   }, [submittedDeliverable]);
 
-  const { data: stagedDeliverable, isLoading: stagedLoading } = useQuery({
-    queryKey: ["unsubmitted-deliverable"],
-    queryFn: async () => {
-      try {
-        const response = await ky.get(
-          `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`
-        );
-        const stagedDeliverable = (await response.json()) as Deliverable;
-        return stagedDeliverable;
-      } catch (e) {
-        return null;
-      }
-    },
-    enabled: user.role === "student",
-    retry: 1,
-  });
+  /* ---------------------------------------------------------------------------------- */
 
   const handleOverrideToggle = (id: number) => {
     setTempFeedbackCriteria((prev) => ({
@@ -87,15 +63,39 @@ export default function TaskRoute() {
     }));
   };
 
-  const handleFileUploadClick = () => {
-    console.log("Triggering file upload dialog...");
-  };
-
   const handleProvideFeedbackClick = () => {};
 
   const handleCheckComplianceClick = () => {};
 
   const handleSubmitDeliverableClick = () => {};
+
+  /* ---------------------------------------------------------------------------------- */
+
+  const handleFileUpload = async (file: File) => {
+    /*
+        file.arrayBuffer() returns the file contents as an ArrayBuffer, which is simply
+        a fixed length binary data buffer that cannot be manipulated.
+
+        Thus, by constructing a UInt8Array from the buffer, the contents can be manipulated,
+        and in that case, converted to base64 format that can be processed by the server.
+    */
+    const fileBytes = new Uint8Array(await file.arrayBuffer());
+    const base64File = base64js.fromByteArray(fileBytes);
+
+    const deliverableFile: DeliverableFile = {
+      filename: file.name,
+      file: base64File,
+      contentType: file.type,
+    };
+
+    deliverableMutation.mutate({
+      method: "post",
+      url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
+      data: deliverableFile,
+    });
+  };
+
+  /* ---------------------------------------------------------------------------------- */
 
   return (
     <>
@@ -148,27 +148,35 @@ export default function TaskRoute() {
             deliverable={stagedDeliverable}
           />
         ) : (
-          <TaskActions.DeliverableUpload
-            handleFileUploadClick={handleFileUploadClick}
-          />
+          user.role == "student" && (
+            <TaskActions.DeliverableUpload
+              handleFileUpload={handleFileUpload}
+            />
+          )
         )}
 
         <TaskActions.ActionButtonContainer>
-          <TaskActions.ProvideFeedbackButton
-            disabled={!submittedDeliverable}
-            handleProvideFeedbackClick={handleProvideFeedbackClick}
-          />
-          <TaskActions.CheckComplianceButton
-            disabled={!stagedDeliverable || tempFeedbackCriteria.length == 0}
-            handleCheckComplianceClick={handleCheckComplianceClick}
-          />
-          <TaskActions.SubmitDeliverableButton
-            disabled={
-              !stagedDeliverable ||
-              tempFeedbackCriteria.some((c) => c.status === "unmet")
-            }
-            handleSubmitDeliverableClick={handleSubmitDeliverableClick}
-          />
+          {user.role == "supervisor" && (
+            <TaskActions.ProvideFeedbackButton
+              disabled={!submittedDeliverable}
+              handleProvideFeedbackClick={handleProvideFeedbackClick}
+            />
+          )}
+          {user.role == "student" && (
+            <TaskActions.CheckComplianceButton
+              disabled={!stagedDeliverable || tempFeedbackCriteria.length == 0}
+              handleCheckComplianceClick={handleCheckComplianceClick}
+            />
+          )}
+          {user.role == "student" && (
+            <TaskActions.SubmitDeliverableButton
+              disabled={
+                !stagedDeliverable ||
+                tempFeedbackCriteria.some((c) => c.status === "unmet")
+              }
+              handleSubmitDeliverableClick={handleSubmitDeliverableClick}
+            />
+          )}
         </TaskActions.ActionButtonContainer>
       </TaskActions>
     </>

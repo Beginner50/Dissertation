@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { memo, useEffect, useState, type ReactNode } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -8,11 +8,12 @@ import {
   Stack,
   Alert,
   Button,
+  FormGroup,
+  FormControl,
 } from "@mui/material";
 
 export type ModalMode = "create" | "edit" | "join-project" | "archive";
-
-export type ProjectModalState = {
+export type ModalState = {
   mode: ModalMode;
   open: boolean;
 };
@@ -28,10 +29,10 @@ export default function ProjectModal({
     <Dialog
       fullWidth
       open={open}
-      style={{
-        maxWidth: "45vw",
-        marginLeft: "auto",
-        marginRight: "auto",
+      slotProps={{
+        paper: {
+          sx: { maxWidth: "45vw", mx: "auto" },
+        },
       }}
     >
       {children}
@@ -46,18 +47,20 @@ ProjectModal.Header = ({ mode }: { mode: ModalMode }) => {
     "join-project": "Join a Project",
     archive: "Archive Project",
   };
-  return <DialogTitle sx={{ fontWeight: "bold" }}>{titles[mode]}</DialogTitle>;
-};
-
-ProjectModal.Fields = ({ children }: { children: ReactNode }) => {
   return (
-    <DialogContent dividers>
-      <Stack spacing={2} sx={{ mt: 1 }}>
-        {children}
-      </Stack>
-    </DialogContent>
+    <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>
   );
 };
+
+ProjectModal.Fields = ({ children }: { children: ReactNode }) => (
+  <DialogContent dividers>
+    <FormGroup>
+      <Stack spacing={2.5} sx={{ mt: 1 }}>
+        {children}
+      </Stack>
+    </FormGroup>
+  </DialogContent>
+);
 
 ProjectModal.ProjectID = ({
   projectID,
@@ -65,62 +68,78 @@ ProjectModal.ProjectID = ({
 }: {
   projectID: number;
   visible: boolean;
-}) => {
-  if (visible)
-    return (
-      <TextField
-        label="Project ID"
-        value={projectID}
-        disabled
-        fullWidth
-        size="small"
-      />
-    );
-  else return <></>;
-};
+}) =>
+  visible ? (
+    <FormControl fullWidth>
+      <TextField label="Project ID" value={projectID} disabled size="small" />
+    </FormControl>
+  ) : null;
 
 ProjectModal.ProjectTitle = ({
   title,
-  onTitleChange,
+  handleTitleChange,
 }: {
   title: string;
-  onTitleChange: (title: string) => void;
+  handleTitleChange: (v: string) => void;
 }) => {
+  const [localValue, setLocalValue] = useState(title);
+
+  useEffect(() => {
+    setLocalValue(title);
+  }, [title]);
+
+  useEffect(() => {
+    if (title == "") handleTitleChange(localValue);
+  }, [localValue]);
+
   return (
-    <TextField
-      label="Title"
-      value={title}
-      onChange={(e) => onTitleChange(e.target.value)}
-      fullWidth
-      size="small"
-    />
+    <FormControl fullWidth>
+      <TextField
+        label="Title"
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={() => handleTitleChange(localValue)}
+        size="small"
+      />
+    </FormControl>
   );
 };
 
 ProjectModal.ProjectDescription = ({
   description,
-  onDescriptionChange,
+  handleDescriptionChange,
 }: {
   description: string;
-  onDescriptionChange: (description: string) => void;
+  handleDescriptionChange: (v: string) => void;
 }) => {
+  const [localValue, setLocalValue] = useState(description);
+
+  useEffect(() => {
+    setLocalValue(description);
+  }, [description]);
+
+  useEffect(() => {
+    if (description == "") handleDescriptionChange(localValue);
+  }, [localValue]);
+
   return (
-    <TextField
-      label="Description"
-      value={description}
-      onChange={(e) => onDescriptionChange(e.target.value)}
-      multiline
-      rows={3}
-      fullWidth
-      size="small"
-    />
+    <FormControl fullWidth>
+      <TextField
+        label="Description"
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={() => handleDescriptionChange(localValue)}
+        multiline
+        rows={3}
+        size="small"
+      />
+    </FormControl>
   );
 };
 
 ProjectModal.ArchiveWarning = () => (
-  <Alert severity="warning">
-    <strong>Warning:</strong> Archiving this project will remove it from the
-    list
+  <Alert severity="warning" variant="outlined" sx={{ fontWeight: "medium" }}>
+    Archiving this project will remove it from the list.
   </Alert>
 );
 
@@ -155,7 +174,7 @@ ProjectModal.Actions = ({
   };
 
   return (
-    <DialogActions sx={{ p: 2 }}>
+    <DialogActions sx={{ p: 2, px: 3 }}>
       <Button onClick={handleCancelClick} color="inherit">
         Cancel
       </Button>

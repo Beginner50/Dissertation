@@ -66,11 +66,11 @@ public class TaskDeliverableService
         return result;
     }
 
-    public async Task<GetTaskDeliverableFileDTO> GetStagedDeliverableFile(long userID, long projectID, long taskID)
+    public async Task<TaskDeliverableFileDTO> GetStagedDeliverableFile(long userID, long projectID, long taskID)
     {
         var result = await dbContext.Tasks
             .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID && t.Project.StudentID == userID)
-            .Select(t => t.StagedDeliverable != null ? new GetTaskDeliverableFileDTO
+            .Select(t => t.StagedDeliverable != null ? new TaskDeliverableFileDTO
             {
                 Filename = t.StagedDeliverable.Filename,
                 File = t.StagedDeliverable.File,
@@ -81,13 +81,13 @@ public class TaskDeliverableService
         return result;
     }
 
-    public async Task<GetTaskDeliverableFileDTO> GetSubmittedDeliverableFile(long userID, long projectID, long taskID)
+    public async Task<TaskDeliverableFileDTO> GetSubmittedDeliverableFile(long userID, long projectID, long taskID)
     {
         var result = await dbContext.Tasks.Where(t =>
                 t.ProjectTaskID == taskID &&
                     t.ProjectID == projectID &&
                      (t.Project.StudentID == userID || t.Project.SupervisorID == userID))
-            .Select(t => t.SubmittedDeliverable != null ? new GetTaskDeliverableFileDTO
+            .Select(t => t.SubmittedDeliverable != null ? new TaskDeliverableFileDTO
             {
                 Filename = t.SubmittedDeliverable.Filename,
                 File = t.SubmittedDeliverable.File,

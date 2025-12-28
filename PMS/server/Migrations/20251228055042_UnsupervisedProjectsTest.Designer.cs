@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PMS.DatabaseContext;
@@ -11,9 +12,11 @@ using PMS.DatabaseContext;
 namespace PMS.Migrations
 {
     [DbContext(typeof(PMSDbContext))]
-    partial class PMSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251228055042_UnsupervisedProjectsTest")]
+    partial class UnsupervisedProjectsTest
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -363,6 +366,9 @@ namespace PMS.Migrations
                     b.Property<long?>("StagedDeliverableID")
                         .HasColumnType("bigint");
 
+                    b.Property<long?>("StagingDeliverableID")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -378,7 +384,7 @@ namespace PMS.Migrations
 
                     b.HasIndex("ProjectID");
 
-                    b.HasIndex("StagedDeliverableID");
+                    b.HasIndex("StagingDeliverableID");
 
                     b.HasIndex("SubmittedDeliverableID");
 
@@ -561,24 +567,6 @@ namespace PMS.Migrations
                             Name = "Dr. Brown",
                             Password = "hashed_password",
                             Role = "supervisor"
-                        },
-                        new
-                        {
-                            UserID = 6L,
-                            Email = "agent@smith.com",
-                            IsDeleted = false,
-                            Name = "Agent Smith",
-                            Password = "hashed_password",
-                            Role = "student"
-                        },
-                        new
-                        {
-                            UserID = 7L,
-                            Email = "rebellius@uni.com",
-                            IsDeleted = false,
-                            Name = "Rebellius",
-                            Password = "hashed_password",
-                            Role = "student"
                         });
                 });
 
@@ -695,7 +683,7 @@ namespace PMS.Migrations
 
                     b.HasOne("PMS.Models.Deliverable", "StagedDeliverable")
                         .WithMany()
-                        .HasForeignKey("StagedDeliverableID");
+                        .HasForeignKey("StagingDeliverableID");
 
                     b.HasOne("PMS.Models.Deliverable", "SubmittedDeliverable")
                         .WithMany()

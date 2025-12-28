@@ -1,23 +1,22 @@
 import {
-  Box,
-  Divider,
-  IconButton,
-  ListItemIcon,
+  ListItem,
   ListItemText,
+  ListItemIcon,
+  IconButton,
   Menu,
   MenuItem,
-  MenuList,
   Typography,
+  Divider,
 } from "@mui/material";
+import { Edit, Delete, MoreVert } from "@mui/icons-material";
+import { useState, type ReactNode } from "react";
+import { Link } from "react-router";
 import { theme } from "../../lib/theme";
 import {
   CompletedVariant1,
   MissingVariant1,
   PendingVariant1,
 } from "../base.components/status-tags.component";
-import { Link } from "react-router";
-import { Delete, Edit, MoreVert } from "@mui/icons-material";
-import { useRef, useState, type ReactNode } from "react";
 
 export default function TaskListEntry({
   status,
@@ -26,39 +25,36 @@ export default function TaskListEntry({
   status: string;
   children?: ReactNode;
 }) {
+  const getStatusIcon = () => {
+    if (status === "completed") return <CompletedVariant1 />;
+    if (status === "missing") return <MissingVariant1 />;
+    return <PendingVariant1 />;
+  };
+
   return (
-    <Box
+    <ListItem
       sx={{
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        padding: "10px 12px",
-        marginBottom: "8px",
-        background: "hsl(0,0%,99.5%)",
-        borderRadius: "8px",
-        borderWidth: "1px",
-        borderStyle: "solid",
-        borderColor: theme.borderNormal,
+        p: "12px 16px",
+        mb: 1.5,
+        bgcolor: "hsl(0,0%,99.5%)",
+        borderRadius: 2,
+        border: "1px solid",
+        borderColor: theme.borderNormal || "divider",
         boxShadow: theme.shadowMuted,
-        transition:
-          "box-shadow 0.2s, border-color 0.2s, opacity 0.3s, transform 0.1s",
-        gap: "14px",
-
+        gap: 2,
+        transition: "all 0.2s ease-in-out",
         "&:hover": {
-          borderColor: theme.borderNormal,
+          borderColor: "primary.main",
           boxShadow: theme.shadowSoft,
         },
       }}
     >
-      {status === "completed" ? (
-        <CompletedVariant1 />
-      ) : status === "missing" ? (
-        <MissingVariant1 />
-      ) : (
-        <PendingVariant1 />
-      )}
+      {getStatusIcon()}
       {children}
-    </Box>
+    </ListItem>
   );
 }
 
@@ -76,51 +72,41 @@ TaskListEntry.Link = ({
     !Number.isNaN(deadline.getTime()) && deadline.getTime() < Date.now();
 
   return (
-    <Box
-      sx={{
-        flexGrow: 1,
-        marginRight: "auto",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <Link to={url} style={{ textDecoration: "none" }}>
+    <ListItemText
+      sx={{ m: 0 }}
+      primary={
+        <Link to={url} style={{ textDecoration: "none" }}>
+          <Typography
+            variant="body1"
+            component="span"
+            sx={{
+              fontWeight: 600,
+              color: theme.link || "primary.main",
+              "&:hover": { textDecoration: "underline" },
+            }}
+          >
+            {title}
+          </Typography>
+        </Link>
+      }
+      secondary={
         <Typography
+          variant="body2"
           component="span"
           sx={{
-            textDecoration: "none",
-            color: theme.link,
-            fontWeight: 600,
-            fontSize: "1rem",
-            transition: "color 0.2s",
-            "&:hover": {
-              color: theme.linkFocused,
-              textDecoration: "underline",
-            },
+            color: "text.secondary",
+            textDecoration: isDeadlinePast ? "line-through" : "none",
+            display: "block",
+            mt: 0.5,
           }}
         >
-          {title}
-        </Typography>
-      </Link>
-
-      <Typography
-        component="span"
-        sx={{
-          fontSize: "0.85rem",
-          color: theme.textNormal,
-          textDecoration: isDeadlinePast ? "line-through" : "none",
-        }}
-      >
-        Deadline:
-        {isDeadlinePast ? (
-          deadline.toLocaleDateString("en-GB")
-        ) : (
-          <strong style={{ fontWeight: 600 }}>
+          Deadline:{" "}
+          <strong style={{ fontWeight: isDeadlinePast ? 400 : 600 }}>
             {deadline.toLocaleDateString("en-GB")}
           </strong>
-        )}
-      </Typography>
-    </Box>
+        </Typography>
+      }
+    />
   );
 };
 
@@ -131,71 +117,55 @@ TaskListEntry.MenuButton = ({
   onEditButtonClick: () => void;
   onDeleteButtonClick: () => void;
 }) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleOpen = (e: React.MouseEvent<HTMLButtonElement>) =>
+    setAnchorEl(e.currentTarget);
+  const handleClose = () => setAnchorEl(null);
 
   return (
     <>
-      <IconButton ref={buttonRef} onClick={() => setMenuOpen((prev) => !prev)}>
-        <MoreVert fontSize="inherit" />
+      <IconButton onClick={handleOpen} size="small">
+        <MoreVert />
       </IconButton>
-      <TaskListEntry.Menu
-        anchorElement={buttonRef.current}
-        open={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        onEditButtonClick={() => {
-          onEditButtonClick();
-          setMenuOpen(false);
-        }}
-        onDeleteButtonClick={() => {
-          onDeleteButtonClick();
-          setMenuOpen(false);
-        }}
-      />
-    </>
-  );
-};
 
-TaskListEntry.Menu = ({
-  anchorElement,
-  open,
-  onClose,
-  onEditButtonClick,
-  onDeleteButtonClick,
-}: {
-  anchorElement: HTMLElement | null;
-  open: boolean;
-  onClose?: () => void;
-  onEditButtonClick: () => void;
-  onDeleteButtonClick: () => void;
-}) => {
-  return (
-    <Menu
-      anchorEl={anchorElement}
-      open={open}
-      onClose={onClose}
-      anchorOrigin={{
-        horizontal: "right",
-        vertical: "top",
-      }}
-    >
-      <MenuList sx={{ padding: 0, borderRadius: "0.4rem" }}>
-        <MenuItem onClick={onEditButtonClick}>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+      >
+        <MenuItem
+          onClick={() => {
+            onEditButtonClick();
+            handleClose();
+          }}
+          sx={{ minWidth: 120 }}
+        >
           <ListItemIcon>
-            <Edit sx={{ fontSize: "1.2rem" }} />
+            <Edit fontSize="small" />
           </ListItemIcon>
-          <ListItemText>Edit</ListItemText>
+          <Typography variant="body2">Edit</Typography>
         </MenuItem>
+
         <Divider />
-        <MenuItem onClick={onDeleteButtonClick}>
+
+        <MenuItem
+          onClick={() => {
+            onDeleteButtonClick();
+            handleClose();
+          }}
+        >
           <ListItemIcon>
-            <Delete sx={{ fontSize: "1.2rem" }} color="error" />
+            <Delete fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText sx={{ color: "hsl(0, 96.80%, 36.90%)" }}>
+          <Typography variant="body2" color="error">
             Delete
-          </ListItemText>
+          </Typography>
         </MenuItem>
-      </MenuList>
-    </Menu>
+      </Menu>
+    </>
   );
 };

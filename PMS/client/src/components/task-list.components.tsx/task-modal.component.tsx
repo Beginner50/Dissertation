@@ -1,3 +1,4 @@
+import { memo, useEffect, useState, type ReactNode } from "react";
 import {
   Alert,
   Button,
@@ -7,14 +8,16 @@ import {
   DialogTitle,
   Stack,
   TextField,
+  FormControl,
+  FormGroup,
 } from "@mui/material";
-import { type ReactNode } from "react";
 
 export type ModalMode = "create" | "edit" | "add-student" | "delete";
 export type ModalState = {
   mode: ModalMode;
   open: boolean;
 };
+
 export default function TaskModal({
   open,
   children,
@@ -25,12 +28,12 @@ export default function TaskModal({
   return (
     <Dialog
       fullWidth
-      style={{
-        maxWidth: "45vw",
-        marginLeft: "auto",
-        marginRight: "auto",
-      }}
       open={open}
+      slotProps={{
+        paper: {
+          sx: { maxWidth: "45vw", mx: "auto" },
+        },
+      }}
     >
       {children}
     </Dialog>
@@ -44,18 +47,20 @@ TaskModal.Header = ({ mode }: { mode: ModalMode }) => {
     delete: "Delete Task",
     "add-student": "Add Student",
   };
-  return <DialogTitle sx={{ fontWeight: "bold" }}>{titles[mode]}</DialogTitle>;
-};
-
-TaskModal.Fields = ({ children }: { children: ReactNode }) => {
   return (
-    <DialogContent dividers>
-      <Stack spacing={2} sx={{ mt: 1 }}>
-        {children}
-      </Stack>
-    </DialogContent>
+    <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>
   );
 };
+
+TaskModal.Fields = ({ children }: { children: ReactNode }) => (
+  <DialogContent dividers>
+    <FormGroup>
+      <Stack spacing={2.5} sx={{ mt: 1 }}>
+        {children}
+      </Stack>
+    </FormGroup>
+  </DialogContent>
+);
 
 TaskModal.TaskID = ({
   taskID,
@@ -63,35 +68,38 @@ TaskModal.TaskID = ({
 }: {
   taskID: number;
   visible: boolean;
-}) => {
-  if (visible)
-    return (
-      <TextField
-        label="Task ID"
-        value={taskID}
-        disabled
-        fullWidth
-        size="small"
-      />
-    );
-  else return <></>;
-};
+}) =>
+  visible ? (
+    <FormControl fullWidth>
+      <TextField label="Task ID" value={taskID} disabled size="small" />
+    </FormControl>
+  ) : null;
 
 TaskModal.TaskTitle = ({
   title,
   handleTitleChange,
 }: {
   title: string;
-  handleTitleChange: (title: string) => void;
+  handleTitleChange: (v: string) => void;
 }) => {
+  const [localValue, setLocalValue] = useState(title);
+
+  useEffect(() => setLocalValue(title), [title]);
+
+  useEffect(() => {
+    if (title == "") handleTitleChange(localValue);
+  }, [title]);
+
   return (
-    <TextField
-      label="Title"
-      value={title}
-      onChange={(e) => handleTitleChange(e.target.value)}
-      fullWidth
-      size="small"
-    />
+    <FormControl fullWidth>
+      <TextField
+        label="Title"
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={() => handleTitleChange(localValue)}
+        size="small"
+      />
+    </FormControl>
   );
 };
 
@@ -100,18 +108,28 @@ TaskModal.TaskDescription = ({
   handleDescriptionChange,
 }: {
   description: string;
-  handleDescriptionChange: (description: string) => void;
+  handleDescriptionChange: (v: string) => void;
 }) => {
+  const [localValue, setLocalValue] = useState(description);
+
+  useEffect(() => setLocalValue(description), [description]);
+
+  useEffect(() => {
+    if (description == "") handleDescriptionChange(localValue);
+  }, [localValue]);
+
   return (
-    <TextField
-      label="Description"
-      value={description}
-      onChange={(e) => handleDescriptionChange(e.target.value)}
-      multiline
-      rows={3}
-      fullWidth
-      size="small"
-    />
+    <FormControl fullWidth>
+      <TextField
+        label="Description"
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={() => handleDescriptionChange(localValue)}
+        multiline
+        rows={3}
+        size="small"
+      />
+    </FormControl>
   );
 };
 
@@ -122,40 +140,46 @@ TaskModal.DueDate = ({
   dueDate: string;
   handleDueDateChange: (dueDate: string) => void;
 }) => {
-  //   Due Date must be in ISO date format
   const datePart = dueDate.split("T")[0] ?? "";
   const timePart = dueDate.split("T")[1]?.slice(0, 5) ?? "00:00";
 
   return (
     <Stack direction="row" spacing={2}>
-      <TextField
-        label="Due Date"
-        type="date"
-        value={datePart}
-        onChange={(e) => handleDueDateChange(`${e.target.value}T${timePart}Z`)}
-        fullWidth
-        size="small"
-        slotProps={{
-          inputLabel: { shrink: true },
-          htmlInput: { min: new Date().toISOString().split("T")[0] },
-        }}
-      />
+      <FormControl fullWidth>
+        <TextField
+          label="Due Date"
+          type="date"
+          value={datePart}
+          onChange={(e) =>
+            handleDueDateChange(`${e.target.value}T${timePart}Z`)
+          }
+          size="small"
+          slotProps={{
+            inputLabel: { shrink: true },
+            htmlInput: { min: new Date().toISOString().split("T")[0] },
+          }}
+        />
+      </FormControl>
 
-      <TextField
-        label="Due Time"
-        type="time"
-        value={timePart}
-        onChange={(e) => handleDueDateChange(`${datePart}T${e.target.value}Z`)}
-        fullWidth
-        size="small"
-      />
+      <FormControl fullWidth>
+        <TextField
+          label="Due Time"
+          type="time"
+          value={timePart}
+          onChange={(e) =>
+            handleDueDateChange(`${datePart}T${e.target.value}Z`)
+          }
+          size="small"
+          slotProps={{ inputLabel: { shrink: true } }}
+        />
+      </FormControl>
     </Stack>
   );
 };
 
 TaskModal.DeleteWarning = () => (
-  <Alert severity="warning">
-    <strong>Warning:</strong> This task will be deleted
+  <Alert severity="warning" variant="outlined" sx={{ fontWeight: "medium" }}>
+    <strong>Warning:</strong> This task will be permanently deleted.
   </Alert>
 );
 
@@ -182,7 +206,6 @@ TaskModal.Actions = ({
     delete: "Delete",
     "add-student": "Add",
   };
-
   const actions = {
     create: handleCreateTask,
     edit: handleEditTask,
@@ -191,14 +214,14 @@ TaskModal.Actions = ({
   };
 
   return (
-    <DialogActions sx={{ p: 2 }}>
+    <DialogActions sx={{ p: 2, px: 3 }}>
       <Button onClick={handleCancelClick} color="inherit">
         Cancel
       </Button>
       <Button
         variant="contained"
         onClick={actions[mode]}
-        color={mode == "delete" ? "error" : "primary"}
+        color={mode === "delete" ? "error" : "primary"}
         disabled={disabled}
       >
         {labels[mode]}

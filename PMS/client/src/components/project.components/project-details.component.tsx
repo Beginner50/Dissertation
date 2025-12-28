@@ -1,38 +1,37 @@
 import {
-  Box,
+  Paper,
   Typography,
   Button,
+  Stack,
+  Divider,
   type SxProps,
   type Theme,
-  Divider,
 } from "@mui/material";
-import { theme } from "../../lib/theme";
-import type { Project, User } from "../../lib/types";
+import type { User } from "../../lib/types";
 import type { ReactNode } from "react";
 
 export function ProjectDetails({
   sx,
   children,
 }: {
-  sx?: SxProps<Theme> | undefined;
+  sx?: SxProps<Theme>;
   children?: ReactNode;
 }) {
   return (
-    <Box
+    <Paper
+      variant="outlined"
       sx={{
-        background: `rgba(255, 255, 255, 0.73)`,
-        borderRadius: "8px",
-        padding: "16px",
-        border: `1px solid ${theme.borderSoft || "#e5e7eb"}`,
-        boxShadow: theme.shadowMuted || "0 4px 12px rgba(17, 24, 39, 0.08)",
+        p: 3, // Increased padding for better breathability
+        borderRadius: 2,
+        bgcolor: "rgba(255, 255, 255, 0.73)",
         display: "flex",
         flexDirection: "column",
-        gap: "10px",
+        gap: 2, // Increased gap
         ...sx,
       }}
     >
       {children}
-    </Box>
+    </Paper>
   );
 }
 
@@ -44,46 +43,19 @@ ProjectDetails.Header = ({
   title: string;
   description: string;
   children?: ReactNode;
-}) => {
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "15px",
-        flexGrow: 1,
-      }}
-    >
-      <Typography
-        variant="h3"
-        component="h3"
-        sx={{
-          fontSize: "1.15rem",
-          fontWeight: 700,
-          color: "#0f172a",
-          margin: 0,
-          lineHeight: 1.2,
-        }}
-      >
-        {title}
-      </Typography>
+}) => (
+  <Stack spacing={1.5} sx={{ flexGrow: 1 }}>
+    <Typography variant="h5" component="h3" sx={{ fontWeight: 700 }}>
+      {title}
+    </Typography>
 
-      <Typography
-        component="p"
-        sx={{
-          margin: 0,
-          color: "#4b5563",
-          lineHeight: 1.5,
-          fontSize: "0.95rem",
-        }}
-      >
-        {description}
-      </Typography>
+    <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+      {description}
+    </Typography>
 
-      {children}
-    </Box>
-  );
-};
+    {children}
+  </Stack>
+);
 
 ProjectDetails.MemberInformation = ({
   student,
@@ -91,33 +63,28 @@ ProjectDetails.MemberInformation = ({
 }: {
   student?: User;
   supervisor?: User;
-}) => {
-  console.log("Student: ", student);
-
-  return (
-    <Box
-      sx={{
-        marginTop: "auto",
-        paddingTop: "10px",
-        borderTop: "1px dashed #eee",
-        display: "flex",
-        flexDirection: "column",
-        rowGap: "5px",
-      }}
-    >
-      <ProjectDetails.UserRow
-        role="Student"
-        name={student?.name ?? ""}
-        id={student?.userID ?? 0}
-      />
-      <ProjectDetails.UserRow
-        role="Supervisor"
-        name={supervisor?.name ?? ""}
-        id={supervisor?.userID ?? 0}
-      />
-    </Box>
-  );
-};
+}) => (
+  <Stack
+    spacing={1.5}
+    sx={{
+      mt: "auto",
+      pt: 2,
+      borderTop: "1px dashed",
+      borderColor: "divider",
+    }}
+  >
+    <ProjectDetails.UserRow
+      role="Student"
+      name={student?.name ?? "Unassigned"}
+      id={student?.userID ?? 0}
+    />
+    <ProjectDetails.UserRow
+      role="Supervisor"
+      name={supervisor?.name ?? "Unassigned"}
+      id={supervisor?.userID ?? 0}
+    />
+  </Stack>
+);
 
 ProjectDetails.UserRow = ({
   name,
@@ -127,112 +94,79 @@ ProjectDetails.UserRow = ({
   name: string;
   role: string;
   id: number;
-}) => {
-  return (
-    <Box
+}) => (
+  <Stack direction="row" justifyContent="space-between" alignItems="center">
+    {/* Moved from caption to body2 (14px) for better readability */}
+    <Typography variant="body2" sx={{ fontWeight: 600, minWidth: 100 }}>
+      {role}:
+    </Typography>
+
+    <Typography
+      variant="body2"
       sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        fontSize: "0.9rem",
+        flexGrow: 1,
+        mx: 1,
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        color: "text.primary",
       }}
     >
-      <Typography
-        component="span"
-        sx={{
-          fontWeight: 600,
-          color: "#333",
-          minWidth: "100px",
-          marginRight: "1rem",
-        }}
-      >
-        {role}:
-      </Typography>
+      {name}
+    </Typography>
 
-      <Typography
-        component="span"
-        sx={{
-          fontWeight: 400,
-          color: "#1f2937",
-          flexGrow: 1,
-          marginRight: "1rem",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-        }}
-      >
-        {name}
-      </Typography>
+    <Typography
+      variant="body2"
+      sx={{
+        fontFamily: "monospace",
+        color: "text.secondary",
+        fontWeight: 500,
+      }}
+    >
+      {id > 0 ? id : "N/A"}
+    </Typography>
+  </Stack>
+);
 
-      <Typography
-        component="span"
-        sx={{
-          textAlign: "right",
-          fontFamily: "monospace",
-          color: "#4b5563",
-          minWidth: "60px",
-        }}
-      >
-        {id}
-      </Typography>
-    </Box>
+ProjectDetails.Actions = ({ children }: { children?: ReactNode }) => (
+  <Stack spacing={1} sx={{ py: 1 }}>
+    <Divider />
+    {children}
+    <Divider />
+  </Stack>
+);
+
+ProjectDetails.GenerateProgressLogReportButton = ({
+  handleGenerateProgressLogReport,
+}: {
+  handleGenerateProgressLogReport: () => void;
+}) => {
+  return (
+    <Button
+      variant="contained"
+      onClick={handleGenerateProgressLogReport}
+      sx={{ textTransform: "none", py: 0.5 }}
+    >
+      Generate Progress Log Report
+    </Button>
   );
 };
 
-ProjectDetails.Actions = ({
-  handleGenerateProgressLogReport,
-  onAddStudent,
+ProjectDetails.AddStudentButton = ({
+  handleAddStudentClick,
   isStudentAssigned,
 }: {
-  handleGenerateProgressLogReport: () => void;
-  onAddStudent: () => void;
+  handleAddStudentClick: () => void;
   isStudentAssigned: boolean;
 }) => {
   return (
-    <>
-      <Divider />
-
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "8px",
-          paddingBottom: "10px",
-        }}
-      >
-        <Button
-          variant="contained"
-          size="small"
-          onClick={handleGenerateProgressLogReport}
-          sx={{
-            textTransform: "none",
-            width: "100%",
-            maxWidth: "300px",
-            padding: "6px 12px",
-          }}
-        >
-          Generate Progress Log Report
-        </Button>
-
-        <Button
-          variant="outlined"
-          size="small"
-          disabled={isStudentAssigned}
-          onClick={onAddStudent}
-          color="primary"
-          sx={{
-            textTransform: "none",
-            width: "100%",
-            maxWidth: "300px",
-            padding: "6px 12px",
-          }}
-        >
-          Add Student
-        </Button>
-      </Box>
-
-      <Divider />
-    </>
+    <Button
+      variant="outlined"
+      disabled={isStudentAssigned}
+      onClick={handleAddStudentClick}
+      sx={{ textTransform: "none", py: 0.5 }}
+    >
+      Add Student
+    </Button>
   );
 };

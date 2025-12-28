@@ -13,7 +13,7 @@ public class ProjectTask
     public required string Status { get; set; }
 
     public long? StagedDeliverableID { get; set; }
-    [ForeignKey("StagingDeliverableID")]
+    [ForeignKey("StagedDeliverableID")]
     public Deliverable? StagedDeliverable { get; set; }
 
     public long? SubmittedDeliverableID { get; set; }

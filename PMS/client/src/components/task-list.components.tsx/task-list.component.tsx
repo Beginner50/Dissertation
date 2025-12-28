@@ -1,84 +1,63 @@
 import {
-  Box,
+  Paper,
   Button,
   Divider,
   Typography,
+  Stack,
+  List,
   type SxProps,
   type Theme,
 } from "@mui/material";
-import { theme } from "../../lib/theme";
-import type { Task, TaskFormData } from "../../lib/types";
+import AddIcon from "@mui/icons-material/Add";
 import { type ReactNode } from "react";
+import type { Task, TaskFormData } from "../../lib/types";
 import TaskListEntry from "./task-list-entry.component";
+import { user } from "../../lib/temp";
 
 export function TaskList({
   children,
   sx,
 }: {
   children?: ReactNode;
-  sx?: SxProps<Theme> | undefined;
+  sx?: SxProps<Theme>;
 }) {
   return (
-    <Box
+    <Paper
+      variant="outlined"
       sx={{
-        padding: "1rem",
+        p: 2,
+        bgcolor: "background.paper",
+        borderRadius: 2,
         display: "flex",
         flexDirection: "column",
-        background: "white",
-        borderColor: theme.borderSoft,
-        borderRadius: "8px",
-        borderStyle: "solid",
-        borderWidth: "1px",
-        boxShadow: theme.shadowSoft,
         ...sx,
       }}
     >
       {children}
-    </Box>
+    </Paper>
   );
 }
 
-TaskList.Header = ({ children }: { children?: ReactNode }) => {
-  return (
-    <>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "12px",
-          paddingBottom: "0.5rem",
-        }}
-      >
-        <Typography
-          variant="h2"
-          sx={{
-            fontSize: "1.2rem",
-            fontFamily: "sans-serif",
-            fontWeight: 600,
-            color: "black",
-            margin: 0,
-            padding: "2px",
-            alignSelf: "end",
-          }}
-        >
-          Project Tasks
-        </Typography>
+TaskList.Header = ({ children }: { children?: ReactNode }) => (
+  <header>
+    <Stack
+      direction="row"
+      alignItems="center"
+      justifyContent="space-between"
+      spacing={2}
+      sx={{ mb: 1 }}
+    >
+      <Typography variant="h6" component="h2" sx={{ fontWeight: "bold" }}>
+        Project Tasks
+      </Typography>
 
-        <Box
-          sx={{
-            display: "flex",
-            gap: "10px",
-          }}
-        >
-          {children}
-        </Box>
-      </Box>
-
-      <Divider sx={{ marginBottom: "0.7rem" }} />
-    </>
-  );
-};
+      <Stack direction="row" spacing={1}>
+        {children}
+      </Stack>
+    </Stack>
+    <Divider sx={{ mb: 2 }} />
+  </header>
+);
 
 TaskList.List = ({
   projectID,
@@ -90,51 +69,47 @@ TaskList.List = ({
   tasks: Task[];
   handleEditTaskClick: (data: TaskFormData) => void;
   handleDeleteTaskClick: (data: TaskFormData) => void;
-}) => {
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      {tasks.map((task) => {
-        return (
-          <TaskListEntry key={task.taskID} status={task.status}>
-            <TaskListEntry.Link
-              title={task.title}
-              url={`/projects/${projectID}/tasks/${task.taskID}`}
-              dueDate={task.dueDate}
-            />
-            <TaskListEntry.MenuButton
-              onEditButtonClick={() =>
-                handleEditTaskClick({
-                  taskID: task.taskID,
-                  title: task.title,
-                  description: task.description,
-                  dueDate: task.dueDate,
-                })
-              }
-              onDeleteButtonClick={() => {
-                handleDeleteTaskClick({
-                  taskID: task.taskID,
-                  title: task.title,
-                  description: task.description,
-                  dueDate: task.dueDate,
-                });
-              }}
-            />
-          </TaskListEntry>
-        );
-      })}
-    </Box>
-  );
-};
+}) => (
+  <List disablePadding>
+    {tasks.map((task) => (
+      <TaskListEntry key={task.taskID} status={task.status}>
+        <TaskListEntry.Link
+          title={task.title}
+          url={`/projects/${projectID}/tasks/${task.taskID}`}
+          dueDate={task.dueDate}
+        />
+        {user.role == "supervisor" && (
+          <TaskListEntry.MenuButton
+            onEditButtonClick={() =>
+              handleEditTaskClick({
+                taskID: task.taskID,
+                title: task.title,
+                description: task.description,
+                dueDate: task.dueDate,
+              })
+            }
+            onDeleteButtonClick={() =>
+              handleDeleteTaskClick({
+                taskID: task.taskID,
+                title: task.title,
+                description: task.description,
+                dueDate: task.dueDate,
+              })
+            }
+          />
+        )}
+      </TaskListEntry>
+    ))}
+  </List>
+);
 
-TaskList.CreateTaskButton = ({ onClick }: { onClick: () => void }) => {
-  return (
-    <Button variant="contained" onClick={onClick}>
-      Create Task
-    </Button>
-  );
-};
+TaskList.CreateTaskButton = ({ onClick }: { onClick: () => void }) => (
+  <Button
+    variant="contained"
+    startIcon={<AddIcon />}
+    onClick={onClick}
+    disableElevation
+  >
+    Create Task
+  </Button>
+);

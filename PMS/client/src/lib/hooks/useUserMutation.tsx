@@ -1,9 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import ky from "ky";
 
-export function useTaskMutation() {
+export function useUserMutation() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({
       method,
@@ -20,11 +19,14 @@ export function useTaskMutation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["tasks"],
+        queryKey: ["users"],
+        refetchType: "all",
+        exact: true,
       });
+      queryClient.invalidateQueries({ queryKey: ["unsupervised-users"] });
     },
     onError: (error) => {
-      console.error("Task Mutation error", error);
+      console.error("User Mutation error", error);
     },
   });
 }

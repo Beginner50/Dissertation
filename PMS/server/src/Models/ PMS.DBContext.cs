@@ -105,6 +105,22 @@ public class PMSDbContext : DbContext
                 Email = "brown@uni.com",
                 Password = "hashed_password",
                 Role = "supervisor"
+            },
+            new User
+            {
+                UserID = 6,
+                Name = "Agent Smith",
+                Email = "agent@smith.com",
+                Password = "hashed_password",
+                Role = "student"
+            },
+            new User
+            {
+                UserID = 7,
+                Name = "Rebellius",
+                Email = "rebellius@uni.com",
+                Password = "hashed_password",
+                Role = "student"
             }
         );
 
@@ -134,6 +150,24 @@ public class PMSDbContext : DbContext
                 Status = "active",
                 StudentID = 4,
                 SupervisorID = 5
+            },
+            new Project
+            {
+                ProjectID = 4,
+                Title = "Compiler Optimization",
+                Description = "Optimize an existing compiler",
+                Status = "active",
+                StudentID = 3,
+                SupervisorID = null
+            },
+            new Project
+            {
+                ProjectID = 5,
+                Title = "Augmented Virtual Reality",
+                Description = "Develop an augmented virtual reality application",
+                Status = "active",
+                StudentID = 1,
+                SupervisorID = null
             }
         );
 
