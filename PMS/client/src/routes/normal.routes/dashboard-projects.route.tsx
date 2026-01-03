@@ -1,5 +1,5 @@
 import { ProjectList } from "../../components/project.components/project-list.component";
-import { ReminderList } from "../../components/reminder-list.components/reminder-list.component";
+import { ReminderList } from "../../components/notification-reminder.components/reminder-list.component";
 import type { Project, ProjectFormData } from "../../lib/types";
 import { origin, user } from "../../lib/temp";
 import { useCallback, useState } from "react";
@@ -12,8 +12,15 @@ import {
   useUnsupervisedProjectsQuery,
 } from "../../lib/hooks/useProjectsQuery";
 import { Selector } from "../../components/base.components/selector.component";
+import { useRemindersQuery } from "../../lib/hooks/useRemindersQuery";
+import { SlidingActivityCard } from "../../components/base.components/sliding-activity-card.component";
+import { NotificationList } from "../../components/notification-reminder.components/notification-list.component";
+import { UNSAFE_getPatchRoutesOnNavigationFunction } from "react-router";
+import { useNotificationsQuery } from "../../lib/hooks/useNotificationsQuery";
 
 export default function DashboardProjectsRoute() {
+  const [step, setStep] = useState(0);
+
   const [projectModalState, setProjectModalState] = useState<ProjectModalState>(
     { mode: "create", open: false }
   );
@@ -29,6 +36,12 @@ export default function DashboardProjectsRoute() {
   const { data: projects, isLoading: projectsLoading } = useProjectsQuery();
   const { data: unsupervisedProjects, isLoading: unsupervisedProjectsLoading } =
     useUnsupervisedProjectsQuery({ disabled: user.role !== "supervisor" });
+
+  const { data: reminders, isLoading: remindersLoading } = useRemindersQuery({
+    userID: user.userID,
+  });
+  const { data: notifications, isLoading: notificationsLoading } =
+    useNotificationsQuery({ userID: user.userID });
 
   /* ---------------------------------------------------------------------------------- */
 
@@ -156,12 +169,29 @@ export default function DashboardProjectsRoute() {
         )}
       </ProjectList>
 
-      {/* Reminder List */}
-      <ReminderList
-        sx={{
-          flexGrow: 1,
-        }}
-      />
+      <SlidingActivityCard>
+        {/* Arrows need to know the state to hide/show and triggers to change it */}
+        <SlidingActivityCard.Arrows
+          activeStep={step}
+          onBack={() => setStep(0)}
+          onNext={() => setStep(1)}
+        />
+
+        {/* Content wraps your lists and slides them based on step */}
+        <SlidingActivityCard.Content activeStep={step}>
+          <ReminderList
+            reminders={reminders ?? []}
+            sx={{ border: "none", boxShadow: "none" }}
+          />
+          <NotificationList
+            notifications={notifications ?? []}
+            sx={{ border: "none", boxShadow: "none" }}
+          />
+        </SlidingActivityCard.Content>
+
+        {/* Dots only need to know where we are */}
+        <SlidingActivityCard.Pagination activeStep={step} />
+      </SlidingActivityCard>
 
       {/* Project Modal */}
       <ProjectModal open={projectModalState.open}>

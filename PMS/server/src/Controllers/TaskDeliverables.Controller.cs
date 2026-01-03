@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PMS.DTOs;
+using PMS.Lib;
 using PMS.Services;
 
 namespace PMS.Controllers;
@@ -82,6 +83,52 @@ public class TaskDeliverablesController : ControllerBase
                 filename: taskDeliverableFileDTO.Filename,
                 fileData: taskDeliverableFileDTO.File,
                 contentType: taskDeliverableFileDTO.ContentType
+            );
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable")]
+    [HttpDelete]
+    public async Task<IActionResult> RemoveStagedDeliverable(
+           [FromRoute] long userID,
+           [FromRoute] long projectID,
+           [FromRoute] long taskID
+       )
+    {
+        try
+        {
+            await taskDeliverableService.RemoveStagedDeliverable(
+                userID,
+                projectID,
+                taskID
+            );
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable/submit")]
+    [HttpPost]
+    public async Task<IActionResult> SubmitStagedDeliverable(
+           [FromRoute] long userID,
+           [FromRoute] long projectID,
+           [FromRoute] long taskID
+       )
+    {
+        try
+        {
+            await taskDeliverableService.SubmitStagedDeliverable(
+                userID,
+                projectID,
+                taskID
             );
             return Ok();
         }

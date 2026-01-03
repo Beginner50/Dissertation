@@ -18,12 +18,8 @@ export function useUserMutation() {
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["users"],
-        refetchType: "all",
-        exact: true,
-      });
-      queryClient.invalidateQueries({ queryKey: ["unsupervised-users"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
     onError: (error) => {
       console.error("User Mutation error", error);

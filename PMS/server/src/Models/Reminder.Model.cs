@@ -5,9 +5,8 @@ namespace PMS.Models;
 public class Reminder
 {
     public long ReminderID { get; set; }
-    public required DateTime RemindAt { get; set; }
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-
+    public DateTime? RemindAt { get; set; }
+    public required string Type { get; set; }
     public required string Message { get; set; }
 
     public required long RecipientID { get; set; }

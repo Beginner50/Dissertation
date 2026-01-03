@@ -29,6 +29,7 @@ public class PMSDbContext : DbContext
     public DbSet<Project> Projects { get; set; }
     public DbSet<Meeting> Meetings { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
     public DbSet<ProgressLogEntry> ProgressLogEntries { get; set; }
     public DbSet<ProjectTask> Tasks { get; set; }
     public DbSet<Deliverable> Deliverables { get; set; }
@@ -337,5 +338,100 @@ public class PMSDbContext : DbContext
             }
         );
 
+        modelBuilder.Entity<Reminder>().HasData(
+    // Upcoming Reminders for Alice (ID 1)
+    new Reminder
+    {
+        ReminderID = 1,
+        RecipientID = 1,
+        Type = "meeting",
+        Message = "Prepare for Dissertation Review",
+        RemindAt = new DateTime(2026, 1, 4, 9, 0, 0, DateTimeKind.Utc), // Tomorrow 9 AM
+        MeetingID = 1,
+        TaskID = null
+    },
+    new Reminder
+    {
+        ReminderID = 2,
+        RecipientID = 1,
+        Type = "task",
+        Message = "Finalize Dataset Collection draft",
+        RemindAt = new DateTime(2026, 1, 4, 14, 0, 0, DateTimeKind.Utc), // Tomorrow 2 PM
+        MeetingID = null,
+        TaskID = 2
+    },
+
+    // Upcoming Reminders for Dr. Smith (ID 2)
+    new Reminder
+    {
+        ReminderID = 3,
+        RecipientID = 2,
+        Type = "meeting",
+        Message = "Review OCR Research with Hashim",
+        RemindAt = new DateTime(2026, 1, 5, 10, 0, 0, DateTimeKind.Utc), // Jan 5th
+        MeetingID = 7,
+        TaskID = null
+    },
+
+    // Upcoming Reminders for Hashim (ID 3)
+    new Reminder
+    {
+        ReminderID = 4,
+        RecipientID = 3,
+        Type = "task",
+        Message = "Compare Tesseract vs EasyOCR",
+        RemindAt = new DateTime(2026, 1, 4, 08, 30, 0, DateTimeKind.Utc), // Tomorrow 8:30 AM (Nearest)
+        MeetingID = null,
+        TaskID = 4
+    }
+);
+
+        modelBuilder.Entity<Notification>().HasData(
+            // Past Notifications for Alice (ID 1)
+            new Notification
+            {
+                NotificationID = 1,
+                RecipientID = 1,
+                Type = "meeting_accepted",
+                Description = "Dr. Smith accepted your meeting request.",
+                Timestamp = new DateTime(2025, 12, 30, 15, 45, 0, DateTimeKind.Utc),
+                MeetingID = 3,
+                TaskID = null
+            },
+            new Notification
+            {
+                NotificationID = 2,
+                RecipientID = 1,
+                Type = "task_completed",
+                Description = "Literature Review has been marked as completed.",
+                Timestamp = new DateTime(2025, 12, 28, 10, 0, 0, DateTimeKind.Utc),
+                MeetingID = null,
+                TaskID = 1
+            },
+
+            // Past Notifications for Dr. Smith (ID 2)
+            new Notification
+            {
+                NotificationID = 3,
+                RecipientID = 2,
+                Type = "task_updated",
+                Description = "Hashim updated 'Initial Prototype' details.",
+                Timestamp = new DateTime(2026, 1, 1, 11, 20, 0, DateTimeKind.Utc),
+                MeetingID = null,
+                TaskID = 5
+            },
+
+            // Past Notifications for Charlie (ID 4)
+            new Notification
+            {
+                NotificationID = 4,
+                RecipientID = 4,
+                Type = "meeting_booked",
+                Description = "Dr. Brown scheduled a new meeting.",
+                Timestamp = new DateTime(2026, 1, 2, 09, 0, 0, DateTimeKind.Utc),
+                MeetingID = 9,
+                TaskID = null
+            }
+        );
     }
 }

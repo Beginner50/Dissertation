@@ -33,6 +33,7 @@ services:
       - POSTGRES_DB=pms
       - POSTGRES_HOST=postgres
       - ASPNETCORE_URLS=http://+:5081
+      - GOOGLE_API_KEY=AIzaSyCGh8eE8PH9bD_JeeJ6UY2x_qDrM_HgDmk
     depends_on:
       postgres:
         condition: service_healthy
@@ -44,7 +45,7 @@ services:
           initial_sync: true
     ports:
       - "5081:5081"
-
+    
   react:
     profiles:
       - development

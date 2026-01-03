@@ -130,7 +130,44 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            await projectService.JoinProject(userID: userID, projectID: projectID); ;
+            await projectService.JoinProject(userID, projectID); ;
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [Route("api/users/{userID}/projects/{projectID}/add-student/{studentID}")]
+    [HttpPut]
+    public async Task<IActionResult> AddStudentToProject(
+            [FromRoute] long userID,
+            [FromRoute] long projectID,
+            [FromRoute] long studentID
+        )
+    {
+        try
+        {
+            await projectService.AssignStudentToProject(userID, projectID, studentID); ;
+            return Ok();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [Route("api/users/{userID}/projects/{projectID}/progress-log")]
+    [HttpGet]
+    public async Task<IActionResult> GenerateProgressLogReport(
+        [FromRoute] long userID,
+        [FromRoute] long projectID
+    )
+    {
+        try
+        {
+            await projectService.GenerateProgressLogReport(userID, projectID);
             return Ok();
         }
         catch (Exception e)

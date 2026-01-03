@@ -5,7 +5,7 @@ import type { User } from "../types";
 
 export function useUnsupervisedStudentsQuery() {
   return useQuery({
-    queryKey: ["unsupervised-students"],
+    queryKey: ["users", "unsupervised"],
     queryFn: async () => {
       const response = await ky.get(`${origin}/api/users`);
       if (!response.ok) throw new Error("Could not fetch users");

@@ -188,4 +188,9 @@ public class ProjectService
 
         await dbContext.SaveChangesAsync();
     }
+
+    public async Task GenerateProgressLogReport(long userID, long projectID)
+    {
+
+    }
 }

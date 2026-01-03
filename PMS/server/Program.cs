@@ -5,14 +5,15 @@ using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using PMS.DatabaseContext;
 using PMS.Services;
+using Google.GenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.AddConsole();
+
 // --- 1. SERVICE REGISTRATION ---
 
-// Register native .NET 9 OpenAPI support
 builder.Services.AddOpenApi();
-
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -25,6 +26,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.Configure<RouteOptions>(options =>
     options.LowercaseUrls = true);
+
+
 
 /*
 Instructs the web application to extract the JWT from the bearer header of the
@@ -85,8 +88,12 @@ builder.Services.AddScoped<TaskDeliverableService>();
 builder.Services.AddScoped<FeedbackService>();
 builder.Services.AddScoped<MeetingService>();
 builder.Services.AddScoped<ReminderService>();
+builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<ProgressLogService>();
 builder.Services.AddSingleton<TokenService>();
+
+// Add the Google AI Sdk Gemini Client 
+builder.Services.AddSingleton<Client>();
 
 // Database Context Registration
 builder.Services.AddDbContext<PMSDbContext>();
@@ -124,22 +131,17 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Development-specific tools
+// API endpoint Testing
 if (app.Environment.IsDevelopment())
 {
-    // Generates the OpenAPI v1.json file
     app.MapOpenApi();
-
-    // Modern UI for testing the API (accessible at http://localhost:5081/scalar/v1)
     app.MapScalarApiReference();
 }
 else
 {
-    // Production security
     app.UseHttpsRedirection();
 }
 
-// Map endpoints
 app.MapControllers();
 
 app.Run();

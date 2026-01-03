@@ -19,7 +19,7 @@ export function useDeliverableMutation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["deliverables"],
+        queryKey: ["deliverable"],
       });
     },
     onError: (error) => {

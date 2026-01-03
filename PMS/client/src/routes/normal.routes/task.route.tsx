@@ -1,9 +1,9 @@
-import FeedbackCriteriaTable from "../../components/task.components/feedback-criteria-table.component";
+import FeedbackCriteriaTable from "../../components/feedback.components/feedback-criteria-table.component";
 import * as base64js from "base64-js";
-import TaskActions from "../../components/task.components/task-actions.component";
-import { TaskDetails } from "../../components/task.components/task-details.component";
+import TaskActions from "../../components/task.components.tsx/task-actions.component";
+import { TaskDetails } from "../../components/task.components.tsx/task-details.component";
 import { useEffect, useState } from "react";
-import DeliverableCard from "../../components/task.components/deliverable-card.component";
+import DeliverableCard from "../../components/task.components.tsx/deliverable-card.component";
 import type { DeliverableFile, FeedbackCriteria } from "../../lib/types";
 import { user, origin } from "../../lib/temp";
 import { useParams } from "react-router";
@@ -13,11 +13,16 @@ import {
   useSubmittedDeliverableQuery,
 } from "../../lib/hooks/useDeliverablesQuery";
 import { useDeliverableMutation } from "../../lib/hooks/useDeliverableMutation";
+import FeedbackModal from "../../components/feedback.components/feedback-criteria-modal.component";
 
 export default function TaskRoute() {
-  const [tempFeedbackCriteria, setTempFeedbackCriteria] = useState<
-    FeedbackCriteria[]
-  >([]);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState<boolean>(false);
+  const [feedbackComplianceLoading, setFeedbackComplianceLoading] =
+    useState<boolean>(false);
+
+  const [tableCriteria, setTableCriteria] = useState<FeedbackCriteria[]>([]);
+  const [modalCriteria, setModalCriteria] = useState<FeedbackCriteria[]>([]);
+
   const { projectID, taskID } = useParams();
 
   const deliverableMutation = useDeliverableMutation();
@@ -39,35 +44,37 @@ export default function TaskRoute() {
     });
 
   useEffect(() => {
-    setTempFeedbackCriteria(submittedDeliverable?.feedbackCriterias ?? []);
+    const criteria = submittedDeliverable?.feedbackCriterias ?? [];
+    setTableCriteria(criteria);
+    setModalCriteria(criteria);
   }, [submittedDeliverable]);
 
   /* ---------------------------------------------------------------------------------- */
 
   const handleOverrideToggle = (id: number) => {
-    setTempFeedbackCriteria((prev) => ({
-      ...prev,
-      feedbackCriteria: prev.map((criterion: FeedbackCriteria) => {
+    setTableCriteria((prev) =>
+      prev.map((criterion) => {
         if (criterion.feedbackCriteriaID !== id) return criterion;
 
-        if (criterion.status === "unmet") {
-          return { ...criterion, status: "overridden" };
-        }
-
-        if (criterion.status === "overridden") {
-          return { ...criterion, status: "unmet" };
-        }
-
-        return criterion;
-      }),
-    }));
+        return {
+          ...criterion,
+          status: criterion.status === "unmet" ? "overridden" : "unmet",
+        };
+      })
+    );
   };
-
-  const handleProvideFeedbackClick = () => {};
-
-  const handleCheckComplianceClick = () => {};
-
-  const handleSubmitDeliverableClick = () => {};
+  const handleAddCriterion = () => {
+    setModalCriteria((prev) => [
+      ...prev,
+      { feedbackCriteriaID: 0, description: "", status: "unmet" },
+    ]);
+  };
+  const handleCancelClick = () => {
+    setFeedbackModalOpen(false);
+  };
+  const handleProvideFeedbackClick = () => {
+    setFeedbackModalOpen(true);
+  };
 
   /* ---------------------------------------------------------------------------------- */
 
@@ -95,6 +102,56 @@ export default function TaskRoute() {
     });
   };
 
+  const handleSubmitDeliverable = () => {
+    deliverableMutation.mutate({
+      method: "post",
+      url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable/submit`,
+      data: {},
+    });
+  };
+
+  const handleRemoveStagedDeliverable = () => {
+    deliverableMutation.mutate({
+      method: "delete",
+      url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
+      data: {},
+    });
+  };
+
+  const handleSubmitFeedback = () => {
+    const filteredCriteria = modalCriteria.filter(
+      (c) => c.description.trim() !== ""
+    );
+
+    deliverableMutation.mutate(
+      {
+        method: "post",
+        url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback`,
+        data: filteredCriteria,
+      },
+      {
+        onSuccess: () => setFeedbackModalOpen(false),
+      }
+    );
+  };
+
+  const handleCheckFeedbackCompliance = () => {
+    if (!feedbackComplianceLoading) {
+      setFeedbackComplianceLoading(true);
+      deliverableMutation.mutate(
+        {
+          method: "post",
+          url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/compliance-check`,
+          data: {},
+        },
+        {
+          onSuccess: () => setFeedbackComplianceLoading(false),
+          onError: () => setFeedbackComplianceLoading(false),
+        }
+      );
+    }
+  };
+
   /* ---------------------------------------------------------------------------------- */
 
   return (
@@ -118,9 +175,9 @@ export default function TaskRoute() {
           <TaskDetails.Description>{task?.description}</TaskDetails.Description>
         </TaskDetails.Content>
 
-        {tempFeedbackCriteria.length > 0 && (
+        {tableCriteria.length > 0 && (
           <FeedbackCriteriaTable
-            criteria={tempFeedbackCriteria}
+            criteria={tableCriteria}
             onOverrideToggle={handleOverrideToggle}
           />
         )}
@@ -146,6 +203,7 @@ export default function TaskRoute() {
             cardDescription="Staged Deliverable"
             url={`${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`}
             deliverable={stagedDeliverable}
+            onRemove={handleRemoveStagedDeliverable}
           />
         ) : (
           user.role == "student" && (
@@ -159,26 +217,46 @@ export default function TaskRoute() {
           {user.role == "supervisor" && (
             <TaskActions.ProvideFeedbackButton
               disabled={!submittedDeliverable}
-              handleProvideFeedbackClick={handleProvideFeedbackClick}
+              onClick={handleProvideFeedbackClick}
             />
           )}
           {user.role == "student" && (
             <TaskActions.CheckComplianceButton
-              disabled={!stagedDeliverable || tempFeedbackCriteria.length == 0}
-              handleCheckComplianceClick={handleCheckComplianceClick}
+              disabled={
+                !stagedDeliverable ||
+                tableCriteria.filter((c) => c.status == "unmet").length == 0
+              }
+              onClick={handleCheckFeedbackCompliance}
+              isLoading={feedbackComplianceLoading}
             />
           )}
           {user.role == "student" && (
             <TaskActions.SubmitDeliverableButton
               disabled={
                 !stagedDeliverable ||
-                tempFeedbackCriteria.some((c) => c.status === "unmet")
+                tableCriteria.some((c) => c.status === "unmet")
               }
-              handleSubmitDeliverableClick={handleSubmitDeliverableClick}
+              onClick={handleSubmitDeliverable}
             />
           )}
         </TaskActions.ActionButtonContainer>
       </TaskActions>
+
+      <FeedbackModal open={feedbackModalOpen}>
+        <FeedbackModal.Header />
+        <FeedbackModal.Content>
+          <FeedbackModal.CriteriaList
+            criteria={modalCriteria}
+            onUpdateCriteria={setModalCriteria}
+          />
+          <FeedbackModal.AddButton onAdd={handleAddCriterion} />
+        </FeedbackModal.Content>
+        <FeedbackModal.Actions
+          onCancel={handleCancelClick}
+          onSubmit={handleSubmitFeedback}
+          disabled={modalCriteria.every((c) => c.description.trim() === "")}
+        />
+      </FeedbackModal>
     </>
   );
 }

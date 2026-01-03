@@ -1,15 +1,10 @@
+using System.CodeDom;
+using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
+using PMS.DTOs;
 using PMS.Models;
 
 namespace PMS.Services;
-
-public enum ReminderType
-{
-    MEETING_BOOKED,
-    MEETING_CANCELLED,
-    MEETING_ACCEPTED,
-    MEETING_REJECTED
-}
 
 public class ReminderService
 {
@@ -19,43 +14,127 @@ public class ReminderService
         this.dbContext = dbContext;
     }
 
-    public void CreateMeetingReminder(Meeting meeting, ReminderType reminderType)
+    public async Task<IEnumerable<ReminderDTO>> GetAllReminders(long userID)
     {
-        Reminder newReminder;
-        switch (reminderType)
-        {
-            case ReminderType.MEETING_BOOKED:
-                newReminder = new Reminder
-                {
-                    Message = $"{meeting.Organizer.Name} has booked a meeting with you.",
-                    RemindAt = meeting.Start,
-                    RecipientID = meeting.AttendeeID,
-                    MeetingID = meeting.MeetingID,
-                };
-                break;
-            case ReminderType.MEETING_CANCELLED:
-                newReminder = new Reminder
-                {
-                    Message = $"{meeting.Organizer.Name} has cancelled a meeting with you.",
-                    RemindAt = meeting.Start,
-                    RecipientID = meeting.AttendeeID,
-                    MeetingID = meeting.MeetingID,
-                };
-                break;
-            case ReminderType.MEETING_ACCEPTED:
-                break;
-            case ReminderType.MEETING_REJECTED:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(reminderType), reminderType, null);
-        }
+        var reminders = await dbContext.Reminders
+                        .Where(r => r.RecipientID == userID)
+                        .ToListAsync();
+
+        var expiredReminders = reminders.Where(r => r.RemindAt < DateTime.UtcNow).ToList();
+        dbContext.RemoveRange(expiredReminders);
+
+        await dbContext.SaveChangesAsync();
+
+        return reminders.Where(r => r.RemindAt > DateTime.UtcNow)
+                        .OrderBy(r => r.RemindAt)
+                        .Select(r => new ReminderDTO
+                        {
+                            ReminderID = r.ReminderID,
+                            Type = r.Type,
+                            RemindAt = r.RemindAt,
+                            Message = r.Message,
+                            RecipientID = r.RecipientID,
+                        })
+                        .ToList();
     }
 
-    public void DeleteMeetingReminders(long meetingID)
+    public async Task CreateMeetingReminder(long meetingID)
     {
-        var reminders = dbContext.Reminders
-                        .Where(r => r.MeetingID == meetingID);
-        dbContext.Reminders.RemoveRange(reminders);
-        dbContext.SaveChanges();
+        var meeting = await dbContext.Meetings.Where(m => m.MeetingID == meetingID)
+                                              .Include(m => m.Organizer)
+                                              .Include(m => m.Attendee)
+                                              .FirstOrDefaultAsync()
+                                              ?? throw new UnauthorizedAccessException("Meeting Not Found!");
+
+
+        var meetingReminder = new Reminder
+        {
+            Message = $"{meeting.Organizer.Name} has booked a meeting with you.",
+            RemindAt = meeting.Start,
+            Type = "meeting",
+            RecipientID = meeting.AttendeeID,
+            MeetingID = meeting.MeetingID,
+        };
+        await dbContext.AddAsync(meetingReminder);
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task UpdateMeetingReminder(long meetingID)
+    {
+        var meeting = await dbContext.Meetings
+                        .Where(m => m.MeetingID == meetingID)
+                        .FirstOrDefaultAsync()
+                        ?? throw new Exception("Meeting Not Found!");
+        var reminder = await dbContext.Reminders
+                        .Where(r => r.MeetingID == meetingID)
+                        .FirstOrDefaultAsync()
+                        ?? throw new Exception("Reminder Not Found!");
+
+        reminder.RemindAt = meeting.Start;
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task DeleteMeetingReminder(long meetingID)
+    {
+        var reminder = await dbContext.Reminders
+                        .Where(r => r.MeetingID == meetingID).FirstOrDefaultAsync()
+                        ?? throw new Exception("Reminder Not Found!");
+
+        dbContext.Reminders.Remove(reminder);
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task CreateTaskReminder(long taskID)
+    {
+
+        var task = await dbContext.Tasks.Where(t => t.ProjectTaskID == taskID)
+                                        .Include(t => t.Project)
+                                            .ThenInclude(p => p.Supervisor)
+                                        .Include(t => t.Project)
+                                            .ThenInclude(p => p.Student)
+                                        .FirstOrDefaultAsync()
+                                        ?? throw new UnauthorizedAccessException("Task Not Found!");
+
+
+        if (task.Project.StudentID != null)
+        {
+            var taskNotification = new Reminder
+            {
+                Message = $"{task.Project.Supervisor.Name} has created a new task: {task.Title}",
+                RemindAt = task.DueDate,
+                Type = "task",
+                RecipientID = (long)task.Project.StudentID,
+                TaskID = task.ProjectTaskID,
+            };
+            await dbContext.AddAsync(taskNotification);
+        }
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task UpdateTaskReminder(long taskID)
+    {
+        var task = await dbContext.Tasks.Where(t => t.ProjectTaskID == taskID)
+                                        .FirstOrDefaultAsync()
+                                        ?? throw new Exception("Task Not Found!");
+        var reminder = await dbContext.Reminders.Where(r => r.TaskID == taskID)
+                                                .FirstOrDefaultAsync()
+                                                ?? throw new Exception("Reminder Not Found");
+
+        reminder.RemindAt = task.DueDate;
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task DeleteTaskReminder(long taskID)
+    {
+        var reminder = await dbContext.Reminders.Where(r => r.TaskID == taskID)
+                                                .FirstOrDefaultAsync()
+                                                ?? throw new Exception("Reminder Not Found");
+        dbContext.Remove(reminder);
+
+        await dbContext.SaveChangesAsync();
     }
 }

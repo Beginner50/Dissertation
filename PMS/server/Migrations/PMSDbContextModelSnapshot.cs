@@ -48,6 +48,10 @@ namespace PMS.Migrations
                     b.Property<long>("SubmittedByID")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("TableOfContent")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<long>("TaskID")
                         .HasColumnType("bigint");
 
@@ -221,6 +225,83 @@ namespace PMS.Migrations
                             ProjectID = 3L,
                             Start = new DateTime(2025, 12, 24, 10, 0, 0, 0, DateTimeKind.Utc),
                             Status = "accepted"
+                        });
+                });
+
+            modelBuilder.Entity("PMS.Models.Notification", b =>
+                {
+                    b.Property<long>("NotificationID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("NotificationID"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long?>("MeetingID")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("RecipientID")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("TaskID")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("NotificationID");
+
+                    b.HasIndex("MeetingID");
+
+                    b.HasIndex("RecipientID");
+
+                    b.HasIndex("TaskID");
+
+                    b.ToTable("Notifications");
+
+                    b.HasData(
+                        new
+                        {
+                            NotificationID = 1L,
+                            Description = "Dr. Smith accepted your meeting request.",
+                            MeetingID = 3L,
+                            RecipientID = 1L,
+                            Timestamp = new DateTime(2025, 12, 30, 15, 45, 0, 0, DateTimeKind.Utc),
+                            Type = "meeting_accepted"
+                        },
+                        new
+                        {
+                            NotificationID = 2L,
+                            Description = "Literature Review has been marked as completed.",
+                            RecipientID = 1L,
+                            TaskID = 1L,
+                            Timestamp = new DateTime(2025, 12, 28, 10, 0, 0, 0, DateTimeKind.Utc),
+                            Type = "task_completed"
+                        },
+                        new
+                        {
+                            NotificationID = 3L,
+                            Description = "Hashim updated 'Initial Prototype' details.",
+                            RecipientID = 2L,
+                            TaskID = 5L,
+                            Timestamp = new DateTime(2026, 1, 1, 11, 20, 0, 0, DateTimeKind.Utc),
+                            Type = "task_updated"
+                        },
+                        new
+                        {
+                            NotificationID = 4L,
+                            Description = "Dr. Brown scheduled a new meeting.",
+                            MeetingID = 9L,
+                            RecipientID = 4L,
+                            Timestamp = new DateTime(2026, 1, 2, 9, 0, 0, 0, DateTimeKind.Utc),
+                            Type = "meeting_booked"
                         });
                 });
 
@@ -465,14 +546,15 @@ namespace PMS.Migrations
                     b.Property<long>("RecipientID")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("RemindAt")
+                    b.Property<DateTime?>("RemindAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<long?>("TaskID")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("ReminderID");
 
@@ -483,6 +565,44 @@ namespace PMS.Migrations
                     b.HasIndex("TaskID");
 
                     b.ToTable("Reminders");
+
+                    b.HasData(
+                        new
+                        {
+                            ReminderID = 1L,
+                            MeetingID = 1L,
+                            Message = "Prepare for Dissertation Review",
+                            RecipientID = 1L,
+                            RemindAt = new DateTime(2026, 1, 4, 9, 0, 0, 0, DateTimeKind.Utc),
+                            Type = "meeting"
+                        },
+                        new
+                        {
+                            ReminderID = 2L,
+                            Message = "Finalize Dataset Collection draft",
+                            RecipientID = 1L,
+                            RemindAt = new DateTime(2026, 1, 4, 14, 0, 0, 0, DateTimeKind.Utc),
+                            TaskID = 2L,
+                            Type = "task"
+                        },
+                        new
+                        {
+                            ReminderID = 3L,
+                            MeetingID = 7L,
+                            Message = "Review OCR Research with Hashim",
+                            RecipientID = 2L,
+                            RemindAt = new DateTime(2026, 1, 5, 10, 0, 0, 0, DateTimeKind.Utc),
+                            Type = "meeting"
+                        },
+                        new
+                        {
+                            ReminderID = 4L,
+                            Message = "Compare Tesseract vs EasyOCR",
+                            RecipientID = 3L,
+                            RemindAt = new DateTime(2026, 1, 4, 8, 30, 0, 0, DateTimeKind.Utc),
+                            TaskID = 4L,
+                            Type = "task"
+                        });
                 });
 
             modelBuilder.Entity("PMS.Models.User", b =>
@@ -645,6 +765,29 @@ namespace PMS.Migrations
                     b.Navigation("Organizer");
 
                     b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("PMS.Models.Notification", b =>
+                {
+                    b.HasOne("PMS.Models.Meeting", "Meeting")
+                        .WithMany()
+                        .HasForeignKey("MeetingID");
+
+                    b.HasOne("PMS.Models.User", "Recipient")
+                        .WithMany()
+                        .HasForeignKey("RecipientID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PMS.Models.ProjectTask", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskID");
+
+                    b.Navigation("Meeting");
+
+                    b.Navigation("Recipient");
+
+                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("PMS.Models.ProgressLogEntry", b =>

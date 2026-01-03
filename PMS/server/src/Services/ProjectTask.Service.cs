@@ -1,15 +1,19 @@
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
 using PMS.DTOs;
+using PMS.Models;
 
 namespace PMS.Services;
 
 public class ProjectTaskService
 {
+    protected readonly ReminderService reminderService;
     protected readonly PMSDbContext dbContext;
-    public ProjectTaskService(PMSDbContext dbContext)
+    public ProjectTaskService(PMSDbContext dbContext, ReminderService reminderService)
     {
         this.dbContext = dbContext;
+        this.reminderService = reminderService;
     }
 
     public async Task<GetProjectTaskDTO> GetProjectTask(long userID, long projectID, long taskID)
@@ -71,25 +75,40 @@ public class ProjectTaskService
         }).OrderByDescending(t => t.DueDate);
     }
 
-    public async Task<Models.ProjectTask> CreateProjectTask(long userID, long projectID, CreateProjectTaskDTO dto)
+    public async Task<ProjectTask> CreateProjectTask(long userID, long projectID, CreateProjectTaskDTO dto)
     {
         var project = await dbContext.Projects.Where(p =>
                 p.ProjectID == projectID && p.SupervisorID == userID)
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Project Not Found!");
 
-        var newTask = new Models.ProjectTask
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
-            Title = dto.Title,
-            Description = dto.Description,
-            DueDate = dto.DueDate,
-            ProjectID = projectID,
-            Status = "pending",
-        };
+            try
+            {
+                var newTask = new ProjectTask
+                {
+                    Title = dto.Title,
+                    Description = dto.Description,
+                    DueDate = dto.DueDate,
+                    ProjectID = projectID,
+                    Status = "pending",
+                };
 
-        dbContext.Tasks.Add(newTask);
-        await dbContext.SaveChangesAsync();
-        return newTask;
+                dbContext.Tasks.Add(newTask);
+                await dbContext.SaveChangesAsync();
+
+                await reminderService.CreateTaskReminder(newTask.ProjectTaskID);
+                await transaction.CommitAsync();
+
+                return newTask;
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 
     public async Task EditProjectTask(long userID, long projectID, long taskID, EditProjectTaskDTO dto)
@@ -98,23 +117,53 @@ public class ProjectTaskService
             t.ProjectTaskID == taskID && t.ProjectID == projectID && t.Project.SupervisorID == userID)
             ?? throw new KeyNotFoundException("Unauthorized Access or Task Not Found.");
 
-        task.Title = dto.Title;
-        task.Description = dto.Description;
-        task.DueDate = dto.DueDate;
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
+        {
+            try
+            {
+                task.Title = dto.Title;
+                task.Description = dto.Description;
+                task.DueDate = dto.DueDate;
 
-        if (task.DueDate < DateTime.UtcNow && task.Status.Equals("pending"))
-            task.Status = "missing";
+                if (task.DueDate < DateTime.UtcNow && task.Status.Equals("pending"))
+                    task.Status = "missing";
 
-        await dbContext.SaveChangesAsync();
+                await dbContext.SaveChangesAsync();
+
+                await reminderService.UpdateTaskReminder(task.ProjectTaskID);
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 
     public async Task DeleteProjectTask(long userID, long projectID, long taskID)
     {
+
         var task = await dbContext.Tasks.FirstOrDefaultAsync(t =>
             t.ProjectTaskID == taskID && t.ProjectID == projectID && t.Project.SupervisorID == userID)
             ?? throw new KeyNotFoundException("Unauthorized Access or Task Not Found.");
 
-        dbContext.Remove(task);
-        await dbContext.SaveChangesAsync();
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
+        {
+            try
+            {
+                dbContext.Remove(task);
+                await dbContext.SaveChangesAsync();
+
+                await reminderService.DeleteTaskReminder(task.ProjectTaskID);
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 }

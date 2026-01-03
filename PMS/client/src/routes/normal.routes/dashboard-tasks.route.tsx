@@ -1,18 +1,20 @@
 import { ProjectDetails } from "../../components/project.components/project-details.component";
-import { TaskList } from "../../components/task-list.components.tsx/task-list.component";
+import { TaskList } from "../../components/task.components.tsx/task-list.component";
 import { user, origin } from "../../lib/temp";
 import { useParams } from "react-router";
 import type { TaskFormData, User } from "../../lib/types";
 import { useCallback, useState } from "react";
 import TaskModal, {
   type ModalState,
-} from "../../components/task-list.components.tsx/task-modal.component";
+} from "../../components/task.components.tsx/task-modal.component";
 import { useSingleProjectQuery } from "../../lib/hooks/useProjectsQuery";
 import { useTaskMutation } from "../../lib/hooks/useTaskMutation";
 import { useTasksQuery } from "../../lib/hooks/useTasksQuery";
 import { Selector } from "../../components/base.components/selector.component";
 import { useUserMutation } from "../../lib/hooks/useUserMutation";
 import { useUnsupervisedStudentsQuery } from "../../lib/hooks/useUsersQuery";
+import { useProjectsMutation } from "../../lib/hooks/useProjectsMutation";
+import { useMutation } from "@tanstack/react-query";
 
 export default function DashboardTasksRoute() {
   const [taskModalState, setTaskModalState] = useState<ModalState>({
@@ -122,7 +124,14 @@ export default function DashboardTasksRoute() {
     setTaskModalState((t) => ({ ...t, open: false }));
   };
 
-  const handleAddStudent = () => {};
+  const handleAddStudent = () => {
+    userMutation.mutate({
+      method: "put",
+      url: `${origin}/api/users/${user.userID}/projects/${projectID}/add-student/${selectedStudent?.userID}`,
+      data: {},
+    });
+    setTaskModalState((t) => ({ ...t, open: false }));
+  };
 
   const handleGenerateProgressLogReport = () => {};
 

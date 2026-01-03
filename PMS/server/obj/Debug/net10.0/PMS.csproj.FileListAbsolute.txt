@@ -187,3 +187,16 @@
 /home/jatooUOM/Desktop/Dissertation/PMS/server/obj/Debug/net10.0/ref/PMS.dll
 /home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/Scalar.AspNetCore.dll
 /home/jatooUOM/Desktop/Dissertation/PMS/server/obj/Debug/net10.0/PMS.sourcelink.json
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/UglyToad.PdfPig.Core.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/UglyToad.PdfPig.DocumentLayoutAnalysis.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/UglyToad.PdfPig.Fonts.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/UglyToad.PdfPig.Package.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/UglyToad.PdfPig.Tokenization.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/UglyToad.PdfPig.Tokens.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/UglyToad.PdfPig.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/Google.Apis.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/Google.Apis.Auth.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/Google.Apis.Core.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/Google.GenAI.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/System.Management.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/runtimes/win/lib/net7.0/System.Management.dll

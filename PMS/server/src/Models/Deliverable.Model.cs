@@ -8,6 +8,9 @@ public class Deliverable
     public required string Filename { get; set; }
     public required byte[] File { get; set; }
     public required string ContentType { get; set; }
+
+    [Column(TypeName = "text")]
+    public string TableOfContent { get; set; }
     public DateTime SubmissionTimestamp { get; set; } = DateTime.UtcNow;
 
     public required long TaskID { get; set; }

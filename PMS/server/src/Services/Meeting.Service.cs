@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
@@ -9,9 +10,11 @@ namespace PMS.Services;
 public class MeetingService
 {
     protected readonly PMSDbContext dbContext;
-    public MeetingService(PMSDbContext dbContext)
+    protected readonly ReminderService reminderService;
+    public MeetingService(PMSDbContext dbContext, ReminderService reminderService)
     {
         this.dbContext = dbContext;
+        this.reminderService = reminderService;
     }
 
     public async Task<Meeting?> GetMeeting(long meetingID)
@@ -82,22 +85,36 @@ public class MeetingService
         string? description, DateTime start, DateTime end
     )
     {
-        var newMeeting = new Meeting
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
-            ProjectID = projectID,
-            OrganizerID = organizerID,
-            AttendeeID = attendeeID,
-            Description = description,
-            Start = start,
-            End = end,
-            Status = "pending"
-        };
-        dbContext.Meetings.Add(entity: newMeeting);
+            try
+            {
+                var newMeeting = new Meeting
+                {
+                    ProjectID = projectID,
+                    OrganizerID = organizerID,
+                    AttendeeID = attendeeID,
+                    Description = description,
+                    Start = start,
+                    End = end,
+                    Status = "pending"
+                };
+                dbContext.Meetings.Add(entity: newMeeting);
 
+                await dbContext.SaveChangesAsync();
 
-        await dbContext.SaveChangesAsync();
+                await reminderService.CreateMeetingReminder(newMeeting.MeetingID);
 
-        return newMeeting;
+                await transaction.CommitAsync();
+
+                return newMeeting;
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 
     public async Task EditMeetingDescription(
@@ -117,39 +134,83 @@ public class MeetingService
 
     public async Task CancelMeeting(long organizerID, long meetingID)
     {
-        var meeting = await dbContext.Meetings.Where(m =>
-            m.MeetingID == meetingID &&
-                m.OrganizerID == organizerID)
-            .FirstOrDefaultAsync()
-            ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
+        {
+            try
+            {
+                var meeting = await dbContext.Meetings.Where(m =>
+                    m.MeetingID == meetingID &&
+                        m.OrganizerID == organizerID)
+                    .FirstOrDefaultAsync()
+                    ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
-        dbContext.Remove(meeting);
-        await dbContext.SaveChangesAsync();
+                dbContext.Remove(meeting);
+                await dbContext.SaveChangesAsync();
+
+                await reminderService.DeleteMeetingReminder(meeting.MeetingID);
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 
     public async Task AcceptMeeting(long attendeeID, long meetingID)
     {
-        var meeting = await dbContext.Meetings.Where(m =>
-            m.MeetingID == meetingID &&
-                m.AttendeeID == attendeeID)
-            .FirstOrDefaultAsync()
-            ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
+        {
+            try
+            {
+                var meeting = await dbContext.Meetings.Where(m =>
+                    m.MeetingID == meetingID &&
+                        m.AttendeeID == attendeeID)
+                    .FirstOrDefaultAsync()
+                    ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
 
-        meeting.Status = "accepted";
-        await dbContext.SaveChangesAsync();
+                meeting.Status = "accepted";
+                await dbContext.SaveChangesAsync();
+
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 
     public async Task RejectMeeting(long attendeeID, long meetingID)
     {
-        var meeting = await dbContext.Meetings.Where(m =>
-          m.MeetingID == meetingID &&
-              m.AttendeeID == attendeeID)
-          .FirstOrDefaultAsync()
-          ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
+        {
+            try
+            {
+                var meeting = await dbContext.Meetings.Where(m =>
+                  m.MeetingID == meetingID &&
+                      m.AttendeeID == attendeeID)
+                  .FirstOrDefaultAsync()
+                  ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
 
-        dbContext.Remove(meeting);
-        await dbContext.SaveChangesAsync();
+                dbContext.Remove(meeting);
+                await dbContext.SaveChangesAsync();
+
+                await reminderService.DeleteMeetingReminder(meeting.MeetingID);
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 }

@@ -117,7 +117,7 @@ ProjectList.List = ({
           </ProjectListEntry>
         ))
       ) : (
-        <Typography variant="body1" color="text.secondary" sx={{ py: 2 }}>
+        <Typography variant="body1" color="textSecondary" sx={{ py: 2 }}>
           You are not a member of any projects yet.
         </Typography>
       )}

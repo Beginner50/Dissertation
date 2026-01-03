@@ -1,6 +1,9 @@
+using System.Text.Json;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
 using PMS.DTOs;
+using PMS.Lib;
 using PMS.Models;
 
 namespace PMS.Services;
@@ -9,12 +12,18 @@ namespace PMS.Services;
 public class TaskDeliverableService
 {
     protected readonly PMSDbContext dbContext;
-    protected readonly FeedbackService feedbackService;
+    protected readonly ReminderService reminderService;
+    protected readonly ILogger<TaskDeliverableService> logger;
 
-    public TaskDeliverableService(PMSDbContext dbContext, FeedbackService feedbackService)
+    public TaskDeliverableService(
+        PMSDbContext dbContext,
+        ReminderService reminderService,
+        ILogger<TaskDeliverableService> logger
+    )
     {
         this.dbContext = dbContext;
-        this.feedbackService = feedbackService;
+        this.reminderService = reminderService;
+        this.logger = logger;
     }
 
     public async Task<GetTaskDeliverablesDTO> GetStagedDeliverable(long userID, long projectID, long taskID)
@@ -25,6 +34,7 @@ public class TaskDeliverableService
             {
                 DeliverableID = t.StagedDeliverable.DeliverableID,
                 Filename = t.StagedDeliverable.Filename,
+                TableOfContent = t.StagedDeliverable.TableOfContent,
                 SubmissionTimestamp = t.StagedDeliverable.SubmissionTimestamp,
                 SubmittedBy = new UserLookupDTO
                 {
@@ -113,12 +123,15 @@ public class TaskDeliverableService
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
 
+        var toc = contentType.Contains("pdf") ? PDFUtils.GenerateTableOfContent(fileData) : "";
+
         var deliverable = new Deliverable
         {
             File = fileData,
             Filename = filename,
             ContentType = contentType,
             SubmissionTimestamp = DateTime.UtcNow,
+            TableOfContent = toc,
             TaskID = taskID,
             SubmittedByID = userID
         };
@@ -142,6 +155,7 @@ public class TaskDeliverableService
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
 
+
         if (task.StagedDeliverable == null)
             throw new InvalidOperationException("Staged Deliverable Not Found!");
 
@@ -164,26 +178,49 @@ public class TaskDeliverableService
                         t.Project.StudentID == userID)
                 .Include(t => t.StagedDeliverable)
                 .Include(t => t.SubmittedDeliverable)
+                    .ThenInclude(submittedDeliverable => submittedDeliverable.FeedbackCriterias)
                 .FirstOrDefaultAsync()
                 ?? throw new UnauthorizedAccessException("Unauthorized or Task Not Found.");
+
 
         if (task.StagedDeliverable == null)
             throw new InvalidOperationException("Staged Deliverable Not Found!");
 
-        if (task.SubmittedDeliverable != null &&
-                task.SubmittedDeliverable.FeedbackCriterias.Count > 0 &&
-                    !feedbackService.AreCriteriaMet(task.SubmittedDeliverable.FeedbackCriterias))
-            throw new InvalidOperationException("Not All Feedback Criteria Met!");
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
+        {
+            try
+            {
+                // Override unmet criteria if any
+                if (task.SubmittedDeliverable != null &&
+                        task.SubmittedDeliverable.FeedbackCriterias.Count > 0)
+                {
+                    var unmetFeedbackCriteria = task.SubmittedDeliverable.FeedbackCriterias
+                                                    .Where(c => c.Status == "unmet")
+                                                    .ToList();
+                    foreach (var feedbackCriteria in unmetFeedbackCriteria)
+                    {
+                        feedbackCriteria.Status = "overriden";
+                    }
+                }
 
-        task.SubmittedDeliverableID = task.StagedDeliverableID;
-        task.StagedDeliverableID = null;
-        task.Status = "completed";
+                if (task.SubmittedDeliverable != null)
+                    dbContext.Deliverables.Remove(task.SubmittedDeliverable);
 
-        await dbContext.SaveChangesAsync();
-    }
+                task.SubmittedDeliverable = task.StagedDeliverable;
+                task.StagedDeliverable = null;
+                task.Status = "completed";
 
-    public async Task ValidateSubmittedDeliverableAgainstFeedback()
-    {
-        // await feedbackService.AIFeedbackComplianceCheck();
+                await dbContext.SaveChangesAsync();
+
+                // await reminderService.CreateTaskReminder(task.ProjectTaskID, ReminderType.TASK_COMPLETED);
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 }
