@@ -16,7 +16,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import type { Theme } from "@emotion/react";
 import { ToggleOn } from "@mui/icons-material";
-import { user } from "../../lib/temp";
 
 function OverrideToggleButton({
   isToggled,
@@ -38,10 +37,12 @@ function OverrideToggleButton({
 export default function FeedbackCriteriaTable({
   sx,
   criteria,
+  overrideToggleEnabled,
   onOverrideToggle,
 }: {
   sx?: SxProps<Theme> | undefined;
   criteria: FeedbackCriteria[];
+  overrideToggleEnabled: boolean;
   onOverrideToggle?: (id: number) => void;
 }) {
   return (
@@ -176,7 +177,7 @@ export default function FeedbackCriteriaTable({
                   width: "64px",
                 }}
               >
-                {user.role == "student" &&
+                {overrideToggleEnabled &&
                   (c.status === "unmet" || c.status === "overridden") &&
                   onOverrideToggle && (
                     <OverrideToggleButton

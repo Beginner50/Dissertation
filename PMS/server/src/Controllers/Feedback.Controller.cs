@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PMS.DatabaseContext;
 using PMS.DTOs;
@@ -18,6 +19,7 @@ public class FeedbackController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetFeedbackCriteria(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -37,6 +39,7 @@ public class FeedbackController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback")]
     [HttpPost]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
     public async Task<IActionResult> ProvideFeedbackCriteria(
            [FromRoute] long userID,
            [FromRoute] long projectID,
@@ -47,7 +50,7 @@ public class FeedbackController : ControllerBase
         try
         {
             await feedbackService.ProvideFeedback(userID, projectID, taskID, provideFeedbackDTO);
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {
@@ -57,6 +60,7 @@ public class FeedbackController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback/compliance-check")]
     [HttpPost]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> FeedbackComplianceCheck(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -66,7 +70,7 @@ public class FeedbackController : ControllerBase
         try
         {
             await feedbackService.AIFeedbackComplianceCheck(userID, projectID, taskID);
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {

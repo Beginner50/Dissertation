@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PMS.DTOs;
 using PMS.Lib;
@@ -16,6 +17,7 @@ public class TaskDeliverablesController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "student")]
     public async Task<IActionResult> GetStagedDeliverable(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -41,6 +43,7 @@ public class TaskDeliverablesController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/submitted-deliverable")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetSubmittedDeliverable(
             [FromRoute] long userID,
             [FromRoute] long projectID,
@@ -67,6 +70,7 @@ public class TaskDeliverablesController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable")]
     [HttpPost]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "student")]
     public async Task<IActionResult> UploadStagedDeliverable(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -84,7 +88,7 @@ public class TaskDeliverablesController : ControllerBase
                 fileData: taskDeliverableFileDTO.File,
                 contentType: taskDeliverableFileDTO.ContentType
             );
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {
@@ -94,6 +98,7 @@ public class TaskDeliverablesController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable")]
     [HttpDelete]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "student")]
     public async Task<IActionResult> RemoveStagedDeliverable(
            [FromRoute] long userID,
            [FromRoute] long projectID,
@@ -107,7 +112,7 @@ public class TaskDeliverablesController : ControllerBase
                 projectID,
                 taskID
             );
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {
@@ -117,6 +122,7 @@ public class TaskDeliverablesController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable/submit")]
     [HttpPost]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "student")]
     public async Task<IActionResult> SubmitStagedDeliverable(
            [FromRoute] long userID,
            [FromRoute] long projectID,
@@ -130,7 +136,7 @@ public class TaskDeliverablesController : ControllerBase
                 projectID,
                 taskID
             );
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {

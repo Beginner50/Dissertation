@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PMS.DTOs;
 using PMS.Services;
@@ -15,6 +16,7 @@ public class TasksController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/[controller]/{taskID}")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetProjectTask(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -34,6 +36,7 @@ public class TasksController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/[controller]")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetProjectTasks(
         [FromRoute] long userID,
         [FromRoute] long projectID
@@ -52,6 +55,7 @@ public class TasksController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks")]
     [HttpPost]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
     public async Task<IActionResult> CreateProjectTask(
             [FromRoute] long userID,
             [FromRoute] long projectID,
@@ -61,7 +65,7 @@ public class TasksController : ControllerBase
         try
         {
             await projectTaskService.CreateProjectTask(userID, projectID, createProjectTaskDTO);
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {
@@ -71,6 +75,7 @@ public class TasksController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}")]
     [HttpPut]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
     public async Task<IActionResult> EditProjectTask(
                 [FromRoute] long userID,
                 [FromRoute] long projectID,
@@ -85,7 +90,7 @@ public class TasksController : ControllerBase
                 projectID: projectID,
                 taskID: taskID,
                 dto: editProjectTaskDTO);
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {
@@ -95,6 +100,7 @@ public class TasksController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}")]
     [HttpDelete]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
     public async Task<IActionResult> DeleteProjectTask(
                     [FromRoute] long userID,
                     [FromRoute] long projectID,
@@ -107,7 +113,7 @@ public class TasksController : ControllerBase
                 userID: userID,
                 projectID: projectID,
                 taskID: taskID);
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {

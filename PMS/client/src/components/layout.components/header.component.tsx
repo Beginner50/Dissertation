@@ -1,99 +1,88 @@
-import { Box, Button, Typography } from "@mui/material"
+import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
+import { Link, NavLink, useNavigate } from "react-router";
 import { theme } from "../../lib/theme";
-import { Link, useLocation } from "react-router";
+import { useAuth } from "../../providers/auth.provider";
+import type { User } from "../../lib/types";
+import React from "react";
 
-export default function Header({ showNavlinks = false }: { showNavlinks?: boolean }) {
-    const location = useLocation();
-
-    return (
-        <header style={{
-            display: "flex",
-            flexDirection: "row",
-            backgroundColor: "white",
-            borderBottom: `1px solid ${theme.borderSoft}`,
-            boxShadow: theme.shadowMuted,
-            marginTop: 0,
-            marginBottom: 0,
-            width: "100vw"
-        }}>
-            <Link to="/projects" style={{
-                textDecoration: "none",
-                color: "black",
-                fontSize: "1.2rem",
-                fontWeight: 600,
-                padding: "10px",
-                display: "inline-block"
-            }}>
-                Project Management System
-            </Link>
-            <Box sx={{
-                flexGrow: 1,
-                display: "flex",
-                flexDirection: "row",
-                marginLeft: "4rem",
-            }}>
-                {showNavlinks && (
-                    <nav style={{ display: "flex", columnGap: "0.9rem", alignItems: "center" }}>
-                        <Link to="/projects">
-                            <Typography sx={{
-                                color: theme.textMuted,
-                                ":hover": {
-                                    ...(!location.pathname.includes("project") && { color: theme.textNormal }),
-                                    border: 0,
-                                    borderBottom: "3px",
-                                    borderRadius: "0.2rem",
-                                    borderStyle: "solid",
-                                    borderColor: "hsla(251, 100%, 50%, 0.52)"
-                                },
-                                ...(location.pathname.includes("projects") && { color: theme.textStrong })
-                            }}>
-                                Projects
-                            </Typography>
-                        </Link>
-                        <Link to="/scheduler" >
-                            <Typography sx={{
-                                color: theme.textMuted,
-                                ":hover": {
-                                    ...(!location.pathname.includes("scheduler") && { color: theme.textNormal }),
-                                    border: 0,
-                                    borderBottom: "3px",
-                                    borderRadius: "0.2rem",
-                                    borderStyle: "solid",
-                                    borderColor: "hsla(251, 100%, 50%, 0.52)"
-                                },
-                                ...(location.pathname.includes("scheduler") && { color: theme.textStrong })
-                            }}>
-                                Scheduler
-                            </Typography>
-                        </Link>
-                    </nav>
-                )}
-            </Box>
-            <Box sx={{ display: "flex", flexDirection: "row" }}>
-                <Link to="/signin">
-                    <Button
-                        variant="contained"
-                        sx={{
-                            margin: "0.3rem",
-                            padding: '0.5rem 0.8rem',
-                            borderRadius: '10px',
-                            backgroundColor: 'hsl(251, 100%, 65%)',
-                            color: 'white',
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            border: 'none',
-                            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
-
-                            '&:hover': {
-                                backgroundColor: 'hsl(251, 100%, 55%)',
-                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-                            },
-                        }}
-                    >
-                        Sign Out
-                    </Button>
-                </Link>
-            </Box>
-        </header >
-    );
+export default function Header({ children }: { children: React.ReactNode }) {
+  return (
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{
+        bgcolor: "white",
+        borderBottom: `1px solid ${theme.borderSoft}`,
+      }}
+    >
+      <Toolbar sx={{ justifyContent: "space-between" }}>{children}</Toolbar>
+    </AppBar>
+  );
 }
+
+Header.Brand = ({ title }: { title: string }) => {
+  return (
+    <Link to="/" style={{ textDecoration: "none", color: "black" }}>
+      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+        {title}
+      </Typography>
+    </Link>
+  );
+};
+
+Header.Navigation = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <Box component="nav" sx={{ display: "flex", gap: 4, ml: 5 }}>
+      {children}
+    </Box>
+  );
+};
+
+Header.NavItem = ({ to, label }: { to: string; label: string }) => {
+  return (
+    <NavLink
+      to={to}
+      style={({ isActive }) => ({
+        textDecoration: "none",
+        fontSize: "1rem",
+        fontWeight: 500,
+        padding: "18px 0",
+        borderBottom: isActive
+          ? `3px solid ${theme.link}`
+          : "3px solid transparent",
+        color: isActive ? theme.linkFocused : theme.textMuted,
+        transition: "all 0.2s ease",
+      })}
+    >
+      {label}
+    </NavLink>
+  );
+};
+
+Header.Actions = ({ children }: { children: React.ReactNode }) => {
+  return <Box sx={{ display: "flex", alignItems: "center" }}>{children}</Box>;
+};
+
+Header.SignOutButton = () => {
+  const navigate = useNavigate();
+  const { authState, signOut } = useAuth();
+  const user = authState.user as User;
+
+  const handleSignOut = async () => {
+    if (user?.userID) {
+      await signOut(user.userID);
+      navigate("/sign-in");
+    }
+  };
+
+  return (
+    <Button
+      variant="contained"
+      color="primary"
+      onClick={handleSignOut}
+      sx={{ textTransform: "none", fontWeight: 600, borderRadius: "8px" }}
+    >
+      Sign Out
+    </Button>
+  );
+};

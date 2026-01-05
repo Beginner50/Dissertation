@@ -18,6 +18,10 @@ export function TaskDetails({
         borderRadius: "8px",
         overflowY: "auto",
         border: `1px solid ${theme.borderSoft}`,
+        display: "flex",
+        flexDirection: "column",
+        maxWidth: "65vw",
+        maxHeight: "78vh",
         boxShadow: theme.shadowSoft,
         ...sx,
       }}

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PMS.DatabaseContext;
 using PMS.Services;
@@ -14,6 +15,7 @@ public class ReminderController : ControllerBase
     }
 
     [Route("api/users/{userID}/reminders")]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetReminders(
         [FromRoute] long userID
     )

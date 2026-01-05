@@ -34,6 +34,7 @@ export default function TaskModal({
           sx: { maxWidth: "45vw", mx: "auto" },
         },
       }}
+      keepMounted
     >
       {children}
     </Dialog>
@@ -62,18 +63,11 @@ TaskModal.Fields = ({ children }: { children: ReactNode }) => (
   </DialogContent>
 );
 
-TaskModal.TaskID = ({
-  taskID,
-  visible,
-}: {
-  taskID: number;
-  visible: boolean;
-}) =>
-  visible ? (
-    <FormControl fullWidth>
-      <TextField label="Task ID" value={taskID} disabled size="small" />
-    </FormControl>
-  ) : null;
+TaskModal.TaskID = ({ taskID }: { taskID: number }) => (
+  <FormControl fullWidth>
+    <TextField label="Task ID" value={taskID} disabled size="small" />
+  </FormControl>
+);
 
 TaskModal.TaskTitle = ({
   title,

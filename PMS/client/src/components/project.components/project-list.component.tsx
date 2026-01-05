@@ -10,9 +10,8 @@ import {
 } from "@mui/material";
 import { Add, AddCircleOutline, GroupAdd } from "@mui/icons-material";
 import { type ReactNode } from "react";
-import type { Project } from "../../lib/types";
+import type { Project, User } from "../../lib/types";
 import ProjectListEntry from "./project-list-entry.component";
-import { user } from "../../lib/temp";
 
 export function ProjectList({
   children,
@@ -26,8 +25,11 @@ export function ProjectList({
       variant="outlined"
       sx={{
         p: 2,
+        flexGrow: 1,
         bgcolor: "background.paper",
         borderRadius: 2,
+        overflowY: "auto",
+        flexDirection: "column",
         ...sx,
       }}
     >
@@ -59,40 +61,52 @@ ProjectList.Header = ({ children }: { children?: ReactNode }) => {
   );
 };
 
-ProjectList.CreateProjectButton = ({ onClick }: { onClick: () => void }) => {
+ProjectList.CreateProjectButton = ({
+  handleCreateProjectClick,
+}: {
+  handleCreateProjectClick: () => void;
+}) => {
   return (
     <Button
       variant="contained"
       color="primary"
       disableElevation
       startIcon={<Add />}
-      onClick={onClick}
+      onClick={handleCreateProjectClick}
     >
       Create Project
     </Button>
   );
 };
 
-ProjectList.JoinProjectButton = ({ onClick }: { onClick: () => void }) => {
+ProjectList.JoinProjectButton = ({
+  handleJoinProjectClick,
+}: {
+  handleJoinProjectClick: () => void;
+}) => {
   return (
     <Button
       variant="outlined"
       color="secondary"
       disableElevation
       startIcon={<GroupAdd />}
-      onClick={onClick}
+      onClick={handleJoinProjectClick}
     >
       Join Project
     </Button>
   );
 };
 
-ProjectList.List = ({
+ProjectList.Content = ({
+  isLoading,
   projects,
+  menuEnabled,
   handleEditProjectClick,
   handleArchiveProjectClick,
 }: {
+  isLoading: boolean;
   projects: Project[];
+  menuEnabled: boolean;
   handleEditProjectClick: (project: Project) => void;
   handleArchiveProjectClick: (project: Project) => void;
 }) => {
@@ -108,7 +122,7 @@ ProjectList.List = ({
               url={`/projects/${project.projectID}/tasks`}
               student={project?.student ?? undefined}
             />
-            {user.role === "supervisor" && (
+            {menuEnabled && (
               <ProjectListEntry.MenuButton
                 onEditButtonClick={() => handleEditProjectClick(project)}
                 onArchiveButtonClick={() => handleArchiveProjectClick(project)}

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PMS.Services;
 
@@ -14,6 +15,7 @@ public class NotificationsController : ControllerBase
 
     [Route("api/users/{userID}/notifications")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetAllNotifications(
         [FromRoute] long userID
     )

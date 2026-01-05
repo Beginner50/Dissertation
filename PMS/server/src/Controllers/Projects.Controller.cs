@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PMS.DTOs;
 using PMS.Services;
@@ -17,6 +18,7 @@ public class ProjectsController : ControllerBase
 
     [Route("/api/projects")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
     public async Task<IActionResult> GetUnsupervisedProjects()
     {
         try
@@ -33,6 +35,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/[controller]")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetProjectsByUser(
         [FromRoute] long userID
     )
@@ -50,6 +53,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/[controller]/{projectID}")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetProject(
             [FromRoute] long userID,
             [FromRoute] long projectID
@@ -68,16 +72,16 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects")]
     [HttpPost]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
     public async Task<IActionResult> CreateProject(
         [FromRoute] long userID,
         [FromBody] CreateProjectDTO createProjectDTO
     )
     {
-        var role = "supervisor";
         try
         {
-            await projectService.CreateProject(userID, role, createProjectDTO);
-            return Ok();
+            await projectService.CreateProject(userID, createProjectDTO);
+            return NoContent();
 
         }
         catch (Exception e)
@@ -88,6 +92,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}")]
     [HttpPut]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
     public async Task<IActionResult> EditProject(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -96,7 +101,7 @@ public class ProjectsController : ControllerBase
         try
         {
             await projectService.EditProject(userID, projectID, editProjectDTO);
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {
@@ -106,6 +111,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}")]
     [HttpDelete]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
     public async Task<IActionResult> ArchiveProject(
             [FromRoute] long userID,
             [FromRoute] long projectID)
@@ -113,7 +119,7 @@ public class ProjectsController : ControllerBase
         try
         {
             await projectService.ArchiveProject(userID, projectID);
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {
@@ -123,6 +129,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/join")]
     [HttpPut]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
     public async Task<IActionResult> JoinProject(
         [FromRoute] long userID,
         [FromRoute] long projectID
@@ -131,7 +138,7 @@ public class ProjectsController : ControllerBase
         try
         {
             await projectService.JoinProject(userID, projectID); ;
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {
@@ -141,6 +148,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/add-student/{studentID}")]
     [HttpPut]
+    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
     public async Task<IActionResult> AddStudentToProject(
             [FromRoute] long userID,
             [FromRoute] long projectID,
@@ -150,7 +158,7 @@ public class ProjectsController : ControllerBase
         try
         {
             await projectService.AssignStudentToProject(userID, projectID, studentID); ;
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {
@@ -160,6 +168,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/progress-log")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GenerateProgressLogReport(
         [FromRoute] long userID,
         [FromRoute] long projectID
@@ -168,7 +177,7 @@ public class ProjectsController : ControllerBase
         try
         {
             await projectService.GenerateProgressLogReport(userID, projectID);
-            return Ok();
+            return NoContent();
         }
         catch (Exception e)
         {

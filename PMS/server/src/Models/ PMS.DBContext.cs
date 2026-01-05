@@ -66,13 +66,16 @@ public class PMSDbContext : DbContext
 
     protected void SeedData(ModelBuilder modelBuilder)
     {
+        string passwordHash = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m";
+
         modelBuilder.Entity<User>().HasData(
             new User
             {
                 UserID = 1,
                 Name = "Alice Student",
                 Email = "alice@uni.com",
-                Password = "hashed_password",
+                Password = passwordHash,
+                RefreshToken = "",
                 Role = "student"
             },
             new User
@@ -80,7 +83,8 @@ public class PMSDbContext : DbContext
                 UserID = 2,
                 Name = "Dr. Smith",
                 Email = "smith@uni.com",
-                Password = "hashed_password",
+                Password = passwordHash,
+                RefreshToken = "",
                 Role = "supervisor"
             },
             new User
@@ -88,7 +92,8 @@ public class PMSDbContext : DbContext
                 UserID = 3,
                 Name = "Hashim",
                 Email = "hashim@uni.com",
-                Password = "hashed_password",
+                Password = passwordHash,
+                RefreshToken = "",
                 Role = "student"
             },
             new User
@@ -96,7 +101,8 @@ public class PMSDbContext : DbContext
                 UserID = 4,
                 Name = "Charlie Student",
                 Email = "charlie@uni.com",
-                Password = "hashed_password",
+                Password = passwordHash,
+                RefreshToken = "",
                 Role = "student"
             },
             new User
@@ -104,7 +110,8 @@ public class PMSDbContext : DbContext
                 UserID = 5,
                 Name = "Dr. Brown",
                 Email = "brown@uni.com",
-                Password = "hashed_password",
+                Password = passwordHash,
+                RefreshToken = "",
                 Role = "supervisor"
             },
             new User
@@ -112,7 +119,8 @@ public class PMSDbContext : DbContext
                 UserID = 6,
                 Name = "Agent Smith",
                 Email = "agent@smith.com",
-                Password = "hashed_password",
+                Password = passwordHash,
+                RefreshToken = "",
                 Role = "student"
             },
             new User
@@ -120,7 +128,8 @@ public class PMSDbContext : DbContext
                 UserID = 7,
                 Name = "Rebellius",
                 Email = "rebellius@uni.com",
-                Password = "hashed_password",
+                Password = passwordHash,
+                RefreshToken = "",
                 Role = "student"
             }
         );

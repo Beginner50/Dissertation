@@ -4,9 +4,8 @@ import { ListItem, Typography, Box, Stack, type SxProps } from "@mui/material";
 import { Event, Assignment } from "@mui/icons-material";
 import type { ReactNode } from "react";
 
-// Helper to calculate opacity based on age
 const getNotificationAgeStyle = (timestamp: string) => {
-  const now = new Date("2026-01-03T22:14:47"); // Current system time
+  const now = new Date("2026-01-03T22:14:47");
   const then = new Date(timestamp);
   const diffInMs = now.getTime() - then.getTime();
   const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
@@ -37,7 +36,7 @@ export default function NotificationEntry({
   return (
     <ListItem
       sx={{
-        py: 1, // Leaner padding (reduced from 2)
+        py: 1,
         px: 2,
         mb: 1,
         borderRadius: 2,
@@ -45,11 +44,9 @@ export default function NotificationEntry({
         alignItems: "center",
         gap: 1.5,
         bgcolor: "background.paper",
-        opacity: opacity, // Applied to the whole container
+        opacity: opacity,
         border: "1px solid",
         borderColor: "divider",
-        transition: "opacity 0.2s ease",
-        "&:hover": { opacity: 1, bgcolor: "action.hover" },
         ...sx,
       }}
     >
@@ -63,7 +60,7 @@ NotificationEntry.Icon = ({ type }: { type: Notification["type"] }) => {
   return (
     <Box
       sx={{
-        width: 32, // Smaller icon container for leaner look
+        width: 32,
         height: 32,
         borderRadius: 1.5,
         display: "flex",

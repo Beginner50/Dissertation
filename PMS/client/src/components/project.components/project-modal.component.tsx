@@ -1,4 +1,4 @@
-import { memo, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -34,6 +34,7 @@ export default function ProjectModal({
           sx: { maxWidth: "45vw", mx: "auto" },
         },
       }}
+      keepMounted
     >
       {children}
     </Dialog>
@@ -145,7 +146,7 @@ ProjectModal.ArchiveWarning = () => (
 
 ProjectModal.Actions = ({
   mode,
-  disabled,
+  isValid,
   handleCancelClick,
   handleCreateProject,
   handleEditProject,
@@ -153,7 +154,7 @@ ProjectModal.Actions = ({
   handleJoinProject,
 }: {
   mode: ModalMode;
-  disabled: boolean;
+  isValid: boolean;
   handleCancelClick: () => void;
   handleCreateProject: () => void;
   handleEditProject: () => void;
@@ -182,7 +183,7 @@ ProjectModal.Actions = ({
         variant="contained"
         onClick={actions[mode]}
         color={mode === "archive" ? "error" : "primary"}
-        disabled={disabled}
+        disabled={!isValid}
       >
         {labels[mode]}
       </Button>

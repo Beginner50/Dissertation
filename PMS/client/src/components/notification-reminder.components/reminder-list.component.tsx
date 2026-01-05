@@ -7,7 +7,6 @@ import {
   Typography,
   type SxProps,
 } from "@mui/material";
-import { theme } from "../../lib/theme";
 import type { Reminder } from "../../lib/types";
 import ReminderEntry from "./reminder-entry.component";
 import type { ReactNode } from "react";
@@ -22,12 +21,11 @@ export function ReminderList({
   return (
     <Box
       sx={{
+        width: "28.5vw",
         padding: "1rem",
         background: "white",
         borderRadius: "8px",
         overflowY: "auto",
-        border: `1px solid ${theme.borderSoft}`,
-        boxShadow: theme.shadowSoft,
         ...sx,
       }}
     >

@@ -1,26 +1,33 @@
 import { ProjectList } from "../../components/project.components/project-list.component";
 import { ReminderList } from "../../components/notification-reminder.components/reminder-list.component";
-import type { Project, ProjectFormData } from "../../lib/types";
-import { origin, user } from "../../lib/temp";
+import type {
+  Notification,
+  Project,
+  ProjectFormData,
+  Reminder,
+  User,
+} from "../../lib/types";
 import { useCallback, useState } from "react";
 import ProjectModal, {
   type ModalState as ProjectModalState,
 } from "../../components/project.components/project-modal.component";
-import { useProjectsMutation } from "../../lib/hooks/useProjectsMutation";
-import {
-  useProjectsQuery,
-  useUnsupervisedProjectsQuery,
-} from "../../lib/hooks/useProjectsQuery";
 import { Selector } from "../../components/base.components/selector.component";
-import { useRemindersQuery } from "../../lib/hooks/useRemindersQuery";
 import { SlidingActivityCard } from "../../components/base.components/sliding-activity-card.component";
 import { NotificationList } from "../../components/notification-reminder.components/notification-list.component";
-import { UNSAFE_getPatchRoutesOnNavigationFunction } from "react-router";
-import { useNotificationsQuery } from "../../lib/hooks/useNotificationsQuery";
+import PageLayout from "../../components/layout.components/page-layout.component";
+import {
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { useAuth } from "../../providers/auth.provider";
 
 export default function DashboardProjectsRoute() {
-  const [step, setStep] = useState(0);
+  const { authState, authorizedAPI } = useAuth();
+  const user = authState.user as User;
 
+  const [step, setStep] = useState(0);
   const [projectModalState, setProjectModalState] = useState<ProjectModalState>(
     { mode: "create", open: false }
   );
@@ -32,16 +39,59 @@ export default function DashboardProjectsRoute() {
   const [projectSearchTerm, setProjectSearchTerm] = useState<string>("");
   const [selectedProject, setSelectedProject] = useState<Project>();
 
-  const projectMutation = useProjectsMutation();
-  const { data: projects, isLoading: projectsLoading } = useProjectsQuery();
-  const { data: unsupervisedProjects, isLoading: unsupervisedProjectsLoading } =
-    useUnsupervisedProjectsQuery({ disabled: user.role !== "supervisor" });
+  /* ---------------------------------------------------------------------------------- */
 
-  const { data: reminders, isLoading: remindersLoading } = useRemindersQuery({
-    userID: user.userID,
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: async ({
+      method,
+      url,
+      data,
+    }: {
+      method: string;
+      url: string;
+      data: any;
+      invalidateQueryKeys: any[][];
+    }) => await authorizedAPI(url, { method: method, json: data }),
+    onSuccess: (_data, variables) =>
+      variables.invalidateQueryKeys.forEach((key) =>
+        queryClient.invalidateQueries({
+          queryKey: key,
+        })
+      ),
   });
-  const { data: notifications, isLoading: notificationsLoading } =
-    useNotificationsQuery({ userID: user.userID });
+
+  const { data: projects, isLoading: projectsLoading } = useQuery({
+    queryKey: [user.userID.toString(), "projects"],
+    queryFn: async (): Promise<Project[]> =>
+      await authorizedAPI.get(`api/users/${user.userID}/projects`).json(),
+    retry: 1,
+  });
+
+  const { data: unsupervisedProjects, isLoading: unsupervisedProjectsLoading } =
+    useQuery({
+      queryKey: [user.userID.toString(), "projects", "unsupervised"],
+      queryFn: async (): Promise<Project[]> =>
+        await authorizedAPI.get(`api/projects`).json(),
+      enabled: user.role === "supervisor",
+      retry: 1,
+    });
+
+  const { data: reminders, isLoading: remindersLoading } = useQuery({
+    queryKey: [user.userID.toString(), "reminders"],
+    queryFn: async (): Promise<Reminder[]> =>
+      await authorizedAPI.get(`api/users/${user.userID}/reminders`).json(),
+    retry: 1,
+    refetchInterval: 1000 * 60, // 1 minute
+  });
+
+  const { data: notifications, isLoading: notificationsLoading } = useQuery({
+    queryKey: [user.userID.toString(), "notifications"],
+    queryFn: async (): Promise<Notification[]> =>
+      await authorizedAPI.get(`api/users/${user.userID}/notifications`).json(),
+    retry: 1,
+    refetchInterval: 1000 * 60 * 5, // 5 minutes
+  });
 
   /* ---------------------------------------------------------------------------------- */
 
@@ -90,37 +140,44 @@ export default function DashboardProjectsRoute() {
   /* ---------------------------------------------------------------------------------- */
 
   const handleCreateProject = () => {
-    projectMutation.mutate({
+    mutation.mutate({
       method: "post",
-      url: `${origin}/api/users/${user.userID}/projects`,
+      url: `api/users/${user.userID}/projects`,
       data: projectModalData,
+      invalidateQueryKeys: [[user.userID.toString(), "projects"]],
     });
     setProjectModalState((p) => ({ ...p, open: false }));
   };
 
   const handleEditProject = () => {
-    projectMutation.mutate({
+    mutation.mutate({
       method: "put",
-      url: `${origin}/api/users/${user.userID}/projects/${projectModalData.projectID}`,
+      url: `api/users/${user.userID}/projects/${projectModalData.projectID}`,
       data: projectModalData,
+      invalidateQueryKeys: [[user.userID.toString(), "projects"]],
     });
     setProjectModalState((p) => ({ ...p, open: false }));
   };
 
   const handleArchiveProject = () => {
-    projectMutation.mutate({
+    mutation.mutate({
       method: "delete",
-      url: `${origin}/api/users/${user.userID}/projects/${projectModalData.projectID}`,
+      url: `api/users/${user.userID}/projects/${projectModalData.projectID}`,
       data: {},
+      invalidateQueryKeys: [[user.userID.toString(), "projects"]],
     });
     setProjectModalState((p) => ({ ...p, open: false }));
   };
 
   const handleJoinProject = () => {
-    projectMutation.mutate({
+    mutation.mutate({
       method: "put",
-      url: `${origin}/api/users/${user.userID}/projects/${selectedProject?.projectID}/join`,
+      url: `api/users/${user.userID}/projects/${selectedProject?.projectID}/join`,
       data: {},
+      invalidateQueryKeys: [
+        [user.userID.toString(), "projects"],
+        [user.userID.toString(), "projects", "unsupervised"],
+      ],
     });
     setSelectedProject(undefined);
     setProjectModalState((p) => ({ ...p, open: false }));
@@ -128,127 +185,136 @@ export default function DashboardProjectsRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const filteredProjects = unsupervisedProjects?.filter(
-    (p) =>
-      p.title.toLowerCase().includes(projectSearchTerm.toLowerCase()) ||
-      p.student?.name.toLowerCase().includes(projectSearchTerm.toLowerCase())
-  );
+  const filteredProjects =
+    unsupervisedProjects?.filter(
+      (p) =>
+        p.title.toLowerCase().includes(projectSearchTerm.toLowerCase()) ||
+        p.student?.name.toLowerCase().includes(projectSearchTerm.toLowerCase())
+    ) ?? [];
 
-  const isFormInvalid = Object.entries(projectModalData).some(([key, val]) => {
-    if (typeof val == "number") return Number.isNaN(val);
-    return val == "";
-  });
+  const formDataIncomplete = (() => {
+    switch (projectModalState.mode) {
+      case "create":
+      case "edit":
+        return Object.entries(projectModalData).some(([key, val]) => {
+          if (typeof val == "number") return Number.isNaN(val);
+          return val == "";
+        });
+      case "join-project":
+        return selectedProject == null;
+      case "archive":
+        return false;
+    }
+  })();
+
+  /* ---------------------------------------------------------------------------------- */
+
+  const modalViews = {
+    create: (
+      <ProjectModal.Fields>
+        <ProjectModal.ProjectTitle
+          title={projectModalData?.title ?? ""}
+          handleTitleChange={handleTitleChange}
+        />
+        <ProjectModal.ProjectDescription
+          description={projectModalData?.description ?? ""}
+          handleDescriptionChange={handleDescriptionChange}
+        />
+      </ProjectModal.Fields>
+    ),
+    edit: (
+      <ProjectModal.Fields>
+        <ProjectModal.ProjectID
+          projectID={projectModalData?.projectID ?? 0}
+          visible={true}
+        />
+        <ProjectModal.ProjectTitle
+          title={projectModalData?.title ?? ""}
+          handleTitleChange={handleTitleChange}
+        />
+        <ProjectModal.ProjectDescription
+          description={projectModalData?.description ?? ""}
+          handleDescriptionChange={handleDescriptionChange}
+        />
+      </ProjectModal.Fields>
+    ),
+    "join-project": (
+      <Selector>
+        <Selector.Search
+          placeholder="Search projects..."
+          searchTerm={projectSearchTerm}
+          handleSearchChange={handleSearchChange}
+        />
+        <Selector.Content>
+          {filteredProjects.length > 0 ? (
+            filteredProjects.map((p) => (
+              <Selector.ProjectListEntry
+                key={p.projectID}
+                project={p}
+                isSelected={p.projectID === selectedProject?.projectID}
+                handleSelectProject={() => handleSelectProject(p)}
+              />
+            ))
+          ) : (
+            <Selector.NotFound placeholder="No projects match" />
+          )}
+        </Selector.Content>
+      </Selector>
+    ),
+    archive: <ProjectModal.ArchiveWarning />,
+  };
 
   return (
     <>
-      {/* Project List */}
-      <ProjectList
-        sx={{
-          flexGrow: 3,
-          overflowY: "auto",
-          flexDirection: "column",
-        }}
-      >
-        <ProjectList.Header>
-          {user.role === "supervisor" && (
-            <>
+      <PageLayout.Normal>
+        {/* Left Section - Projects */}
+        <ProjectList>
+          <ProjectList.Header>
+            {user.role == "supervisor" && (
               <ProjectList.CreateProjectButton
-                onClick={handleCreateProjectClick}
+                handleCreateProjectClick={handleCreateProjectClick}
               />
-              <ProjectList.JoinProjectButton onClick={handleJoinProjectClick} />
-            </>
-          )}
-        </ProjectList.Header>
+            )}
+            {user.role == "supervisor" && (
+              <ProjectList.JoinProjectButton
+                handleJoinProjectClick={handleJoinProjectClick}
+              />
+            )}
+          </ProjectList.Header>
 
-        {!projectsLoading && (
-          <ProjectList.List
+          <ProjectList.Content
+            isLoading={projectsLoading}
             projects={projects ?? []}
+            menuEnabled={user.role === "supervisor"}
             handleEditProjectClick={handleEditProjectClick}
             handleArchiveProjectClick={handleArchiveProjectClick}
           />
-        )}
-      </ProjectList>
+        </ProjectList>
 
-      <SlidingActivityCard>
-        {/* Arrows need to know the state to hide/show and triggers to change it */}
-        <SlidingActivityCard.Arrows
-          activeStep={step}
-          onBack={() => setStep(0)}
-          onNext={() => setStep(1)}
-        />
+        {/* Right Section - Sliding Activity (Reminder + Notifications) */}
+        <SlidingActivityCard>
+          <SlidingActivityCard.Content activeStep={step}>
+            <ReminderList reminders={reminders ?? []} />
+            <NotificationList notifications={notifications ?? []} />
+          </SlidingActivityCard.Content>
 
-        {/* Content wraps your lists and slides them based on step */}
-        <SlidingActivityCard.Content activeStep={step}>
-          <ReminderList
-            reminders={reminders ?? []}
-            sx={{ border: "none", boxShadow: "none" }}
+          <SlidingActivityCard.Navigation
+            activeStep={step}
+            onNext={() => setStep(1)}
+            onBack={() => setStep(0)}
           />
-          <NotificationList
-            notifications={notifications ?? []}
-            sx={{ border: "none", boxShadow: "none" }}
-          />
-        </SlidingActivityCard.Content>
-
-        {/* Dots only need to know where we are */}
-        <SlidingActivityCard.Pagination activeStep={step} />
-      </SlidingActivityCard>
+        </SlidingActivityCard>
+      </PageLayout.Normal>
 
       {/* Project Modal */}
       <ProjectModal open={projectModalState.open}>
         <ProjectModal.Header mode={projectModalState.mode} />
 
-        {(projectModalState.mode === "create" ||
-          projectModalState.mode === "edit") && (
-          <ProjectModal.Fields>
-            <ProjectModal.ProjectID
-              projectID={projectModalData?.projectID ?? 0}
-              visible={projectModalState.mode == "edit"}
-            />
-            <ProjectModal.ProjectTitle
-              title={projectModalData?.title ?? ""}
-              handleTitleChange={handleTitleChange}
-            />
-            <ProjectModal.ProjectDescription
-              description={projectModalData?.description ?? ""}
-              handleDescriptionChange={handleDescriptionChange}
-            />
-          </ProjectModal.Fields>
-        )}
-
-        {projectModalState.mode === "join-project" && (
-          <Selector>
-            <Selector.Search
-              placeholder="Search projects by title or student..."
-              searchTerm={projectSearchTerm}
-              handleSearchChange={handleSearchChange}
-            />
-            <Selector.List>
-              {filteredProjects && filteredProjects.length > 0 ? (
-                filteredProjects.map((p) => (
-                  <Selector.ProjectListEntry
-                    project={p}
-                    isSelected={p.projectID == selectedProject?.projectID}
-                    handleSelectProject={() => handleSelectProject(p)}
-                  />
-                ))
-              ) : (
-                <Selector.NotFound placeholder="No projects match your search" />
-              )}
-            </Selector.List>
-          </Selector>
-        )}
-
-        {projectModalState.mode == "archive" && <ProjectModal.ArchiveWarning />}
+        {modalViews[projectModalState.mode]}
 
         <ProjectModal.Actions
           mode={projectModalState.mode}
-          disabled={
-            (isFormInvalid &&
-              (projectModalState.mode == "create" ||
-                projectModalState.mode == "edit")) ||
-            (selectedProject == undefined &&
-              projectModalState.mode == "join-project")
-          }
+          isValid={!formDataIncomplete}
           handleCancelClick={handleCancelClick}
           handleCreateProject={handleCreateProject}
           handleEditProject={handleEditProject}

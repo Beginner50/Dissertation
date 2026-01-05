@@ -21,12 +21,15 @@ export function ProjectDetails({
     <Paper
       variant="outlined"
       sx={{
-        p: 3, // Increased padding for better breathability
+        p: 3,
         borderRadius: 2,
         bgcolor: "rgba(255, 255, 255, 0.73)",
         display: "flex",
         flexDirection: "column",
-        gap: 2, // Increased gap
+        gap: 2,
+        maxWidth: "30vw",
+        minHeight: "45vh",
+        height: "fit-content",
         ...sx,
       }}
     >

@@ -32,7 +32,7 @@ services:
       - POSTGRES_PASSWORD=password1234
       - POSTGRES_DB=pms
       - POSTGRES_HOST=postgres
-      - ASPNETCORE_URLS=http://+:5081
+      - JWT_SECRET_KEY=dPxKLDJnXNcd/m1mSf5IKBDpe98RNFHSu72izm9FQOs= # Generated using openssl rand -base64 32
       - GOOGLE_API_KEY=AIzaSyCGh8eE8PH9bD_JeeJ6UY2x_qDrM_HgDmk
     depends_on:
       postgres:
@@ -74,6 +74,7 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=password1234
       - POSTGRES_DB=pms-test
+      - JWT_SECRET_KEY=dPxKLDJnXNcd/m1mSf5IKBDpe98RNFHSu72izm9FQOs= # Generated using openssl rand -base64 32
     ports:
       - "5431:5432"
     healthcheck:

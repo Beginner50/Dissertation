@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "7OyK/xp69+I=",
+  "dgSpecHash": "ncSK2C/vQPE=",
   "success": true,
   "projectFilePath": "/home/jatooUOM/Desktop/Dissertation/PMS/server/PMS.csproj",
   "expectedPackageFiles": [
+    "/home/jatooUOM/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/google.apis/1.69.0/google.apis.1.69.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/google.apis.auth/1.69.0/google.apis.auth.1.69.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/google.apis.core/1.69.0/google.apis.core.1.69.0.nupkg.sha512",

@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace PMS.Migrations
 {
     /// <inheritdoc />
-    public partial class NewInit : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -24,6 +24,7 @@ namespace PMS.Migrations
                     Email = table.Column<string>(type: "text", nullable: false),
                     Password = table.Column<string>(type: "text", nullable: false),
                     Role = table.Column<string>(type: "text", nullable: false),
+                    RefreshToken = table.Column<string>(type: "text", nullable: false),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
@@ -287,16 +288,16 @@ namespace PMS.Migrations
 
             migrationBuilder.InsertData(
                 table: "Users",
-                columns: new[] { "UserID", "Email", "IsDeleted", "Name", "Password", "Role" },
+                columns: new[] { "UserID", "Email", "IsDeleted", "Name", "Password", "RefreshToken", "Role" },
                 values: new object[,]
                 {
-                    { 1L, "alice@uni.com", false, "Alice Student", "hashed_password", "student" },
-                    { 2L, "smith@uni.com", false, "Dr. Smith", "hashed_password", "supervisor" },
-                    { 3L, "hashim@uni.com", false, "Hashim", "hashed_password", "student" },
-                    { 4L, "charlie@uni.com", false, "Charlie Student", "hashed_password", "student" },
-                    { 5L, "brown@uni.com", false, "Dr. Brown", "hashed_password", "supervisor" },
-                    { 6L, "agent@smith.com", false, "Agent Smith", "hashed_password", "student" },
-                    { 7L, "rebellius@uni.com", false, "Rebellius", "hashed_password", "student" }
+                    { 1L, "alice@uni.com", false, "Alice Student", "hashed_password", "", "student" },
+                    { 2L, "smith@uni.com", false, "Dr. Smith", "hashed_password", "", "supervisor" },
+                    { 3L, "hashim@uni.com", false, "Hashim", "hashed_password", "", "student" },
+                    { 4L, "charlie@uni.com", false, "Charlie Student", "hashed_password", "", "student" },
+                    { 5L, "brown@uni.com", false, "Dr. Brown", "hashed_password", "", "supervisor" },
+                    { 6L, "agent@smith.com", false, "Agent Smith", "hashed_password", "", "student" },
+                    { 7L, "rebellius@uni.com", false, "Rebellius", "hashed_password", "", "student" }
                 });
 
             migrationBuilder.InsertData(

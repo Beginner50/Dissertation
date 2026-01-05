@@ -1,22 +1,25 @@
 import { ProjectDetails } from "../../components/project.components/project-details.component";
 import { TaskList } from "../../components/task.components.tsx/task-list.component";
-import { user, origin } from "../../lib/temp";
 import { useParams } from "react-router";
-import type { TaskFormData, User } from "../../lib/types";
+import type { Project, Task, TaskFormData, User } from "../../lib/types";
 import { useCallback, useState } from "react";
 import TaskModal, {
   type ModalState,
 } from "../../components/task.components.tsx/task-modal.component";
-import { useSingleProjectQuery } from "../../lib/hooks/useProjectsQuery";
-import { useTaskMutation } from "../../lib/hooks/useTaskMutation";
-import { useTasksQuery } from "../../lib/hooks/useTasksQuery";
 import { Selector } from "../../components/base.components/selector.component";
-import { useUserMutation } from "../../lib/hooks/useUserMutation";
-import { useUnsupervisedStudentsQuery } from "../../lib/hooks/useUsersQuery";
-import { useProjectsMutation } from "../../lib/hooks/useProjectsMutation";
-import { useMutation } from "@tanstack/react-query";
+import PageLayout from "../../components/layout.components/page-layout.component";
+import { useAuth } from "../../providers/auth.provider";
+import {
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 export default function DashboardTasksRoute() {
+  const { authState, authorizedAPI } = useAuth();
+  const user = authState.user as User;
+
   const [taskModalState, setTaskModalState] = useState<ModalState>({
     mode: "create",
     open: false,
@@ -33,16 +36,55 @@ export default function DashboardTasksRoute() {
     undefined
   );
 
-  const taskMutation = useTaskMutation();
-  const userMutation = useUserMutation();
-
   const { projectID } = useParams();
-  const { data: project, isLoading: projectLoading } = useSingleProjectQuery({
-    projectID,
+
+  /* ---------------------------------------------------------------------------------- */
+
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: async ({
+      method,
+      url,
+      data,
+    }: {
+      method: string;
+      url: string;
+      data: any;
+      invalidateQueryKeys: any[][];
+    }) => await authorizedAPI(url, { method: method, json: data }),
+    onSuccess: (_data, variables) =>
+      variables.invalidateQueryKeys.forEach((key) =>
+        queryClient.invalidateQueries({
+          queryKey: key,
+        })
+      ),
   });
-  const { data: tasks, isLoading: tasksLoading } = useTasksQuery({ projectID });
+
+  const { data: project, isLoading: projectLoading } = useQuery({
+    queryKey: ["projects", projectID?.toString()],
+    queryFn: async (): Promise<Project> =>
+      await authorizedAPI
+        .get(`api/users/${user.userID}/projects/${projectID}`)
+        .json(),
+    retry: 1,
+  });
+
+  const { data: tasks, isLoading: tasksLoading } = useQuery({
+    queryKey: [projectID?.toString(), "tasks"],
+    queryFn: async (): Promise<Task[]> =>
+      await authorizedAPI
+        .get(`api/users/${user.userID}/projects/${projectID}/tasks`)
+        .json(),
+    retry: 1,
+  });
+
   const { data: unsupervisedStudents, isLoading: unsupervisedStudentsLoading } =
-    useUnsupervisedStudentsQuery();
+    useQuery({
+      queryKey: [user.userID.toString(), "users", "unsupervised"],
+      queryFn: async (): Promise<User[]> =>
+        await authorizedAPI.get(`api/users`).json(),
+      retry: 1,
+    });
 
   /* ---------------------------------------------------------------------------------- */
 
@@ -98,37 +140,44 @@ export default function DashboardTasksRoute() {
   /* ---------------------------------------------------------------------------------- */
 
   const handleCreateTask = () => {
-    taskMutation.mutate({
+    mutation.mutate({
       method: "post",
       url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks`,
       data: taskModalData,
+      invalidateQueryKeys: [[projectID?.toString(), "tasks"]],
     });
     setTaskModalState((t) => ({ ...t, open: false }));
   };
 
   const handleEditTask = () => {
-    taskMutation.mutate({
+    mutation.mutate({
       method: "put",
-      url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
+      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
       data: taskModalData,
+      invalidateQueryKeys: [[projectID?.toString(), "tasks"]],
     });
     setTaskModalState((t) => ({ ...t, open: false }));
   };
 
   const handleDeleteTask = () => {
-    taskMutation.mutate({
+    mutation.mutate({
       method: "delete",
-      url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
+      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
       data: taskModalData,
+      invalidateQueryKeys: [[projectID?.toString(), "tasks"]],
     });
     setTaskModalState((t) => ({ ...t, open: false }));
   };
 
   const handleAddStudent = () => {
-    userMutation.mutate({
+    mutation.mutate({
       method: "put",
-      url: `${origin}/api/users/${user.userID}/projects/${projectID}/add-student/${selectedStudent?.userID}`,
+      url: `api/users/${user.userID}/projects/${projectID}/add-student/${selectedStudent?.userID}`,
       data: {},
+      invalidateQueryKeys: [
+        ["projects", projectID?.toString()],
+        [user.userID.toString(), "users", "unsupervised"],
+      ],
     });
     setTaskModalState((t) => ({ ...t, open: false }));
   };
@@ -146,123 +195,137 @@ export default function DashboardTasksRoute() {
         .includes(studentSearchTerm.toLowerCase())
   );
 
-  const isFormInvalid = Object.entries(taskModalData).some(([key, val]) => {
-    if (typeof val == "number") return Number.isNaN(val);
-    if (key == "description") return false;
-    return val == "";
-  });
+  const formDataIncomplete = (() => {
+    switch (taskModalState.mode) {
+      case "create":
+      case "edit":
+        return Object.entries(taskModalData).some(([key, val]) => {
+          if (typeof val == "number") return Number.isNaN(val);
+          if (key == "description") return false;
+          return val == "";
+        });
+      case "add-student":
+        return selectedStudent == null;
+      case "delete":
+        return false;
+    }
+  })();
+
+  /* ---------------------------------------------------------------------------------- */
+
+  const modalViews = {
+    create: (
+      <TaskModal.Fields>
+        <TaskModal.TaskTitle
+          title={taskModalData.title}
+          handleTitleChange={handleTitleChange}
+        />
+        <TaskModal.TaskDescription
+          description={taskModalData.description ?? ""}
+          handleDescriptionChange={handleDescriptionChange}
+        />
+        <TaskModal.DueDate
+          dueDate={taskModalData.dueDate}
+          handleDueDateChange={handleDueDateChange}
+        />
+      </TaskModal.Fields>
+    ),
+    edit: (
+      <TaskModal.Fields>
+        <TaskModal.TaskID taskID={taskModalData.taskID} />
+        <TaskModal.TaskTitle
+          title={taskModalData.title}
+          handleTitleChange={handleTitleChange}
+        />
+        <TaskModal.TaskDescription
+          description={taskModalData.description ?? ""}
+          handleDescriptionChange={handleDescriptionChange}
+        />
+        <TaskModal.DueDate
+          dueDate={taskModalData.dueDate}
+          handleDueDateChange={handleDueDateChange}
+        />
+      </TaskModal.Fields>
+    ),
+    "add-student": (
+      <Selector>
+        <Selector.Search
+          searchTerm={studentSearchTerm}
+          placeholder="Search for students..."
+          handleSearchChange={handleSearchChange}
+        />
+        <Selector.Content>
+          {filteredStudents && filteredStudents.length > 0 ? (
+            filteredStudents.map((s) => (
+              <Selector.StudentListEntry
+                student={s}
+                isSelected={selectedStudent?.userID == s.userID}
+                handleSelectStudent={() => handleSelectStudent(s)}
+              />
+            ))
+          ) : (
+            <Selector.NotFound placeholder="No students match your search" />
+          )}
+        </Selector.Content>
+      </Selector>
+    ),
+    delete: <TaskModal.DeleteWarning />,
+  };
 
   return (
     <>
-      <TaskList
-        sx={{
-          flexGrow: 3,
-          overflowY: "auto",
-          flexDirection: "column",
-        }}
-      >
-        <TaskList.Header>
-          {user.role == "supervisor" && (
-            <TaskList.CreateTaskButton onClick={handleCreateTaskClick} />
-          )}
-        </TaskList.Header>
+      <PageLayout.Normal>
+        {/* Left Section - Tasks */}
+        <TaskList sx={{ flexGrow: 3 }}>
+          <TaskList.Header>
+            {user.role == "supervisor" && (
+              <TaskList.CreateTaskButton onClick={handleCreateTaskClick} />
+            )}
+          </TaskList.Header>
 
-        {!tasksLoading && (
-          <TaskList.List
-            projectID={parseInt(projectID ?? "")}
+          <TaskList.Content
+            isLoading={tasksLoading}
+            projectID={projectID}
             tasks={tasks ?? []}
+            menuEnabled={user.role === "supervisor"}
             handleEditTaskClick={handleEditTaskClick}
             handleDeleteTaskClick={handleDeleteTaskClick}
           />
-        )}
-      </TaskList>
+        </TaskList>
 
-      <ProjectDetails
-        sx={{
-          flexGrow: 1,
-          maxWidth: "30vw",
-          minHeight: "45vh",
-          height: "fit-content",
-        }}
-      >
-        <ProjectDetails.Header
-          title={project?.title ?? ""}
-          description={project?.description ?? ""}
-        />
-        <ProjectDetails.MemberInformation
-          student={project?.student}
-          supervisor={project?.supervisor}
-        />
-        <ProjectDetails.Actions>
-          <ProjectDetails.GenerateProgressLogReportButton
-            handleGenerateProgressLogReport={handleGenerateProgressLogReport}
+        {/* Right Section - Project Details */}
+        <ProjectDetails sx={{ flexGrow: 1 }}>
+          <ProjectDetails.Header
+            title={project?.title ?? ""}
+            description={project?.description ?? ""}
           />
-          {user.role == "supervisor" && (
-            <ProjectDetails.AddStudentButton
-              isStudentAssigned={!!project?.student}
-              handleAddStudentClick={handleAddStudentClick}
+          <ProjectDetails.MemberInformation
+            student={project?.student}
+            supervisor={project?.supervisor}
+          />
+          <ProjectDetails.Actions>
+            <ProjectDetails.GenerateProgressLogReportButton
+              handleGenerateProgressLogReport={handleGenerateProgressLogReport}
             />
-          )}
-        </ProjectDetails.Actions>
-      </ProjectDetails>
+            {user.role == "supervisor" && (
+              <ProjectDetails.AddStudentButton
+                isStudentAssigned={!!project?.student}
+                handleAddStudentClick={handleAddStudentClick}
+              />
+            )}
+          </ProjectDetails.Actions>
+        </ProjectDetails>
+      </PageLayout.Normal>
 
+      {/* Task Modal */}
       <TaskModal open={taskModalState.open}>
         <TaskModal.Header mode={taskModalState.mode} />
-        {(taskModalState.mode == "create" || taskModalState.mode == "edit") && (
-          <TaskModal.Fields>
-            <TaskModal.TaskID
-              taskID={taskModalData.taskID}
-              visible={taskModalState.mode == "edit"}
-            />
-            <TaskModal.TaskTitle
-              title={taskModalData.title}
-              handleTitleChange={handleTitleChange}
-            />
-            <TaskModal.TaskDescription
-              description={taskModalData.description ?? ""}
-              handleDescriptionChange={handleDescriptionChange}
-            />
-            <TaskModal.DueDate
-              dueDate={taskModalData.dueDate}
-              handleDueDateChange={handleDueDateChange}
-            />
-          </TaskModal.Fields>
-        )}
 
-        {taskModalState.mode == "add-student" && (
-          <Selector>
-            <Selector.Search
-              searchTerm={studentSearchTerm}
-              placeholder="Search for students..."
-              handleSearchChange={handleSearchChange}
-            />
-            <Selector.List>
-              {filteredStudents && filteredStudents.length > 0 ? (
-                filteredStudents.map((s) => (
-                  <Selector.StudentListEntry
-                    student={s}
-                    isSelected={selectedStudent?.userID == s.userID}
-                    handleSelectStudent={() => handleSelectStudent(s)}
-                  />
-                ))
-              ) : (
-                <Selector.NotFound placeholder="No students match your search" />
-              )}
-            </Selector.List>
-          </Selector>
-        )}
-
-        {taskModalState.mode == "delete" && <TaskModal.DeleteWarning />}
+        {modalViews[taskModalState.mode]}
 
         <TaskModal.Actions
           mode={taskModalState.mode}
-          disabled={
-            (isFormInvalid &&
-              (taskModalState.mode == "create" ||
-                taskModalState.mode == "edit")) ||
-            (selectedStudent == undefined &&
-              taskModalState.mode == "add-student")
-          }
+          disabled={formDataIncomplete}
           handleCancelClick={handleCancelClick}
           handleCreateTask={handleCreateTask}
           handleEditTask={handleEditTask}

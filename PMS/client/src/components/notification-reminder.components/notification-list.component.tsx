@@ -1,6 +1,5 @@
 import type { Theme } from "@emotion/react";
 import { Box, Divider, Stack, Typography, type SxProps } from "@mui/material";
-import { theme } from "../../lib/theme";
 import type { Notification } from "../../lib/types";
 import NotificationEntry from "./notification-list-entry.component";
 import type { ReactNode } from "react";
@@ -12,7 +11,6 @@ export function NotificationList({
   notifications: Notification[];
   sx?: SxProps<Theme>;
 }) {
-  // Sort notifications by most recent first (Descending)
   const sortedNotifications = [...notifications].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
@@ -20,12 +18,11 @@ export function NotificationList({
   return (
     <Box
       sx={{
+        width: "28.5vw",
         padding: "1rem",
         background: "white",
         borderRadius: "8px",
         overflowY: "auto",
-        border: `1px solid ${theme.borderSoft}`,
-        boxShadow: theme.shadowSoft,
         ...sx,
       }}
     >

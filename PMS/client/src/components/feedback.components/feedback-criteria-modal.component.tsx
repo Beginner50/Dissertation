@@ -38,6 +38,7 @@ export default function FeedbackModal({
           sx: { maxWidth: "50vw", mx: "auto" },
         },
       }}
+      keepMounted
     >
       {children}
     </Dialog>

@@ -21,6 +21,7 @@ public class MeetingsController : ControllerBase
     // [Authorize]
     [Route("api/users/{userID}/[controller]")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetSupervisorMeetings(
         [FromRoute] long userID
     )
@@ -40,6 +41,7 @@ public class MeetingsController : ControllerBase
 
     [Route("api/[controller]/{meetingID}")]
     [HttpGet]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetMeeting([FromRoute] long meetingID)
     {
         try
@@ -55,6 +57,7 @@ public class MeetingsController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/[controller]")]
     [HttpPost]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> BookMeeting(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -80,6 +83,7 @@ public class MeetingsController : ControllerBase
 
     [Route("api/users/{userID}/[controller]/{meetingID}/edit-description")]
     [HttpPut]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> EditMeetingDescription(
                     [FromRoute] long userID,
                     [FromRoute] long meetingID,
@@ -103,6 +107,7 @@ public class MeetingsController : ControllerBase
 
     [Route("api/users/{userID}/[controller]/{meetingID}/cancel")]
     [HttpDelete]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> CancelMeeting(
                     [FromRoute] long userID,
                     [FromRoute] long meetingID
@@ -121,6 +126,7 @@ public class MeetingsController : ControllerBase
 
     [Route("api/users/{userID}/[controller]/{meetingID}/accept")]
     [HttpPut]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> AcceptMeeting(
         [FromRoute] long userID,
         [FromRoute] long meetingID
@@ -139,6 +145,7 @@ public class MeetingsController : ControllerBase
 
     [Route("api/users/{userID}/[controller]/{meetingID}/reject")]
     [HttpDelete]
+    [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> RejectMeeting(
             [FromRoute] long userID,
             [FromRoute] long meetingID

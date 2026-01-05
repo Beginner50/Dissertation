@@ -12,8 +12,8 @@ using PMS.DatabaseContext;
 namespace PMS.Migrations
 {
     [DbContext(typeof(PMSDbContext))]
-    [Migration("20260103173715_NewInit")]
-    partial class NewInit
+    [Migration("20260104113542_PasswordUpdate")]
+    partial class PasswordUpdate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -631,6 +631,10 @@ namespace PMS.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("text");
@@ -646,7 +650,8 @@ namespace PMS.Migrations
                             Email = "alice@uni.com",
                             IsDeleted = false,
                             Name = "Alice Student",
-                            Password = "hashed_password",
+                            Password = "$2a$11$VuPbqwmrwFzfNyMcA5kw5uN8FTANUUch1QVlvY1TFs3hgwK3hVrl2",
+                            RefreshToken = "",
                             Role = "student"
                         },
                         new
@@ -655,7 +660,8 @@ namespace PMS.Migrations
                             Email = "smith@uni.com",
                             IsDeleted = false,
                             Name = "Dr. Smith",
-                            Password = "hashed_password",
+                            Password = "$2a$11$VuPbqwmrwFzfNyMcA5kw5uN8FTANUUch1QVlvY1TFs3hgwK3hVrl2",
+                            RefreshToken = "",
                             Role = "supervisor"
                         },
                         new
@@ -664,7 +670,8 @@ namespace PMS.Migrations
                             Email = "hashim@uni.com",
                             IsDeleted = false,
                             Name = "Hashim",
-                            Password = "hashed_password",
+                            Password = "$2a$11$VuPbqwmrwFzfNyMcA5kw5uN8FTANUUch1QVlvY1TFs3hgwK3hVrl2",
+                            RefreshToken = "",
                             Role = "student"
                         },
                         new
@@ -673,7 +680,8 @@ namespace PMS.Migrations
                             Email = "charlie@uni.com",
                             IsDeleted = false,
                             Name = "Charlie Student",
-                            Password = "hashed_password",
+                            Password = "$2a$11$VuPbqwmrwFzfNyMcA5kw5uN8FTANUUch1QVlvY1TFs3hgwK3hVrl2",
+                            RefreshToken = "",
                             Role = "student"
                         },
                         new
@@ -682,7 +690,8 @@ namespace PMS.Migrations
                             Email = "brown@uni.com",
                             IsDeleted = false,
                             Name = "Dr. Brown",
-                            Password = "hashed_password",
+                            Password = "$2a$11$VuPbqwmrwFzfNyMcA5kw5uN8FTANUUch1QVlvY1TFs3hgwK3hVrl2",
+                            RefreshToken = "",
                             Role = "supervisor"
                         },
                         new
@@ -691,7 +700,8 @@ namespace PMS.Migrations
                             Email = "agent@smith.com",
                             IsDeleted = false,
                             Name = "Agent Smith",
-                            Password = "hashed_password",
+                            Password = "$2a$11$VuPbqwmrwFzfNyMcA5kw5uN8FTANUUch1QVlvY1TFs3hgwK3hVrl2",
+                            RefreshToken = "",
                             Role = "student"
                         },
                         new
@@ -700,7 +710,8 @@ namespace PMS.Migrations
                             Email = "rebellius@uni.com",
                             IsDeleted = false,
                             Name = "Rebellius",
-                            Password = "hashed_password",
+                            Password = "$2a$11$VuPbqwmrwFzfNyMcA5kw5uN8FTANUUch1QVlvY1TFs3hgwK3hVrl2",
+                            RefreshToken = "",
                             Role = "student"
                         });
                 });

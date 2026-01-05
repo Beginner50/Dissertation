@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PMS.DatabaseContext;
@@ -11,9 +12,11 @@ using PMS.DatabaseContext;
 namespace PMS.Migrations
 {
     [DbContext(typeof(PMSDbContext))]
-    partial class PMSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260104111248_Init")]
+    partial class Init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -615,8 +618,7 @@ namespace PMS.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -627,8 +629,7 @@ namespace PMS.Migrations
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RefreshToken")
                         .IsRequired()
@@ -649,7 +650,7 @@ namespace PMS.Migrations
                             Email = "alice@uni.com",
                             IsDeleted = false,
                             Name = "Alice Student",
-                            Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
+                            Password = "hashed_password",
                             RefreshToken = "",
                             Role = "student"
                         },
@@ -659,7 +660,7 @@ namespace PMS.Migrations
                             Email = "smith@uni.com",
                             IsDeleted = false,
                             Name = "Dr. Smith",
-                            Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
+                            Password = "hashed_password",
                             RefreshToken = "",
                             Role = "supervisor"
                         },
@@ -669,7 +670,7 @@ namespace PMS.Migrations
                             Email = "hashim@uni.com",
                             IsDeleted = false,
                             Name = "Hashim",
-                            Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
+                            Password = "hashed_password",
                             RefreshToken = "",
                             Role = "student"
                         },
@@ -679,7 +680,7 @@ namespace PMS.Migrations
                             Email = "charlie@uni.com",
                             IsDeleted = false,
                             Name = "Charlie Student",
-                            Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
+                            Password = "hashed_password",
                             RefreshToken = "",
                             Role = "student"
                         },
@@ -689,7 +690,7 @@ namespace PMS.Migrations
                             Email = "brown@uni.com",
                             IsDeleted = false,
                             Name = "Dr. Brown",
-                            Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
+                            Password = "hashed_password",
                             RefreshToken = "",
                             Role = "supervisor"
                         },
@@ -699,7 +700,7 @@ namespace PMS.Migrations
                             Email = "agent@smith.com",
                             IsDeleted = false,
                             Name = "Agent Smith",
-                            Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
+                            Password = "hashed_password",
                             RefreshToken = "",
                             Role = "student"
                         },
@@ -709,7 +710,7 @@ namespace PMS.Migrations
                             Email = "rebellius@uni.com",
                             IsDeleted = false,
                             Name = "Rebellius",
-                            Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
+                            Password = "hashed_password",
                             RefreshToken = "",
                             Role = "student"
                         });

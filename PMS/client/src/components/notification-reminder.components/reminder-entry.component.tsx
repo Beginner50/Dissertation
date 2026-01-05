@@ -37,11 +37,6 @@ export default function ReminderEntry({
         display: "flex",
         alignItems: "center",
         gap: 2,
-        transition: "all 0.2s ease",
-        "&:hover": {
-          borderColor: "primary.main",
-          bgcolor: "hsl(0, 0%, 99%)",
-        },
         ...sx,
       }}
     >
@@ -50,7 +45,6 @@ export default function ReminderEntry({
   );
 }
 
-// 1. Icon Component
 ReminderEntry.Icon = ({ type }: { type: Reminder["type"] }) => {
   const { color, icon } = getReminderTypeMeta(type);
   return (
@@ -62,7 +56,7 @@ ReminderEntry.Icon = ({ type }: { type: Reminder["type"] }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        bgcolor: `${color}12`, // Subtle 12% opacity background
+        bgcolor: `${color}12`,
         color: color,
         flexShrink: 0,
       }}
@@ -72,14 +66,12 @@ ReminderEntry.Icon = ({ type }: { type: Reminder["type"] }) => {
   );
 };
 
-// 2. Vertical Stack Wrapper
 ReminderEntry.Content = ({ children }: { children: ReactNode }) => (
   <Box sx={{ flexGrow: 1, minWidth: 0 }}>
     <Stack spacing={0.2}>{children}</Stack>
   </Box>
 );
 
-// 3. The Headline (Time + Date)
 ReminderEntry.Time = ({ remindAt }: { remindAt: string }) => {
   const dateObj = new Date(remindAt);
   return (
@@ -113,14 +105,12 @@ ReminderEntry.Time = ({ remindAt }: { remindAt: string }) => {
   );
 };
 
-// 4. The Subtext (Description)
 ReminderEntry.Description = ({ text }: { text: string }) => (
   <Typography
     variant="body2"
     sx={{
-      color: "text.secondary", // Grayer than the time
+      color: "text.secondary",
       fontWeight: 500,
-      // Standard non-webkit truncation:
       whiteSpace: "nowrap",
       overflow: "hidden",
       textOverflow: "ellipsis",

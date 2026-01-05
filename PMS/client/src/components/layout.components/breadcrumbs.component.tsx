@@ -1,41 +1,34 @@
 import { Breadcrumbs as MuiBreadcrumbs, Typography } from "@mui/material";
 import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import ky from "ky";
 import { theme } from "../../lib/theme";
-import { user, origin } from "../../lib/temp";
-import type { Project, Task } from "../../lib/types";
-
-const fetchProject = async (userID: number, projectID: string) => {
-  return (await ky
-    .get(`${origin}/api/users/${userID}/projects/${projectID}`)
-    .json()) as Project;
-};
-
-const fetchTask = async (
-  userID: number,
-  projectID?: string,
-  taskID?: string
-) => {
-  return (await ky
-    .get(`${origin}/api/users/${userID}/projects/${projectID}/tasks/${taskID}`)
-    .json()) as Task;
-};
+import type { Project, Task, User } from "../../lib/types";
+import { useAuth } from "../../providers/auth.provider";
 
 export default function Breadcrumbs() {
+  const { authState, authorizedAPI } = useAuth();
+  const user = authState.user as User;
+
   const { pathname } = useLocation();
 
   const { projectID, taskID } = useParams();
 
   const { data: project } = useQuery({
-    queryKey: ["project", projectID],
-    queryFn: () => fetchProject(user.userID, projectID!),
-    enabled: !!projectID,
+    queryKey: ["projects", projectID],
+    queryFn: async (): Promise<Project> =>
+      await authorizedAPI
+        .get(`api/users/${user.userID}/projects/${projectID}`)
+        .json(),
+    enabled: projectID != undefined,
   });
+
   const { data: task } = useQuery({
-    queryKey: ["task"],
-    queryFn: () => fetchTask(user.userID, projectID, taskID),
-    enabled: !!taskID,
+    queryKey: ["tasks", taskID],
+    queryFn: async (): Promise<Task> =>
+      await authorizedAPI
+        .get(`api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`)
+        .json(),
+    enabled: taskID != undefined,
   });
 
   const breadcrumbs = [];

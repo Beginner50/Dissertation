@@ -2,8 +2,8 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { BrowserRouter, Route, Routes } from "react-router";
-import { AuthProvider } from "./lib/providers/auth.provider";
-import NormalLayout from "./components/layout.components/normal.layout.component";
+import { AuthProvider } from "./providers/auth.provider";
+import PageLayout from "./components/layout.components/page-layout.component";
 import IndexRoute from "./routes/index.route";
 import DashboardProjectsRoute from "./routes/normal.routes/dashboard-projects.route";
 import DashboardTasksRoute from "./routes/normal.routes/dashboard-tasks.route";
@@ -20,18 +20,16 @@ createRoot(document.getElementById("root")!).render(
         <BrowserRouter>
           <Routes>
             <Route index element={<IndexRoute />} />
-            <Route element={<NormalLayout />}>
-              <Route path="projects" element={<DashboardProjectsRoute />} />
-              <Route path="scheduler" element={<SchedulerRoute />} />
-              <Route
-                path="projects/:projectID/tasks"
-                element={<DashboardTasksRoute />}
-              />
-              <Route
-                path="projects/:projectID/tasks/:taskID"
-                element={<TaskRoute />}
-              />
-            </Route>
+            <Route path="projects" element={<DashboardProjectsRoute />} />
+            <Route path="scheduler" element={<SchedulerRoute />} />
+            <Route
+              path="projects/:projectID/tasks"
+              element={<DashboardTasksRoute />}
+            />
+            <Route
+              path="projects/:projectID/tasks/:taskID"
+              element={<TaskRoute />}
+            />
             <Route path="sign-in" element={<SignInRoute />} />
           </Routes>
         </BrowserRouter>

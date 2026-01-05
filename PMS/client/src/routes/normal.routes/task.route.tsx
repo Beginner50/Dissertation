@@ -4,18 +4,23 @@ import TaskActions from "../../components/task.components.tsx/task-actions.compo
 import { TaskDetails } from "../../components/task.components.tsx/task-details.component";
 import { useEffect, useState } from "react";
 import DeliverableCard from "../../components/task.components.tsx/deliverable-card.component";
-import type { DeliverableFile, FeedbackCriteria } from "../../lib/types";
-import { user, origin } from "../../lib/temp";
+import type {
+  Deliverable,
+  DeliverableFile,
+  FeedbackCriteria,
+  Task,
+  User,
+} from "../../lib/types";
 import { useParams } from "react-router";
-import { useSingleTaskQuery } from "../../lib/hooks/useTasksQuery";
-import {
-  useStagedDeliverableQuery,
-  useSubmittedDeliverableQuery,
-} from "../../lib/hooks/useDeliverablesQuery";
-import { useDeliverableMutation } from "../../lib/hooks/useDeliverableMutation";
 import FeedbackModal from "../../components/feedback.components/feedback-criteria-modal.component";
+import PageLayout from "../../components/layout.components/page-layout.component";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { baseURL, useAuth } from "../../providers/auth.provider";
 
 export default function TaskRoute() {
+  const { authState, authorizedAPI } = useAuth();
+  const user = authState.user as User;
+
   const [feedbackModalOpen, setFeedbackModalOpen] = useState<boolean>(false);
   const [feedbackComplianceLoading, setFeedbackComplianceLoading] =
     useState<boolean>(false);
@@ -25,23 +30,74 @@ export default function TaskRoute() {
 
   const { projectID, taskID } = useParams();
 
-  const deliverableMutation = useDeliverableMutation();
+  /* ---------------------------------------------------------------------------------- */
 
-  const { data: task, isLoading: taskLoading } = useSingleTaskQuery({
-    projectID,
-    taskID,
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: async ({
+      method,
+      url,
+      data,
+    }: {
+      method: string;
+      url: string;
+      data: any;
+      invalidateQueryKeys: any[][];
+    }) => await authorizedAPI(url, { method: method, json: data }),
+    onSuccess: (_data, variables) =>
+      variables.invalidateQueryKeys.forEach((key) =>
+        queryClient.invalidateQueries({
+          queryKey: key,
+        })
+      ),
   });
-  const { data: submittedDeliverable, isLoading: submittedLoading } =
-    useSubmittedDeliverableQuery({
-      projectID,
-      taskID,
-    });
-  const { data: stagedDeliverable, isLoading: stagedLoading } =
-    useStagedDeliverableQuery({
-      projectID,
-      taskID,
-      disabled: user.role != "student",
-    });
+
+  const { data: task, isLoading: taskLoading } = useQuery({
+    queryKey: ["tasks", taskID?.toString()],
+    queryFn: async (): Promise<Task> =>
+      await authorizedAPI
+        .get(`api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`)
+        .json(),
+    retry: 1,
+  });
+
+  const { data: submittedDeliverable, isLoading: submittedLoading } = useQuery({
+    queryKey: [taskID?.toString(), "deliverables", "submitted"],
+    queryFn: async (): Promise<Deliverable | null> => {
+      try {
+        return await authorizedAPI
+          .get(
+            `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable`
+          )
+          .json();
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          return null;
+        }
+        throw error;
+      }
+    },
+    retry: 1,
+  });
+
+  const { data: stagedDeliverable, isLoading: stagedLoading } = useQuery({
+    queryKey: [taskID?.toString(), "deliverables", "staged"],
+    queryFn: async (): Promise<Deliverable | null> => {
+      try {
+        return await authorizedAPI
+          .get(
+            `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`
+          )
+          .json();
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          return null;
+        }
+        throw error;
+      }
+    },
+    retry: 1,
+  });
 
   useEffect(() => {
     const criteria = submittedDeliverable?.feedbackCriterias ?? [];
@@ -95,26 +151,32 @@ export default function TaskRoute() {
       contentType: file.type,
     };
 
-    deliverableMutation.mutate({
+    mutation.mutate({
       method: "post",
-      url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
+      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
       data: deliverableFile,
+      invalidateQueryKeys: [[taskID?.toString(), "deliverables", "staged"]],
     });
   };
 
   const handleSubmitDeliverable = () => {
-    deliverableMutation.mutate({
+    mutation.mutate({
       method: "post",
-      url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable/submit`,
+      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable/submit`,
       data: {},
+      invalidateQueryKeys: [
+        [taskID?.toString(), "deliverables", "staged"],
+        [taskID?.toString(), "deliverables", "submitted"],
+      ],
     });
   };
 
   const handleRemoveStagedDeliverable = () => {
-    deliverableMutation.mutate({
+    mutation.mutate({
       method: "delete",
-      url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
+      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
       data: {},
+      invalidateQueryKeys: [[taskID?.toString(), "deliverables", "staged"]],
     });
   };
 
@@ -123,11 +185,14 @@ export default function TaskRoute() {
       (c) => c.description.trim() !== ""
     );
 
-    deliverableMutation.mutate(
+    mutation.mutate(
       {
         method: "post",
-        url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback`,
+        url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback`,
         data: filteredCriteria,
+        invalidateQueryKeys: [
+          [taskID?.toString(), "deliverables", "submitted"],
+        ],
       },
       {
         onSuccess: () => setFeedbackModalOpen(false),
@@ -138,11 +203,14 @@ export default function TaskRoute() {
   const handleCheckFeedbackCompliance = () => {
     if (!feedbackComplianceLoading) {
       setFeedbackComplianceLoading(true);
-      deliverableMutation.mutate(
+      mutation.mutate(
         {
           method: "post",
-          url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/compliance-check`,
+          url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/compliance-check`,
           data: {},
+          invalidateQueryKeys: [
+            [taskID?.toString(), "deliverables", "submitted"],
+          ],
         },
         {
           onSuccess: () => setFeedbackComplianceLoading(false),
@@ -156,94 +224,94 @@ export default function TaskRoute() {
 
   return (
     <>
-      <TaskDetails
-        sx={{
-          flexGrow: 3,
-          display: "flex",
-          flexDirection: "column",
-          maxWidth: "65vw",
-          maxHeight: "78vh",
-          overflowY: "scroll",
-        }}
-      >
-        <TaskDetails.Header
-          title={task?.title ?? "Task Title"}
-          deadline={task?.dueDate ?? "Due Date"}
-        />
-
-        <TaskDetails.Content>
-          <TaskDetails.Description>{task?.description}</TaskDetails.Description>
-        </TaskDetails.Content>
-
-        {tableCriteria.length > 0 && (
-          <FeedbackCriteriaTable
-            criteria={tableCriteria}
-            onOverrideToggle={handleOverrideToggle}
+      <PageLayout.Normal>
+        {/* Left Section - Task Details */}
+        <TaskDetails sx={{ flexGrow: 3 }}>
+          <TaskDetails.Header
+            title={task?.title ?? "Task Title"}
+            deadline={task?.dueDate ?? "Due Date"}
           />
-        )}
-      </TaskDetails>
 
-      <TaskActions
-        sx={{
-          flexGrow: 1,
-          maxWidth: "25vw",
-          background: "hsla(0,0%,100%,50%)",
-        }}
-      >
-        <TaskActions.Header title="Task Actions" />
-        {submittedDeliverable && (
-          <DeliverableCard
-            cardDescription="Submitted Deliverable"
-            url={`${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable?file=true`}
-            deliverable={submittedDeliverable}
-          />
-        )}
-        {stagedDeliverable ? (
-          <DeliverableCard
-            cardDescription="Staged Deliverable"
-            url={`${origin}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`}
-            deliverable={stagedDeliverable}
-            onRemove={handleRemoveStagedDeliverable}
-          />
-        ) : (
-          user.role == "student" && (
-            <TaskActions.DeliverableUpload
-              handleFileUpload={handleFileUpload}
-            />
-          )
-        )}
+          <TaskDetails.Content>
+            <TaskDetails.Description>
+              {task?.description}
+            </TaskDetails.Description>
+          </TaskDetails.Content>
 
-        <TaskActions.ActionButtonContainer>
-          {user.role == "supervisor" && (
-            <TaskActions.ProvideFeedbackButton
-              disabled={!submittedDeliverable}
-              onClick={handleProvideFeedbackClick}
+          {tableCriteria.length > 0 && (
+            <FeedbackCriteriaTable
+              criteria={tableCriteria}
+              overrideToggleEnabled={user.role === "student"}
+              onOverrideToggle={handleOverrideToggle}
             />
           )}
-          {user.role == "student" && (
-            <TaskActions.CheckComplianceButton
-              disabled={
-                !stagedDeliverable ||
-                tableCriteria.filter((c) => c.status == "unmet").length == 0
-              }
-              onClick={handleCheckFeedbackCompliance}
-              isLoading={feedbackComplianceLoading}
+        </TaskDetails>
+
+        {/* Right Section - Task Actions */}
+        <TaskActions
+          sx={{
+            flexGrow: 1,
+            maxWidth: "25vw",
+            background: "hsla(0,0%,100%,50%)",
+          }}
+        >
+          <TaskActions.Header title="Task Actions" />
+
+          {submittedDeliverable && (
+            <DeliverableCard
+              cardDescription="Submitted Deliverable"
+              url={`${baseURL}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable?file=true`}
+              deliverable={submittedDeliverable}
             />
           )}
-          {user.role == "student" && (
-            <TaskActions.SubmitDeliverableButton
-              disabled={
-                !stagedDeliverable ||
-                tableCriteria.some((c) => c.status === "unmet")
-              }
-              onClick={handleSubmitDeliverable}
+          {stagedDeliverable ? (
+            <DeliverableCard
+              cardDescription="Staged Deliverable"
+              url={`${baseURL}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`}
+              deliverable={stagedDeliverable}
+              onRemove={handleRemoveStagedDeliverable}
             />
+          ) : (
+            user.role == "student" && (
+              <TaskActions.DeliverableUpload
+                handleFileUpload={handleFileUpload}
+              />
+            )
           )}
-        </TaskActions.ActionButtonContainer>
-      </TaskActions>
+
+          <TaskActions.Actions>
+            {user.role == "supervisor" && (
+              <TaskActions.ProvideFeedbackButton
+                disabled={!submittedDeliverable}
+                onClick={handleProvideFeedbackClick}
+              />
+            )}
+            {user.role == "student" && (
+              <TaskActions.CheckComplianceButton
+                disabled={
+                  !stagedDeliverable ||
+                  tableCriteria.filter((c) => c.status == "unmet").length == 0
+                }
+                onClick={handleCheckFeedbackCompliance}
+                isLoading={feedbackComplianceLoading}
+              />
+            )}
+            {user.role == "student" && (
+              <TaskActions.SubmitDeliverableButton
+                disabled={
+                  !stagedDeliverable ||
+                  tableCriteria.some((c) => c.status === "unmet")
+                }
+                onClick={handleSubmitDeliverable}
+              />
+            )}
+          </TaskActions.Actions>
+        </TaskActions>
+      </PageLayout.Normal>
 
       <FeedbackModal open={feedbackModalOpen}>
         <FeedbackModal.Header />
+
         <FeedbackModal.Content>
           <FeedbackModal.CriteriaList
             criteria={modalCriteria}
@@ -251,6 +319,7 @@ export default function TaskRoute() {
           />
           <FeedbackModal.AddButton onAdd={handleAddCriterion} />
         </FeedbackModal.Content>
+
         <FeedbackModal.Actions
           onCancel={handleCancelClick}
           onSubmit={handleSubmitFeedback}

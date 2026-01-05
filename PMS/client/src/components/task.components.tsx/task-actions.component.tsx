@@ -129,7 +129,7 @@ TaskActions.DeliverableUpload = ({
   );
 };
 
-TaskActions.ActionButtonContainer = ({ children }: { children: ReactNode }) => {
+TaskActions.Actions = ({ children }: { children: ReactNode }) => {
   return (
     <Box
       sx={{

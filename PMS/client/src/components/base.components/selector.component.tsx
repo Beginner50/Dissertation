@@ -53,7 +53,7 @@ Selector.Search = ({
   </FormControl>
 );
 
-Selector.List = ({ children }: { children: ReactNode }) => (
+Selector.Content = ({ children }: { children: ReactNode }) => (
   <Paper
     variant="outlined"
     sx={{

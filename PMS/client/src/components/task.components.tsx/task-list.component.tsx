@@ -12,7 +12,6 @@ import AddIcon from "@mui/icons-material/Add";
 import { type ReactNode } from "react";
 import type { Task, TaskFormData } from "../../lib/types";
 import TaskListEntry from "./task-list-entry.component";
-import { user } from "../../lib/temp";
 
 export function TaskList({
   children,
@@ -29,6 +28,7 @@ export function TaskList({
         bgcolor: "background.paper",
         borderRadius: 2,
         display: "flex",
+        overflowY: "auto",
         flexDirection: "column",
         ...sx,
       }}
@@ -59,14 +59,18 @@ TaskList.Header = ({ children }: { children?: ReactNode }) => (
   </header>
 );
 
-TaskList.List = ({
+TaskList.Content = ({
+  isLoading,
   projectID,
   tasks,
+  menuEnabled,
   handleEditTaskClick,
   handleDeleteTaskClick,
 }: {
-  projectID: number;
+  isLoading: boolean;
+  projectID: number | string | undefined;
   tasks: Task[];
+  menuEnabled: boolean;
   handleEditTaskClick: (data: TaskFormData) => void;
   handleDeleteTaskClick: (data: TaskFormData) => void;
 }) => (
@@ -78,7 +82,7 @@ TaskList.List = ({
           url={`/projects/${projectID}/tasks/${task.taskID}`}
           dueDate={task.dueDate}
         />
-        {user.role == "supervisor" && (
+        {menuEnabled && (
           <TaskListEntry.MenuButton
             onEditButtonClick={() =>
               handleEditTaskClick({

@@ -109,37 +109,26 @@ public class ProjectService
             .ToListAsync();
     }
 
-    // Both supervisors and students can create project (only 1 for student)
-    public async Task CreateProject(long userID, string role, CreateProjectDTO dto)
+    public async Task CreateProject(long userID, CreateProjectDTO dto)
     {
-        if (role.Equals("student"))
-        {
-            var existingProject = await dbContext.Projects.Where(p =>
-                    p.StudentID == userID).FirstOrDefaultAsync();
-            if (existingProject != null)
-                throw new UnauthorizedAccessException("Unauthorized Access");
-        }
-
         var newProject = new Project
         {
             Title = dto.Title,
             Description = dto.Description,
             Status = "active",
-            StudentID = role.Equals("student") ? userID : null,
-            SupervisorID = role.Equals("supervisor") ? userID : null
+            StudentID = null,
+            SupervisorID = userID
         };
 
         dbContext.Projects.Add(newProject);
         await dbContext.SaveChangesAsync();
     }
 
-    // A student can edit a project provided that there is no supervisor in the project
     public async Task EditProject(long userID, long projectID, EditProjectDTO dto)
     {
         var project = await dbContext.Projects.Where(p =>
             p.ProjectID == projectID &&
-                ((p.StudentID == userID && p.Supervisor == null) ||
-                    p.SupervisorID == userID))
+                    p.SupervisorID == userID)
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Not Authorized or Project Not Found!");
 
