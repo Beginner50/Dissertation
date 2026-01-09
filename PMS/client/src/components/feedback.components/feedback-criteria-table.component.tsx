@@ -17,23 +17,6 @@ import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import type { Theme } from "@emotion/react";
 import { ToggleOn } from "@mui/icons-material";
 
-function OverrideToggleButton({
-  isToggled,
-  onClick,
-}: {
-  isToggled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <IconButton size="small" onClick={onClick} sx={{ padding: 0 }}>
-      {isToggled ? (
-        <ToggleOn sx={{ fontSize: "1.6rem", color: theme.link }} />
-      ) : (
-        <ToggleOffIcon sx={{ fontSize: "1.6rem" }} />
-      )}
-    </IconButton>
-  );
-}
 export default function FeedbackCriteriaTable({
   sx,
   criteria,
@@ -180,7 +163,7 @@ export default function FeedbackCriteriaTable({
                 {overrideToggleEnabled &&
                   (c.status === "unmet" || c.status === "overridden") &&
                   onOverrideToggle && (
-                    <OverrideToggleButton
+                    <FeedbackCriteriaTable.OverrideToggleButton
                       isToggled={c.status == "overridden"}
                       onClick={() => onOverrideToggle(c.feedbackCriteriaID)}
                     />
@@ -193,3 +176,21 @@ export default function FeedbackCriteriaTable({
     </Box>
   );
 }
+
+FeedbackCriteriaTable.OverrideToggleButton = ({
+  isToggled,
+  onClick,
+}: {
+  isToggled: boolean;
+  onClick: () => void;
+}) => {
+  return (
+    <IconButton size="small" onClick={onClick} sx={{ padding: 0 }}>
+      {isToggled ? (
+        <ToggleOn sx={{ fontSize: "1.6rem", color: theme.link }} />
+      ) : (
+        <ToggleOffIcon sx={{ fontSize: "1.6rem" }} />
+      )}
+    </IconButton>
+  );
+};

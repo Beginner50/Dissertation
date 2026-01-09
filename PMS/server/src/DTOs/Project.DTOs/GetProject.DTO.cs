@@ -10,5 +10,5 @@ public class GetProjectDTO
     public string Status { get; set; }
     public UserLookupDTO? Supervisor { get; set; }
     public UserLookupDTO? Student { get; set; }
-
+    public List<ProjectTaskLookupDTO> Tasks { get; set; }
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
 using PMS.DTOs;
+using PMS.Lib;
 using PMS.Models;
 
 namespace PMS.Services;
@@ -13,55 +14,50 @@ public class ProjectService
         dbContext = _dbContext;
     }
 
-    // Should only be called when projectID is not specified in url (get meeting endpoint)
-    public async Task<Project?> GetProject(
-            long userID
-        )
-    {
-        return await dbContext.Projects.Where(
-            p => p.SupervisorID == userID || p.StudentID == userID
-        ).FirstOrDefaultAsync()
-        ?? throw new UnauthorizedAccessException("Unauthorized Access or Project Not Found!");
-    }
-
     public async Task<GetProjectDTO> GetProject(
-         long userID, long projectID
+         long userID,
+         long projectID
     )
     {
-        return await dbContext.Projects.Where(
-            p => p.ProjectID == projectID && (p.SupervisorID == userID || p.StudentID == userID)
-        ).Select(p => new GetProjectDTO
-        {
-            ProjectID = p.ProjectID,
-            Title = p.Title,
-            Description = p.Description,
-            Status = p.Status,
-            Student = p.Student != null ? new UserLookupDTO
+        return await dbContext.Projects
+            .AsSplitQuery()
+            .Where(p => p.ProjectID == projectID && (p.SupervisorID == userID || p.StudentID == userID))
+            .Select(p => new GetProjectDTO
             {
-                UserID = p.Student.UserID,
-                Name = p.Student.Name,
-                Email = p.Student.Email
-            } : null,
-            Supervisor = p.Supervisor != null ? new UserLookupDTO
-            {
-                UserID = p.Supervisor.UserID,
-                Name = p.Supervisor.Name,
-                Email = p.Supervisor.Email
-            } : null,
-        })
-        .FirstOrDefaultAsync()
-        ?? throw new UnauthorizedAccessException("Unauthorized Access or Project Not Found!");
+                ProjectID = p.ProjectID,
+                Title = p.Title,
+                Description = p.Description,
+                Status = p.Status,
+                Student = p.Student != null ? new UserLookupDTO
+                {
+                    UserID = p.Student.UserID,
+                    Name = p.Student.Name,
+                    Email = p.Student.Email
+                } : null,
+                Supervisor = p.Supervisor != null ? new UserLookupDTO
+                {
+                    UserID = p.Supervisor.UserID,
+                    Name = p.Supervisor.Name,
+                    Email = p.Supervisor.Email
+                } : null,
+                Tasks = p.Tasks
+                .OrderByDescending(t => t.AssignedDate)
+                .Select(t => new ProjectTaskLookupDTO
+                {
+                    TaskID = t.ProjectTaskID,
+                    Title = t.Title
+                })
+                .ToList()
+            })
+            .FirstOrDefaultAsync()
+            ?? throw new UnauthorizedAccessException("Unauthorized Access or Project Not Found!");
     }
 
-    /*
-        Returns projects where the user is involved in.
-        A supervisor can supervise multiple projects, while a student can only conduct
-        one project (ConductedProjects is a list for uniformity).
-    */
     public async Task<IEnumerable<GetProjectDTO>> GetProjects(long userID)
     {
-        return await dbContext.Users.Where(u => u.UserID == userID)
-            .SelectMany(u => u.ConductedProjects.Concat(u.SupervisedProjects))
+        return await dbContext.Projects
+            .AsSplitQuery()
+            .Where(p => p.SupervisorID == userID || p.StudentID == userID)
             .Select(p => new GetProjectDTO
             {
                 ProjectID = p.ProjectID,
@@ -79,15 +75,24 @@ public class ProjectService
                     UserID = p.Student.UserID,
                     Name = p.Student.Name,
                     Email = p.Student.Email
-                } : null
+                } : null,
+                Tasks = p.Tasks
+                    .OrderByDescending(t => t.AssignedDate)
+                    .Select(t => new ProjectTaskLookupDTO
+                    {
+                        TaskID = t.ProjectTaskID,
+                        Title = t.Title
+                    })
+                    .ToList()
             })
             .ToListAsync();
     }
 
     public async Task<IEnumerable<GetProjectDTO>> GetAllUnsupervisedProjects()
     {
-        return await dbContext.Projects.Where(p =>
-                p.Supervisor == null)
+        return await dbContext.Projects
+            .AsSplitQuery()
+            .Where(p => p.Supervisor == null)
             .Select(p => new GetProjectDTO
             {
                 ProjectID = p.ProjectID,
@@ -104,7 +109,15 @@ public class ProjectService
                     UserID = p.Supervisor.UserID,
                     Name = p.Supervisor.Name,
                     Email = p.Supervisor.Email
-                } : null
+                } : null,
+                Tasks = p.Tasks
+                .OrderByDescending(t => t.AssignedDate)
+                .Select(t => new ProjectTaskLookupDTO
+                {
+                    TaskID = t.ProjectTaskID,
+                    Title = t.Title
+                })
+                .ToList()
             })
             .ToListAsync();
     }
@@ -178,8 +191,27 @@ public class ProjectService
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task GenerateProgressLogReport(long userID, long projectID)
+    public async Task<TaskDeliverableFileDTO> GenerateProgressLogReport(long userID, long projectID)
     {
+        var tasksWithMeetings = await dbContext.Tasks
+                                    .Include(t => t.Project)
+                                    .Include(t => t.Meetings)
+                                    .Where(t => t.ProjectID == projectID &&
+                                            t.Project.SupervisorID == userID || t.Project.StudentID == userID)
+                                    .OrderBy(t => t.AssignedDate)
+                                    .ToListAsync();
 
+        if (tasksWithMeetings.Count == 0)
+            throw new UnauthorizedAccessException("Tasks Not Found!");
+
+        var project = tasksWithMeetings[0].Project;
+
+        var pdfData = PDFUtils.GenerateProgressLogReport(project, tasksWithMeetings);
+        return new TaskDeliverableFileDTO
+        {
+            Filename = $"{project.Title}_ProgressLog_{DateTime.UtcNow:dd/MM/yyyy}",
+            File = pdfData,
+            ContentType = "application/pdf"
+        };
     }
 }

@@ -25,10 +25,4 @@ public class Project
     */
     [InverseProperty("Project")]
     public List<ProjectTask> Tasks { get; set; }
-
-    [InverseProperty("Project")]
-    public List<Meeting> Meetings { get; set; }
-
-    [InverseProperty("Project")]
-    public List<ProgressLogEntry> ProgressLogEntries { get; }
 }

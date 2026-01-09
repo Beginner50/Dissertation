@@ -1,9 +1,10 @@
 /*
-    AuthProvider abstracts and manages the authentication logic for the application.
-    It provides all the functionalities that deal with authentication like sign-in, sign-out,
-    and making authorized API requests.
+AuthProvider abstracts and manages the authentication logic for the application.
+
+It provides all the functionalities that deal with authentication like sign-in, sign-out,
+and making authorized API requests.
 */
-import type { User } from "../lib/types";
+import type { AuthContextType, AuthState } from "../lib/types";
 import {
   useContext,
   createContext,
@@ -12,60 +13,89 @@ import {
   useMemo,
 } from "react";
 import ky from "ky";
+import { baseURL } from "../lib/config";
 
-/* ---------------------------------------------------------------------------------------- */
+/*
+Refresh Token Request De-duplication:
+  When a page load, multiple APIs are triggered, and if the token is invalid, each of them
+  will try to refresh the token separately (see authorizedAPI below).
 
-const url = new URL(window.location.origin);
-url.port = "5081";
-export const baseURL = url.origin;
+  These separate duplicate ongoing requests to the refresh endpoint will result in the
+  server flagging this suspicious behavior as a security breach and invalidate the refresh
+  token (stored as an HTTP-only cookie)
 
-/* ---------------------------------------------------------------------------------------- */
+  As such, to prevent such race condition, using refreshPromise here ensure that only one
+  request ends up trying to refresh the token, and lead to the other requests waiting for
+  the result of the iniitial refresh token request instead.
+*/
+let refreshPromise: Promise<any> | null = null;
+const performRefresh = async (): Promise<any> => {
+  if (!refreshPromise) {
+    refreshPromise = ky.post(`${baseURL}/api/token/refresh`).json();
+  }
 
-export type AuthState = {
-  isAuthenticated: boolean;
-  user: User | null;
-  token: string | null;
-  tokenExpiry: number | null;
+  try {
+    const data = await refreshPromise;
+    refreshPromise = null;
+    return data;
+  } catch (err) {
+    refreshPromise = null;
+    throw err;
+  }
 };
 
-export type AuthContextType = {
-  authState: AuthState;
-  authorizedAPI: typeof ky;
-  signIn: (userData: Record<string, any>) => Promise<AuthState>;
-  signOut: (userID: number | string | undefined) => Promise<void>;
-};
-
-const initialAuthState: string = JSON.stringify({
-  isAuthenticated: false,
-  user: null,
-  token: null,
-  tokenExpiry: null,
-});
+/* ---------------------------------------------------------------------------------------- */
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-/* ---------------------------------------------------------------------------------------- */
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [authState, setAuthState] = useState<AuthState>(
-    JSON.parse(localStorage.getItem("auth") ?? initialAuthState)
-  );
+  let initialAuthState = JSON.parse(
+    localStorage.getItem("auth") ?? ""
+  ) as AuthState | null;
+
+  if (!initialAuthState) {
+    initialAuthState = {
+      isAuthenticated: false,
+      token: null,
+      tokenExpiry: null,
+      user: null,
+    };
+
+    localStorage.setItem("auth", JSON.stringify(initialAuthState));
+  }
+
+  /*
+    Every component in React is functional in nature, meaning that they are stateless
+    and are re-initialized on every render. To maintain state across renders, we use hooks 
+    like useState, useMemo or useCallback.
+
+    useMemo and useCallback will be relevant in the sections below
+  */
+  const [authState, setAuthState] = useState<AuthState>(initialAuthState);
 
   /*    
-  Every component in React is functional in nature, meaning that they are stateless
-  and are re-initialized on every render. To maintain state across renders, we use hooks 
-  like useState, useMemo or useCallback.
+    Authorized API instance abstracts the logic of making authenticated API requests.
 
-  Authorized API instance abstracts the logic of making authenticated API requests.
+    It performs 2 tasks:
+    1) Authentication:
+        It automatically injects the authentication token in the Authorization header of the
+        request.
+      
+    2) Token Refresh:
+        It intercepts 401 unauthorized response and tries to refresh the token.
 
-  It automatically attaches the authentication token to each request and handles token
-  refresh when a 401 Unauthorized response is received. It also updates the authentication
-  state if a new token is received in the response.
+        Upon success, it will update the authentication state (memory + local storage) with
+        the new token values.
+
+        Upon failure, it will reset the authentication state (memory + local storage) to a
+        default value. This will cause the layout component to re-render, which will
+        subsequently redirect the user to the /sign-in route upon seeing isAuthenticated false
   */
   const authorizedAPI = useMemo(
     () =>
       ky.extend({
         prefixUrl: baseURL,
+        credentials: "include",
         hooks: {
           beforeRequest: [
             (request) => {
@@ -83,27 +113,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ],
           beforeError: [
             async (error) => {
-              const authState: AuthState = JSON.parse(
-                localStorage.getItem("auth") ?? ""
-              );
-
               if (error.response?.status === 401) {
-                const response = await ky.post(
-                  `${baseURL}/api/users/${authState.user?.userID}/token/refresh`
-                );
+                try {
+                  const data = await performRefresh();
 
-                if (!response.ok) {
-                  await signOut(authState.user?.userID);
+                  const newAuth = { isAuthenticated: true, ...data };
+                  setAuthState(newAuth);
+                  localStorage.setItem("auth", JSON.stringify(newAuth));
+                } catch (e) {
+                  console.log("Token Refresh Failed! Logging User Out");
+                  console.error(e);
+
+                  const newAuth = {
+                    isAuthenticated: false,
+                    token: null,
+                    tokenExpiry: null,
+                    user: null,
+                  };
+                  setAuthState(newAuth);
+                  localStorage.setItem("auth", JSON.stringify(newAuth));
                 }
-
-                const data = (await response.json()) as Omit<
-                  AuthState,
-                  "isAuthenticated"
-                >;
-
-                const newAuthState = { isAuthenticated: true, ...data };
-                setAuthState(newAuthState);
-                localStorage.setItem("auth", JSON.stringify(newAuthState));
               }
               return error;
             },
@@ -119,7 +148,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(
     async (userData: Record<string, any>): Promise<AuthState> => {
       const response: Omit<AuthState, "isAuthenticated"> = await ky
-        .post(`${baseURL}/api/users/login`, { json: userData })
+        .post(`${baseURL}/api/users/login`, {
+          json: userData,
+          credentials: "include",
+        })
         .json();
 
       const newAuthState: AuthState = { isAuthenticated: true, ...response };
@@ -133,11 +165,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(
     async (userID: number | string | undefined): Promise<void> => {
-      await ky.post(`${baseURL}/api/users/${userID}/logout`);
+      await authorizedAPI.post(`api/users/${userID}/logout`);
 
-      const newAuthState = JSON.parse(initialAuthState) as AuthState;
-      setAuthState(newAuthState);
-      localStorage.setItem("auth", JSON.stringify(newAuthState));
+      setAuthState(initialAuthState);
+      localStorage.setItem("auth", JSON.stringify(initialAuthState));
     },
     [setAuthState]
   );

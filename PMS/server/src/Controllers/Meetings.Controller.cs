@@ -19,7 +19,7 @@ public class MeetingsController : ControllerBase
     }
 
     // [Authorize]
-    [Route("api/users/{userID}/[controller]")]
+    [Route("api/users/{userID}/meetings")]
     [HttpGet]
     [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetSupervisorMeetings(
@@ -28,9 +28,7 @@ public class MeetingsController : ControllerBase
     {
         try
         {
-            var project = await projectService.GetProject(userID: userID);
-            var meetings = await meetingService.GetSupervisorMeetings(supervisorID:
-                                                    (long)project.SupervisorID);
+            var meetings = await meetingService.GetSupervisorMeetings(userID);
             return Ok(meetings);
         }
         catch (Exception e)
@@ -39,7 +37,7 @@ public class MeetingsController : ControllerBase
         }
     }
 
-    [Route("api/[controller]/{meetingID}")]
+    [Route("api/meetings/{meetingID}")]
     [HttpGet]
     [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetMeeting([FromRoute] long meetingID)
@@ -55,18 +53,18 @@ public class MeetingsController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/projects/{projectID}/[controller]")]
+    [Route("api/users/{userID}/meetings")]
     [HttpPost]
     [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> BookMeeting(
         [FromRoute] long userID,
-        [FromRoute] long projectID,
         [FromBody] BookMeetingDTO bookMeetingDTO)
     {
         try
         {
             await meetingService.BookMeeting(
-                projectID: projectID, organizerID: userID,
+                taskID: bookMeetingDTO.TaskID,
+                organizerID: userID,
                 attendeeID: bookMeetingDTO.AttendeeID,
                 description: bookMeetingDTO.Description,
                 start: bookMeetingDTO.Start,
@@ -81,7 +79,7 @@ public class MeetingsController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/[controller]/{meetingID}/edit-description")]
+    [Route("api/users/{userID}/meetings/{meetingID}/edit-description")]
     [HttpPut]
     [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> EditMeetingDescription(
@@ -105,13 +103,13 @@ public class MeetingsController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/[controller]/{meetingID}/cancel")]
+    [Route("api/users/{userID}/meetings/{meetingID}/cancel")]
     [HttpDelete]
     [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> CancelMeeting(
-                    [FromRoute] long userID,
-                    [FromRoute] long meetingID
-                )
+        [FromRoute] long userID,
+        [FromRoute] long meetingID
+    )
     {
         try
         {
@@ -124,7 +122,7 @@ public class MeetingsController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/[controller]/{meetingID}/accept")]
+    [Route("api/users/{userID}/meetings/{meetingID}/accept")]
     [HttpPut]
     [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> AcceptMeeting(
@@ -143,7 +141,7 @@ public class MeetingsController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/[controller]/{meetingID}/reject")]
+    [Route("api/users/{userID}/meetings/{meetingID}/reject")]
     [HttpDelete]
     [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> RejectMeeting(

@@ -10,7 +10,7 @@ public class GetMeetingsDTO
     public string? Description { get; set; }
     public UserLookupDTO? Organizer { get; set; }
     public UserLookupDTO? Attendee { get; set; }
-    public ProjectLookupDTO? Project { get; set; }
+    public ProjectTaskLookupDTO? Task { get; set; }
     public required string Status { get; set; }
 }
 

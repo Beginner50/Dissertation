@@ -30,15 +30,55 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.AddConsole();
 
 builder.Services.AddOpenApi();
+
+/*
+CORS
+    An origin is the combination of the protocol (http/https), domain (localhost, www.website.com)
+    and port (3000, 5081)
+
+    Browsers come with the SOP (Same-Origin Policy), which only allows a website to access
+    resource from the server if they are from the same origin. This is to prevent websites
+    from accessing resources from servers of other origins and thus maintain security.
+
+    The way it works is that for unknown origins, the server responds without an
+    `Access-Control-Allow-Origin` header. The browser blocks the unknown origin from reading
+    the response.
+
+    CORS (Cross Origin Resource Sharing) occurs when the browser allows a website to access a
+    resource from another origin, provided that the origin (server) has given permission to
+    the website's origin. The server can essentially instruct the browser to make an exception
+    to its SOP rule for some origins.
+
+Note:
+    AllowCredentials
+        AllowCredentials ensures the website can read and save cookies such as refreshTokens for 
+        authentication. This ensures that when other unallowed origins call the refresh token
+        endpoint, they will not be able to read and save the refresh token.
+
+    CORS is not enough to prevent CSRF attacks. They only instruct the browser to block the
+    website from reading the response of a request but not making the actual request itself.
+
+    For example:
+        A malicious origin may cause damage by sending a DELETE request on a resource without
+        needing to read the response of the request.
+*/
+var allowedOrigins = new List<string> {
+     "http://localhost:3000",
+     "https://localhost:80",
+     "https://website.com"
+};
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowedOrigins.ToArray())
         .AllowAnyHeader()
-        .AllowAnyMethod();
+        .AllowAnyMethod()
+        .AllowCredentials();
     });
 });
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.Configure<RouteOptions>(options =>
     options.LowercaseUrls = true);
@@ -161,7 +201,6 @@ builder.Services.AddScoped<FeedbackService>();
 builder.Services.AddScoped<MeetingService>();
 builder.Services.AddScoped<ReminderService>();
 builder.Services.AddScoped<NotificationService>();
-builder.Services.AddScoped<ProgressLogService>();
 
 builder.Services.AddDbContext<PMSDbContext>(); // Database Context Registration
 builder.Services.AddControllers();

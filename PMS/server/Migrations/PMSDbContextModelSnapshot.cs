@@ -115,9 +115,6 @@ namespace PMS.Migrations
                     b.Property<long>("OrganizerID")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("ProjectID")
-                        .HasColumnType("bigint");
-
                     b.Property<DateTime>("Start")
                         .HasColumnType("timestamp with time zone");
 
@@ -125,13 +122,16 @@ namespace PMS.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<long>("TaskID")
+                        .HasColumnType("bigint");
+
                     b.HasKey("MeetingID");
 
                     b.HasIndex("AttendeeID");
 
                     b.HasIndex("OrganizerID");
 
-                    b.HasIndex("ProjectID");
+                    b.HasIndex("TaskID");
 
                     b.ToTable("Meetings");
 
@@ -139,82 +139,82 @@ namespace PMS.Migrations
                         new
                         {
                             MeetingID = 1L,
-                            AttendeeID = 1L,
+                            AttendeeID = 3L,
                             End = new DateTime(2025, 12, 20, 11, 0, 0, 0, DateTimeKind.Utc),
                             OrganizerID = 2L,
-                            ProjectID = 1L,
                             Start = new DateTime(2025, 12, 20, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "pending"
+                            Status = "pending",
+                            TaskID = 1L
                         },
                         new
                         {
                             MeetingID = 2L,
                             AttendeeID = 2L,
                             End = new DateTime(2025, 12, 21, 15, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 1L,
-                            ProjectID = 1L,
+                            OrganizerID = 3L,
                             Start = new DateTime(2025, 12, 21, 14, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "pending"
+                            Status = "pending",
+                            TaskID = 2L
                         },
                         new
                         {
                             MeetingID = 3L,
-                            AttendeeID = 1L,
+                            AttendeeID = 3L,
                             End = new DateTime(2025, 12, 22, 10, 30, 0, 0, DateTimeKind.Utc),
                             OrganizerID = 2L,
-                            ProjectID = 1L,
                             Start = new DateTime(2025, 12, 22, 9, 30, 0, 0, DateTimeKind.Utc),
-                            Status = "accepted"
+                            Status = "accepted",
+                            TaskID = 1L
                         },
                         new
                         {
                             MeetingID = 4L,
                             AttendeeID = 2L,
                             End = new DateTime(2025, 12, 23, 12, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 1L,
-                            ProjectID = 1L,
+                            OrganizerID = 3L,
                             Start = new DateTime(2025, 12, 23, 11, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "pending"
+                            Status = "pending",
+                            TaskID = 3L
                         },
                         new
                         {
                             MeetingID = 5L,
-                            AttendeeID = 3L,
+                            AttendeeID = 6L,
                             End = new DateTime(2025, 12, 20, 14, 0, 0, 0, DateTimeKind.Utc),
                             OrganizerID = 2L,
-                            ProjectID = 2L,
                             Start = new DateTime(2025, 12, 20, 13, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "accepted"
+                            Status = "accepted",
+                            TaskID = 4L
                         },
                         new
                         {
                             MeetingID = 6L,
                             AttendeeID = 2L,
                             End = new DateTime(2025, 12, 21, 11, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 3L,
-                            ProjectID = 2L,
+                            OrganizerID = 6L,
                             Start = new DateTime(2025, 12, 21, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "pending"
+                            Status = "pending",
+                            TaskID = 5L
                         },
                         new
                         {
                             MeetingID = 7L,
-                            AttendeeID = 3L,
+                            AttendeeID = 6L,
                             End = new DateTime(2025, 12, 22, 16, 0, 0, 0, DateTimeKind.Utc),
                             OrganizerID = 2L,
-                            ProjectID = 2L,
                             Start = new DateTime(2025, 12, 22, 15, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "accepted"
+                            Status = "accepted",
+                            TaskID = 4L
                         },
                         new
                         {
                             MeetingID = 8L,
                             AttendeeID = 2L,
                             End = new DateTime(2025, 12, 23, 10, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 3L,
-                            ProjectID = 2L,
+                            OrganizerID = 6L,
                             Start = new DateTime(2025, 12, 23, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "pending"
+                            Status = "pending",
+                            TaskID = 5L
                         },
                         new
                         {
@@ -222,9 +222,9 @@ namespace PMS.Migrations
                             AttendeeID = 4L,
                             End = new DateTime(2025, 12, 24, 11, 0, 0, 0, DateTimeKind.Utc),
                             OrganizerID = 5L,
-                            ProjectID = 3L,
                             Start = new DateTime(2025, 12, 24, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "accepted"
+                            Status = "accepted",
+                            TaskID = 6L
                         });
                 });
 
@@ -272,7 +272,7 @@ namespace PMS.Migrations
                             NotificationID = 1L,
                             Description = "Dr. Smith accepted your meeting request.",
                             MeetingID = 3L,
-                            RecipientID = 1L,
+                            RecipientID = 3L,
                             Timestamp = new DateTime(2025, 12, 30, 15, 45, 0, 0, DateTimeKind.Utc),
                             Type = "meeting_accepted"
                         },
@@ -280,7 +280,7 @@ namespace PMS.Migrations
                         {
                             NotificationID = 2L,
                             Description = "Literature Review has been marked as completed.",
-                            RecipientID = 1L,
+                            RecipientID = 3L,
                             TaskID = 1L,
                             Timestamp = new DateTime(2025, 12, 28, 10, 0, 0, 0, DateTimeKind.Utc),
                             Type = "task_completed"
@@ -303,41 +303,6 @@ namespace PMS.Migrations
                             Timestamp = new DateTime(2026, 1, 2, 9, 0, 0, 0, DateTimeKind.Utc),
                             Type = "meeting_booked"
                         });
-                });
-
-            modelBuilder.Entity("PMS.Models.ProgressLogEntry", b =>
-                {
-                    b.Property<long>("ProgressLogEntryID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("ProgressLogEntryID"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long?>("MeetingID")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("ProjectID")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("TaskID")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("ProgressLogEntryID");
-
-                    b.HasIndex("MeetingID");
-
-                    b.HasIndex("ProjectID");
-
-                    b.HasIndex("TaskID");
-
-                    b.ToTable("ProgressLogEntries");
                 });
 
             modelBuilder.Entity("PMS.Models.Project", b =>
@@ -380,7 +345,7 @@ namespace PMS.Migrations
                             ProjectID = 1L,
                             Description = "Research on AI algorithms",
                             Status = "active",
-                            StudentID = 1L,
+                            StudentID = 4L,
                             SupervisorID = 2L,
                             Title = "AI Research"
                         },
@@ -398,25 +363,9 @@ namespace PMS.Migrations
                             ProjectID = 3L,
                             Description = "Development of Blockchain applications",
                             Status = "active",
-                            StudentID = 4L,
+                            StudentID = 6L,
                             SupervisorID = 5L,
                             Title = "Blockchain Dev"
-                        },
-                        new
-                        {
-                            ProjectID = 4L,
-                            Description = "Optimize an existing compiler",
-                            Status = "active",
-                            StudentID = 3L,
-                            Title = "Compiler Optimization"
-                        },
-                        new
-                        {
-                            ProjectID = 5L,
-                            Description = "Develop an augmented virtual reality application",
-                            Status = "active",
-                            StudentID = 1L,
-                            Title = "Augmented Virtual Reality"
                         });
                 });
 
@@ -572,7 +521,7 @@ namespace PMS.Migrations
                             ReminderID = 1L,
                             MeetingID = 1L,
                             Message = "Prepare for Dissertation Review",
-                            RecipientID = 1L,
+                            RecipientID = 3L,
                             RemindAt = new DateTime(2026, 1, 4, 9, 0, 0, 0, DateTimeKind.Utc),
                             Type = "meeting"
                         },
@@ -580,7 +529,7 @@ namespace PMS.Migrations
                         {
                             ReminderID = 2L,
                             Message = "Finalize Dataset Collection draft",
-                            RecipientID = 1L,
+                            RecipientID = 3L,
                             RemindAt = new DateTime(2026, 1, 4, 14, 0, 0, 0, DateTimeKind.Utc),
                             TaskID = 2L,
                             Type = "task"
@@ -598,7 +547,7 @@ namespace PMS.Migrations
                         {
                             ReminderID = 4L,
                             Message = "Compare Tesseract vs EasyOCR",
-                            RecipientID = 3L,
+                            RecipientID = 6L,
                             RemindAt = new DateTime(2026, 1, 4, 8, 30, 0, 0, DateTimeKind.Utc),
                             TaskID = 4L,
                             Type = "task"
@@ -631,7 +580,6 @@ namespace PMS.Migrations
                         .HasColumnType("character varying(128)");
 
                     b.Property<string>("RefreshToken")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Role")
@@ -646,12 +594,12 @@ namespace PMS.Migrations
                         new
                         {
                             UserID = 1L,
-                            Email = "alice@uni.com",
+                            Email = "admin@uni.com",
                             IsDeleted = false,
-                            Name = "Alice Student",
+                            Name = "Admin",
                             Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
                             RefreshToken = "",
-                            Role = "student"
+                            Role = "admin"
                         },
                         new
                         {
@@ -767,9 +715,9 @@ namespace PMS.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PMS.Models.Project", "Project")
+                    b.HasOne("PMS.Models.ProjectTask", "Task")
                         .WithMany("Meetings")
-                        .HasForeignKey("ProjectID")
+                        .HasForeignKey("TaskID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -777,7 +725,7 @@ namespace PMS.Migrations
 
                     b.Navigation("Organizer");
 
-                    b.Navigation("Project");
+                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("PMS.Models.Notification", b =>
@@ -787,41 +735,18 @@ namespace PMS.Migrations
                         .HasForeignKey("MeetingID");
 
                     b.HasOne("PMS.Models.User", "Recipient")
-                        .WithMany()
+                        .WithMany("Notifications")
                         .HasForeignKey("RecipientID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("PMS.Models.ProjectTask", "Task")
-                        .WithMany()
+                        .WithMany("Notifications")
                         .HasForeignKey("TaskID");
 
                     b.Navigation("Meeting");
 
                     b.Navigation("Recipient");
-
-                    b.Navigation("Task");
-                });
-
-            modelBuilder.Entity("PMS.Models.ProgressLogEntry", b =>
-                {
-                    b.HasOne("PMS.Models.Meeting", "Meeting")
-                        .WithMany()
-                        .HasForeignKey("MeetingID");
-
-                    b.HasOne("PMS.Models.Project", "Project")
-                        .WithMany("ProgressLogEntries")
-                        .HasForeignKey("ProjectID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PMS.Models.ProjectTask", "Task")
-                        .WithMany("ProgressLogEntries")
-                        .HasForeignKey("TaskID");
-
-                    b.Navigation("Meeting");
-
-                    b.Navigation("Project");
 
                     b.Navigation("Task");
                 });
@@ -894,10 +819,6 @@ namespace PMS.Migrations
 
             modelBuilder.Entity("PMS.Models.Project", b =>
                 {
-                    b.Navigation("Meetings");
-
-                    b.Navigation("ProgressLogEntries");
-
                     b.Navigation("Tasks");
                 });
 
@@ -905,7 +826,9 @@ namespace PMS.Migrations
                 {
                     b.Navigation("AllDeliverables");
 
-                    b.Navigation("ProgressLogEntries");
+                    b.Navigation("Meetings");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("Reminders");
                 });
@@ -915,6 +838,8 @@ namespace PMS.Migrations
                     b.Navigation("AttendedMeetings");
 
                     b.Navigation("ConductedProjects");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("OrganizedMeetings");
 

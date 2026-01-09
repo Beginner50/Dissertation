@@ -16,7 +16,7 @@ public class User
     public required string Role { get; set; }
 
     [Column(TypeName = "text")]
-    public string RefreshToken { get; set; } = "";
+    public string? RefreshToken { get; set; } = null;
     public bool IsDeleted { get; set; }
 
     /*
@@ -39,6 +39,9 @@ public class User
 
     [InverseProperty("Recipient")]
     public List<Reminder> Reminders { get; }
+
+    [InverseProperty("Recipient")]
+    public List<Notification> Notifications { get; }
 
     [InverseProperty("SubmittedBy")]
     public List<Deliverable> SubmittedDeliverables { get; }

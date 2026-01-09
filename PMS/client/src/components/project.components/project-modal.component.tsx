@@ -34,23 +34,20 @@ export default function ProjectModal({
           sx: { maxWidth: "45vw", mx: "auto" },
         },
       }}
-      keepMounted
-    >
+      keepMounted>
       {children}
     </Dialog>
   );
 }
 
 ProjectModal.Header = ({ mode }: { mode: ModalMode }) => {
-  const titles: Record<ModalMode, string> = {
+  const titles = {
     create: "Create New Project",
     edit: "Edit Project Details",
     "join-project": "Join a Project",
     archive: "Archive Project",
   };
-  return (
-    <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>
-  );
+  return <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>;
 };
 
 ProjectModal.Fields = ({ children }: { children: ReactNode }) => (
@@ -183,8 +180,7 @@ ProjectModal.Actions = ({
         variant="contained"
         onClick={actions[mode]}
         color={mode === "archive" ? "error" : "primary"}
-        disabled={!isValid}
-      >
+        disabled={!isValid}>
         {labels[mode]}
       </Button>
     </DialogActions>

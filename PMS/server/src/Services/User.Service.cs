@@ -17,6 +17,19 @@ public class UserService
         this.logger = logger;
     }
 
+    public async Task<IEnumerable<UserLookupDTO>> GetAllUsers()
+    {
+        return await dbContext.Users
+                    .Where(u => u.Role != "admin" && u.IsDeleted == false)
+                    .Select(u => new UserLookupDTO
+                    {
+                        UserID = u.UserID,
+                        Name = u.Name,
+                        Email = u.Email,
+                        Role = u.Role
+                    }).ToListAsync();
+    }
+
     public async Task<IEnumerable<UserLookupDTO>> GetAllUnsupervisedStudents()
     {
         return await dbContext.Users.Where(

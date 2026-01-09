@@ -152,10 +152,10 @@ public class ProjectTaskService
         {
             try
             {
+                await reminderService.DeleteTaskReminder(task.ProjectTaskID);
+
                 dbContext.Remove(task);
                 await dbContext.SaveChangesAsync();
-
-                await reminderService.DeleteTaskReminder(task.ProjectTaskID);
 
                 await transaction.CommitAsync();
             }

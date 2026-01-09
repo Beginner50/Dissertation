@@ -3,7 +3,7 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid/index.js";
 import interactionPlugin from "@fullcalendar/interaction/index.js";
 import { Box, type SxProps } from "@mui/material";
-import type { EventClickArg } from "@fullcalendar/core/index.js";
+import type { EventClickArg, EventSourceInput } from "@fullcalendar/core/index.js";
 import type { Theme } from "@emotion/react";
 import type { Meeting } from "../../lib/types";
 
@@ -16,7 +16,22 @@ const COLOR_ORGANIZER_MISSED = "#a9c9e3ff";
 const COLOR_UNRELATED = "#9e9e9e";
 const COLOR_UNRELATED_DARK = "#616161";
 
-function adaptMeetingData(userID: number, meetingData: Meeting[]) {
+/*
+  FullCalendar represents each meeting event as an Event Object that has the following properties
+  {
+    id: number;
+    title: string;
+    start: Date;
+    end: Date;
+    className: string[];
+    extendedProps?: any
+  }
+
+  To avoid bloating the Event object, FullCalendar allows users to store custom data about an
+  event in the extendedProps property and will only use the other properties (id, title, start,
+  end) in displaying the events
+*/
+function adaptMeetingData(userID: number, meetingData: Meeting[]): EventSourceInput {
   return meetingData.map((meeting) => {
     let roleClass = "unrelated";
 
@@ -27,7 +42,9 @@ function adaptMeetingData(userID: number, meetingData: Meeting[]) {
     }
 
     return {
-      ...meeting,
+      title: meeting.task.title,
+      start: meeting.start,
+      end: meeting.end,
       extendedProps: {
         ...meeting,
       },
@@ -45,11 +62,7 @@ export default function Scheduler({
 }: {
   userID: number;
   meetingData: Meeting[];
-  handleSlotSelect: (selectInfo: {
-    start: Date;
-    end: Date;
-    allDay: boolean;
-  }) => void;
+  handleSlotSelect: (selectInfo: { start: Date; end: Date; allDay: boolean }) => void;
   handleEventSelect: (arg: EventClickArg) => void;
   sx?: SxProps<Theme> | undefined;
 }) {
@@ -108,8 +121,7 @@ export default function Scheduler({
           opacity: 0.8,
           color: "white",
         },
-      }}
-    >
+      }}>
       <FullCalendar
         plugins={[timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"

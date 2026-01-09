@@ -14,11 +14,7 @@ import { Link } from "react-router";
 import { theme } from "../../lib/theme";
 import type { User } from "../../lib/types";
 
-export default function ProjectListEntry({
-  children,
-}: {
-  children?: ReactNode;
-}) {
+export default function ProjectListEntry({ children }: { children?: ReactNode }) {
   return (
     <ListItem
       sx={{
@@ -39,8 +35,7 @@ export default function ProjectListEntry({
           borderColor: "primary.main",
           boxShadow: theme.shadowSoft || 2,
         },
-      }}
-    >
+      }}>
       {children}
     </ListItem>
   );
@@ -66,8 +61,7 @@ ProjectListEntry.Link = ({
             fontWeight: 600,
             color: theme.link || "primary.main",
             "&:hover": { textDecoration: "underline" },
-          }}
-        >
+          }}>
           {title}
         </Typography>
       </Link>
@@ -76,12 +70,9 @@ ProjectListEntry.Link = ({
       <Typography
         variant="body2"
         component="span"
-        sx={{ color: "text.secondary", mt: 0.5, display: "block" }}
-      >
+        sx={{ color: "text.secondary", mt: 0.5, display: "block" }}>
         Student:{" "}
-        <strong style={{ color: "text.primary" }}>
-          {student?.name ?? "N/A"}
-        </strong>
+        <strong style={{ color: "text.primary" }}>{student?.name ?? "N/A"}</strong>
       </Typography>
     }
   />
@@ -111,16 +102,13 @@ ProjectListEntry.MenuButton = ({
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-      >
+        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}>
         <MenuItem
           onClick={() => {
             onEditButtonClick();
             handleClose();
           }}
-          sx={{ minWidth: 120 }}
-        >
+          sx={{ minWidth: 120 }}>
           <ListItemIcon>
             <Edit fontSize="small" />
           </ListItemIcon>
@@ -133,8 +121,7 @@ ProjectListEntry.MenuButton = ({
           onClick={() => {
             onArchiveButtonClick();
             handleClose();
-          }}
-        >
+          }}>
           <ListItemIcon>
             <Archive fontSize="small" color="error" />
           </ListItemIcon>

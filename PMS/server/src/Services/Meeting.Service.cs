@@ -35,13 +35,19 @@ public class MeetingService
         return meeting;
     }
 
-    public async Task<IEnumerable<GetMeetingsDTO>> GetSupervisorMeetings(long supervisorID)
+    public async Task<IEnumerable<GetMeetingsDTO>> GetSupervisorMeetings(long userID)
     {
+        var projectSupervisor = await dbContext.Projects
+                                .Where(p => p.SupervisorID == userID || p.StudentID == userID)
+                                .Select(p => p.Supervisor)
+                                .FirstOrDefaultAsync()
+                                ?? throw new Exception("Project Supervisor Not Found!");
+
         var meetings = await dbContext.Meetings
-                    .Include(m => m.Project)
+                    .Include(m => m.Task)
                     .Include(m => m.Organizer)
                     .Include(m => m.Attendee)
-                    .Where(m => m.AttendeeID == supervisorID || m.OrganizerID == supervisorID)
+                    .Where(m => m.AttendeeID == projectSupervisor.UserID || m.OrganizerID == projectSupervisor.UserID)
                     .ToListAsync();
 
         // See GetMeeting above to see why GetSupervisorMeetings is not idempotent
@@ -58,10 +64,10 @@ public class MeetingService
             Start = m.Start,
             End = m.End,
             Description = m.Description,
-            Project = new ProjectLookupDTO
+            Task = new ProjectTaskLookupDTO
             {
-                ProjectID = m.Project.ProjectID,
-                Title = m.Project.Title
+                TaskID = m.Task.ProjectID,
+                Title = m.Task.Title
             },
             Organizer = new UserLookupDTO
             {
@@ -77,11 +83,12 @@ public class MeetingService
             },
             Status = m.Status
         })
-        .Distinct();
+        .Distinct()
+        .ToList();
     }
 
     public async Task<Meeting> BookMeeting(
-        long organizerID, long attendeeID, long projectID,
+        long organizerID, long attendeeID, long taskID,
         string? description, DateTime start, DateTime end
     )
     {
@@ -91,7 +98,7 @@ public class MeetingService
             {
                 var newMeeting = new Meeting
                 {
-                    ProjectID = projectID,
+                    TaskID = taskID,
                     OrganizerID = organizerID,
                     AttendeeID = attendeeID,
                     Description = description,
@@ -144,10 +151,11 @@ public class MeetingService
                     .FirstOrDefaultAsync()
                     ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
-                dbContext.Remove(meeting);
-                await dbContext.SaveChangesAsync();
 
                 await reminderService.DeleteMeetingReminder(meeting.MeetingID);
+
+                dbContext.Remove(meeting);
+                await dbContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
             }

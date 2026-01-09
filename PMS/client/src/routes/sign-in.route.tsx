@@ -9,9 +9,9 @@ import {
   Alert,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import PageLayout from "../components/layout.components/page-layout.component";
 import { useAuth } from "../providers/auth.provider";
 import { useNavigate } from "react-router";
+import Header from "../components/header.components/header.component";
 
 export default function SignInRoute() {
   const navigate = useNavigate();
@@ -52,72 +52,86 @@ export default function SignInRoute() {
   };
 
   return (
-    <PageLayout.SignIn>
-      <Container component="main" maxWidth="xs" sx={{ mt: 8 }}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            p: 4,
-            borderRadius: 2,
-            boxShadow: 3,
-            bgcolor: "background.paper",
-          }}
-        >
-          <LockOutlinedIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
-          <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
-            Sign In
-          </Typography>
-
-          <Box
-            component="form"
-            onSubmit={handleSubmit}
-            sx={{ mt: 1, width: "100%" }}
-          >
-            <Stack spacing={2}>
-              {error && <Alert severity="error">{error}</Alert>}
-              {success && <Alert severity="success">{success}</Alert>}
-
-              {/* Email */}
-              <TextField
-                required
-                fullWidth
-                id="email"
-                label="Email Address"
-                name="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                variant="outlined"
-              />
-
-              {/* Password */}
-              <TextField
-                required
-                fullWidth
-                name="password"
-                label="Password"
-                type="password"
-                id="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                variant="outlined"
-              />
-
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{ mt: 3, mb: 2, py: 1.5 }}
-              >
-                Sign In
-              </Button>
-            </Stack>
-          </Box>
+    <>
+      <Header>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Header.Brand title="Project Management System" />
         </Box>
-      </Container>
-    </PageLayout.SignIn>
+      </Header>
+
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          height: "89.5vh",
+        }}
+      >
+        <Container component="main" maxWidth="xs" sx={{ mt: 8 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              p: 4,
+              borderRadius: 2,
+              boxShadow: 3,
+              bgcolor: "background.paper",
+            }}
+          >
+            <LockOutlinedIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
+            <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
+              Sign In
+            </Typography>
+
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              sx={{ mt: 1, width: "100%" }}
+            >
+              <Stack spacing={2}>
+                {error && <Alert severity="error">{error}</Alert>}
+                {success && <Alert severity="success">{success}</Alert>}
+
+                {/* Email */}
+                <TextField
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email Address"
+                  name="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  variant="outlined"
+                />
+
+                {/* Password */}
+                <TextField
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  variant="outlined"
+                />
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2, py: 1.5 }}
+                >
+                  Sign In
+                </Button>
+              </Stack>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+    </>
   );
 }

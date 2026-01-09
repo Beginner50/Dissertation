@@ -30,7 +30,6 @@ public class PMSDbContext : DbContext
     public DbSet<Meeting> Meetings { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
     public DbSet<Notification> Notifications { get; set; }
-    public DbSet<ProgressLogEntry> ProgressLogEntries { get; set; }
     public DbSet<ProjectTask> Tasks { get; set; }
     public DbSet<Deliverable> Deliverables { get; set; }
     public DbSet<FeedbackCriteria> FeedbackCriterias { get; set; }
@@ -72,11 +71,11 @@ public class PMSDbContext : DbContext
             new User
             {
                 UserID = 1,
-                Name = "Alice Student",
-                Email = "alice@uni.com",
+                Name = "Admin",
+                Email = "admin@uni.com",
                 Password = passwordHash,
                 RefreshToken = "",
-                Role = "student"
+                Role = "admin"
             },
             new User
             {
@@ -141,16 +140,16 @@ public class PMSDbContext : DbContext
                 Title = "AI Research",
                 Description = "Research on AI algorithms",
                 Status = "active",
-                StudentID = 1,     // Matches Alice
-                SupervisorID = 2   // Matches Dr. Smith
+                StudentID = 4,
+                SupervisorID = 2
             }, new Project
             {
                 ProjectID = 2,
                 Title = "OCR Research",
                 Description = "Research on Optical Character Recognition",
                 Status = "active",
-                StudentID = 3,     // Matches Hashim
-                SupervisorID = 2   // Matches Dr. Smith
+                StudentID = 3,
+                SupervisorID = 2
             },
             new Project
             {
@@ -158,129 +157,12 @@ public class PMSDbContext : DbContext
                 Title = "Blockchain Dev",
                 Description = "Development of Blockchain applications",
                 Status = "active",
-                StudentID = 4,
+                StudentID = 6,
                 SupervisorID = 5
-            },
-            new Project
-            {
-                ProjectID = 4,
-                Title = "Compiler Optimization",
-                Description = "Optimize an existing compiler",
-                Status = "active",
-                StudentID = 3,
-                SupervisorID = null
-            },
-            new Project
-            {
-                ProjectID = 5,
-                Title = "Augmented Virtual Reality",
-                Description = "Develop an augmented virtual reality application",
-                Status = "active",
-                StudentID = 1,
-                SupervisorID = null
-            }
-        );
-
-        modelBuilder.Entity<Meeting>().HasData(
-            // Alice (ID 1) & Dr. Smith (ID 2) - Project 1
-            new Meeting
-            {
-                MeetingID = 1,
-                ProjectID = 1,
-                OrganizerID = 2,
-                AttendeeID = 1,
-                Status = "pending",
-                Start = new DateTime(2025, 12, 20, 10, 0, 0, DateTimeKind.Utc),
-                End = new DateTime(2025, 12, 20, 11, 0, 0, DateTimeKind.Utc)
-            },
-            new Meeting
-            {
-                MeetingID = 2,
-                ProjectID = 1,
-                OrganizerID = 1,
-                AttendeeID = 2,
-                Status = "pending",
-                Start = new DateTime(2025, 12, 21, 14, 0, 0, DateTimeKind.Utc),
-                End = new DateTime(2025, 12, 21, 15, 0, 0, DateTimeKind.Utc)
-            },
-            new Meeting
-            {
-                MeetingID = 3,
-                ProjectID = 1,
-                OrganizerID = 2,
-                AttendeeID = 1,
-                Status = "accepted",
-                Start = new DateTime(2025, 12, 22, 09, 30, 0, DateTimeKind.Utc),
-                End = new DateTime(2025, 12, 22, 10, 30, 0, DateTimeKind.Utc)
-            },
-            new Meeting
-            {
-                MeetingID = 4,
-                ProjectID = 1,
-                OrganizerID = 1,
-                AttendeeID = 2,
-                Status = "pending",
-                Start = new DateTime(2025, 12, 23, 11, 0, 0, DateTimeKind.Utc),
-                End = new DateTime(2025, 12, 23, 12, 0, 0, DateTimeKind.Utc)
-            },
-
-            // Hashim (ID 3) & Dr. Smith (ID 2) - Project 2
-            new Meeting
-            {
-                MeetingID = 5,
-                ProjectID = 2,
-                OrganizerID = 2,
-                AttendeeID = 3,
-                Status = "accepted",
-                Start = new DateTime(2025, 12, 20, 13, 0, 0, DateTimeKind.Utc),
-                End = new DateTime(2025, 12, 20, 14, 0, 0, DateTimeKind.Utc)
-            },
-            new Meeting
-            {
-                MeetingID = 6,
-                ProjectID = 2,
-                OrganizerID = 3,
-                AttendeeID = 2,
-                Status = "pending",
-                Start = new DateTime(2025, 12, 21, 10, 0, 0, DateTimeKind.Utc),
-                End = new DateTime(2025, 12, 21, 11, 0, 0, DateTimeKind.Utc)
-            },
-            new Meeting
-            {
-                MeetingID = 7,
-                ProjectID = 2,
-                OrganizerID = 2,
-                AttendeeID = 3,
-                Status = "accepted",
-                Start = new DateTime(2025, 12, 22, 15, 0, 0, DateTimeKind.Utc),
-                End = new DateTime(2025, 12, 22, 16, 0, 0, DateTimeKind.Utc)
-            },
-            new Meeting
-            {
-                MeetingID = 8,
-                ProjectID = 2,
-                OrganizerID = 3,
-                AttendeeID = 2,
-                Status = "pending",
-                Start = new DateTime(2025, 12, 23, 09, 0, 0, DateTimeKind.Utc),
-                End = new DateTime(2025, 12, 23, 10, 0, 0, DateTimeKind.Utc)
-            },
-
-            // New Project: Charlie (ID 4) & Dr. Brown (ID 5) - Project 3
-            new Meeting
-            {
-                MeetingID = 9,
-                ProjectID = 3,
-                OrganizerID = 5,
-                AttendeeID = 4,
-                Status = "accepted",
-                Start = new DateTime(2025, 12, 24, 10, 0, 0, DateTimeKind.Utc),
-                End = new DateTime(2025, 12, 24, 11, 0, 0, DateTimeKind.Utc)
             }
         );
 
         modelBuilder.Entity<ProjectTask>().HasData(
-            // Tasks for Project 1: AI Research
             new ProjectTask
             {
                 ProjectTaskID = 1,
@@ -311,8 +193,6 @@ public class PMSDbContext : DbContext
                 DueDate = new DateTime(2025, 10, 15, 0, 0, 0, DateTimeKind.Utc),
                 Status = "missing"
             },
-
-            // Tasks for Project 2: OCR Research
             new ProjectTask
             {
                 ProjectTaskID = 4,
@@ -334,7 +214,6 @@ public class PMSDbContext : DbContext
                 Status = "completed"
             },
 
-            // Tasks for Project 3: Blockchain Dev
             new ProjectTask
             {
                 ProjectTaskID = 6,
@@ -347,60 +226,148 @@ public class PMSDbContext : DbContext
             }
         );
 
+        modelBuilder.Entity<Meeting>().HasData(
+            new Meeting
+            {
+                MeetingID = 1,
+                TaskID = 1, // Project 1 - Literature Review
+                OrganizerID = 2,
+                AttendeeID = 3,
+                Status = "pending",
+                Start = new DateTime(2025, 12, 20, 10, 0, 0, DateTimeKind.Utc),
+                End = new DateTime(2025, 12, 20, 11, 0, 0, DateTimeKind.Utc)
+            },
+            new Meeting
+            {
+                MeetingID = 2,
+                TaskID = 2, // Project 1 - Dataset Collection
+                OrganizerID = 3,
+                AttendeeID = 2,
+                Status = "pending",
+                Start = new DateTime(2025, 12, 21, 14, 0, 0, DateTimeKind.Utc),
+                End = new DateTime(2025, 12, 21, 15, 0, 0, DateTimeKind.Utc)
+            },
+            new Meeting
+            {
+                MeetingID = 3,
+                TaskID = 1, // Project 1 - Literature Review
+                OrganizerID = 2,
+                AttendeeID = 3,
+                Status = "accepted",
+                Start = new DateTime(2025, 12, 22, 09, 30, 0, DateTimeKind.Utc),
+                End = new DateTime(2025, 12, 22, 10, 30, 0, DateTimeKind.Utc)
+            },
+            new Meeting
+            {
+                MeetingID = 4,
+                TaskID = 3, // Project 1 - Proposal Submission
+                OrganizerID = 3,
+                AttendeeID = 2,
+                Status = "pending",
+                Start = new DateTime(2025, 12, 23, 11, 0, 0, DateTimeKind.Utc),
+                End = new DateTime(2025, 12, 23, 12, 0, 0, DateTimeKind.Utc)
+            },
+            new Meeting
+            {
+                MeetingID = 5,
+                TaskID = 4, // Project 2 - Algorithm Selection
+                OrganizerID = 2,
+                AttendeeID = 6,
+                Status = "accepted",
+                Start = new DateTime(2025, 12, 20, 13, 0, 0, DateTimeKind.Utc),
+                End = new DateTime(2025, 12, 20, 14, 0, 0, DateTimeKind.Utc)
+            },
+            new Meeting
+            {
+                MeetingID = 6,
+                TaskID = 5, // Project 2 - Initial Prototype
+                OrganizerID = 6,
+                AttendeeID = 2,
+                Status = "pending",
+                Start = new DateTime(2025, 12, 21, 10, 0, 0, DateTimeKind.Utc),
+                End = new DateTime(2025, 12, 21, 11, 0, 0, DateTimeKind.Utc)
+            },
+            new Meeting
+            {
+                MeetingID = 7,
+                TaskID = 4, // Project 2 - Algorithm Selection
+                OrganizerID = 2,
+                AttendeeID = 6,
+                Status = "accepted",
+                Start = new DateTime(2025, 12, 22, 15, 0, 0, DateTimeKind.Utc),
+                End = new DateTime(2025, 12, 22, 16, 0, 0, DateTimeKind.Utc)
+            },
+            new Meeting
+            {
+                MeetingID = 8,
+                TaskID = 5, // Project 2 - Initial Prototype
+                OrganizerID = 6,
+                AttendeeID = 2,
+                Status = "pending",
+                Start = new DateTime(2025, 12, 23, 09, 0, 0, DateTimeKind.Utc),
+                End = new DateTime(2025, 12, 23, 10, 0, 0, DateTimeKind.Utc)
+            },
+            new Meeting
+            {
+                MeetingID = 9,
+                TaskID = 6, // Project 3 - Smart Contract Design
+                OrganizerID = 5,
+                AttendeeID = 4,
+                Status = "accepted",
+                Start = new DateTime(2025, 12, 24, 10, 0, 0, DateTimeKind.Utc),
+                End = new DateTime(2025, 12, 24, 11, 0, 0, DateTimeKind.Utc)
+            }
+        );
+
+
         modelBuilder.Entity<Reminder>().HasData(
-    // Upcoming Reminders for Alice (ID 1)
-    new Reminder
-    {
-        ReminderID = 1,
-        RecipientID = 1,
-        Type = "meeting",
-        Message = "Prepare for Dissertation Review",
-        RemindAt = new DateTime(2026, 1, 4, 9, 0, 0, DateTimeKind.Utc), // Tomorrow 9 AM
-        MeetingID = 1,
-        TaskID = null
-    },
-    new Reminder
-    {
-        ReminderID = 2,
-        RecipientID = 1,
-        Type = "task",
-        Message = "Finalize Dataset Collection draft",
-        RemindAt = new DateTime(2026, 1, 4, 14, 0, 0, DateTimeKind.Utc), // Tomorrow 2 PM
-        MeetingID = null,
-        TaskID = 2
-    },
-
-    // Upcoming Reminders for Dr. Smith (ID 2)
-    new Reminder
-    {
-        ReminderID = 3,
-        RecipientID = 2,
-        Type = "meeting",
-        Message = "Review OCR Research with Hashim",
-        RemindAt = new DateTime(2026, 1, 5, 10, 0, 0, DateTimeKind.Utc), // Jan 5th
-        MeetingID = 7,
-        TaskID = null
-    },
-
-    // Upcoming Reminders for Hashim (ID 3)
-    new Reminder
-    {
-        ReminderID = 4,
-        RecipientID = 3,
-        Type = "task",
-        Message = "Compare Tesseract vs EasyOCR",
-        RemindAt = new DateTime(2026, 1, 4, 08, 30, 0, DateTimeKind.Utc), // Tomorrow 8:30 AM (Nearest)
-        MeetingID = null,
-        TaskID = 4
-    }
-);
+            new Reminder
+            {
+                ReminderID = 1,
+                RecipientID = 3,
+                Type = "meeting",
+                Message = "Prepare for Dissertation Review",
+                RemindAt = new DateTime(2026, 1, 4, 9, 0, 0, DateTimeKind.Utc),
+                MeetingID = 1,
+                TaskID = null
+            },
+            new Reminder
+            {
+                ReminderID = 2,
+                RecipientID = 3,
+                Type = "task",
+                Message = "Finalize Dataset Collection draft",
+                RemindAt = new DateTime(2026, 1, 4, 14, 0, 0, DateTimeKind.Utc),
+                MeetingID = null,
+                TaskID = 2
+            },
+            new Reminder
+            {
+                ReminderID = 3,
+                RecipientID = 2,
+                Type = "meeting",
+                Message = "Review OCR Research with Hashim",
+                RemindAt = new DateTime(2026, 1, 5, 10, 0, 0, DateTimeKind.Utc), // Jan 5th
+                MeetingID = 7,
+                TaskID = null
+            },
+            new Reminder
+            {
+                ReminderID = 4,
+                RecipientID = 6,
+                Type = "task",
+                Message = "Compare Tesseract vs EasyOCR",
+                RemindAt = new DateTime(2026, 1, 4, 08, 30, 0, DateTimeKind.Utc), // Tomorrow 8:30 AM (Nearest)
+                MeetingID = null,
+                TaskID = 4
+            }
+        );
 
         modelBuilder.Entity<Notification>().HasData(
-            // Past Notifications for Alice (ID 1)
             new Notification
             {
                 NotificationID = 1,
-                RecipientID = 1,
+                RecipientID = 3,
                 Type = "meeting_accepted",
                 Description = "Dr. Smith accepted your meeting request.",
                 Timestamp = new DateTime(2025, 12, 30, 15, 45, 0, DateTimeKind.Utc),
@@ -410,15 +377,13 @@ public class PMSDbContext : DbContext
             new Notification
             {
                 NotificationID = 2,
-                RecipientID = 1,
+                RecipientID = 3,
                 Type = "task_completed",
                 Description = "Literature Review has been marked as completed.",
                 Timestamp = new DateTime(2025, 12, 28, 10, 0, 0, DateTimeKind.Utc),
                 MeetingID = null,
                 TaskID = 1
             },
-
-            // Past Notifications for Dr. Smith (ID 2)
             new Notification
             {
                 NotificationID = 3,
@@ -429,8 +394,6 @@ public class PMSDbContext : DbContext
                 MeetingID = null,
                 TaskID = 5
             },
-
-            // Past Notifications for Charlie (ID 4)
             new Notification
             {
                 NotificationID = 4,

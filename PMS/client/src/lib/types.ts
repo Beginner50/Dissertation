@@ -1,9 +1,27 @@
+import type ky from "ky";
+
+export type AuthState = {
+  isAuthenticated: boolean;
+  user: User | null;
+  token: string | null;
+  tokenExpiry: number | null;
+};
+
+export type AuthContextType = {
+  authState: AuthState;
+  authorizedAPI: typeof ky;
+  signIn: (userData: Record<string, any>) => Promise<AuthState>;
+  signOut: (userID: number | string | undefined) => Promise<void>;
+};
+
 export type User = {
   userID: number;
   role: string;
   name: string;
   email: string;
 };
+
+export type UserFormData = Pick<User, "userID" | "name" | "email" | "role">;
 
 export type Project = {
   projectID: number;
@@ -12,12 +30,10 @@ export type Project = {
   status: string;
   student?: User;
   supervisor?: User;
+  tasks?: Pick<Task, "taskID" | "title">[];
 };
 
-export type ProjectFormData = Pick<
-  Project,
-  "projectID" | "title" | "description"
->;
+export type ProjectFormData = Pick<Project, "projectID" | "title" | "description">;
 
 export type Task = {
   taskID: number;
@@ -28,10 +44,7 @@ export type Task = {
   dueDate: string;
 };
 
-export type TaskFormData = Pick<
-  Task,
-  "taskID" | "title" | "description" | "dueDate"
->;
+export type TaskFormData = Pick<Task, "taskID" | "title" | "description" | "dueDate">;
 
 export type Deliverable = {
   deliverableID: number;
@@ -59,7 +72,7 @@ export type Meeting = {
   start: Date;
   end: Date;
   description: string;
-  project: { projectID: number; title: string };
+  task: { taskID: number; title: string };
   organizer: { userID: number; name: string; email: string };
   attendee: { userID: number; name: string; email: string };
   status: "accepted" | "pending";
@@ -71,7 +84,7 @@ export type MeetingFormData = {
   end: Date;
   attendeeID: number;
   projectID: number;
-  projectTitle: string;
+  taskID: number;
 };
 
 export type Reminder = {

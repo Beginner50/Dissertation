@@ -44,8 +44,7 @@ export default function TaskListEntry({
           borderColor: "primary.main",
           boxShadow: theme.shadowSoft,
         },
-      }}
-    >
+      }}>
       <ListItemIcon>
         {status == "completed" ? (
           <CompletedVariant1 />
@@ -85,8 +84,7 @@ TaskListEntry.Link = ({
               fontWeight: 600,
               color: theme.link || "primary.main",
               "&:hover": { textDecoration: "underline" },
-            }}
-          >
+            }}>
             {title}
           </Typography>
         </Link>
@@ -100,8 +98,7 @@ TaskListEntry.Link = ({
             textDecoration: isDeadlinePast ? "line-through" : "none",
             display: "block",
             mt: 0.5,
-          }}
-        >
+          }}>
           Deadline:{" "}
           <strong style={{ fontWeight: isDeadlinePast ? 400 : 600 }}>
             {deadline.toLocaleDateString("en-GB")}
@@ -136,16 +133,13 @@ TaskListEntry.MenuButton = ({
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-      >
+        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}>
         <MenuItem
           onClick={() => {
             onEditButtonClick();
             handleClose();
           }}
-          sx={{ minWidth: 120 }}
-        >
+          sx={{ minWidth: 120 }}>
           <ListItemIcon>
             <Edit fontSize="small" />
           </ListItemIcon>
@@ -158,8 +152,7 @@ TaskListEntry.MenuButton = ({
           onClick={() => {
             onDeleteButtonClick();
             handleClose();
-          }}
-        >
+          }}>
           <ListItemIcon>
             <Delete fontSize="small" color="error" />
           </ListItemIcon>

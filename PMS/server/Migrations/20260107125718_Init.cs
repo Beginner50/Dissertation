@@ -21,10 +21,10 @@ namespace PMS.Migrations
                     UserID = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Email = table.Column<string>(type: "text", nullable: false),
-                    Password = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    Password = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     Role = table.Column<string>(type: "text", nullable: false),
-                    RefreshToken = table.Column<string>(type: "text", nullable: false),
+                    RefreshToken = table.Column<string>(type: "text", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
@@ -57,43 +57,6 @@ namespace PMS.Migrations
                         column: x => x.SupervisorID,
                         principalTable: "Users",
                         principalColumn: "UserID");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Meetings",
-                columns: table => new
-                {
-                    MeetingID = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Start = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    End = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: true),
-                    Status = table.Column<string>(type: "text", nullable: false),
-                    OrganizerID = table.Column<long>(type: "bigint", nullable: false),
-                    AttendeeID = table.Column<long>(type: "bigint", nullable: false),
-                    ProjectID = table.Column<long>(type: "bigint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Meetings", x => x.MeetingID);
-                    table.ForeignKey(
-                        name: "FK_Meetings_Projects_ProjectID",
-                        column: x => x.ProjectID,
-                        principalTable: "Projects",
-                        principalColumn: "ProjectID",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Meetings_Users_AttendeeID",
-                        column: x => x.AttendeeID,
-                        principalTable: "Users",
-                        principalColumn: "UserID",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Meetings_Users_OrganizerID",
-                        column: x => x.OrganizerID,
-                        principalTable: "Users",
-                        principalColumn: "UserID",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -186,6 +149,43 @@ namespace PMS.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Meetings",
+                columns: table => new
+                {
+                    MeetingID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Start = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    End = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    OrganizerID = table.Column<long>(type: "bigint", nullable: false),
+                    AttendeeID = table.Column<long>(type: "bigint", nullable: false),
+                    TaskID = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Meetings", x => x.MeetingID);
+                    table.ForeignKey(
+                        name: "FK_Meetings_Tasks_TaskID",
+                        column: x => x.TaskID,
+                        principalTable: "Tasks",
+                        principalColumn: "ProjectTaskID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Meetings_Users_AttendeeID",
+                        column: x => x.AttendeeID,
+                        principalTable: "Users",
+                        principalColumn: "UserID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Meetings_Users_OrganizerID",
+                        column: x => x.OrganizerID,
+                        principalTable: "Users",
+                        principalColumn: "UserID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Notifications",
                 columns: table => new
                 {
@@ -217,39 +217,6 @@ namespace PMS.Migrations
                         principalTable: "Users",
                         principalColumn: "UserID",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ProgressLogEntries",
-                columns: table => new
-                {
-                    ProgressLogEntryID = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
-                    ProjectID = table.Column<long>(type: "bigint", nullable: false),
-                    MeetingID = table.Column<long>(type: "bigint", nullable: true),
-                    TaskID = table.Column<long>(type: "bigint", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ProgressLogEntries", x => x.ProgressLogEntryID);
-                    table.ForeignKey(
-                        name: "FK_ProgressLogEntries_Meetings_MeetingID",
-                        column: x => x.MeetingID,
-                        principalTable: "Meetings",
-                        principalColumn: "MeetingID");
-                    table.ForeignKey(
-                        name: "FK_ProgressLogEntries_Projects_ProjectID",
-                        column: x => x.ProjectID,
-                        principalTable: "Projects",
-                        principalColumn: "ProjectID",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ProgressLogEntries_Tasks_TaskID",
-                        column: x => x.TaskID,
-                        principalTable: "Tasks",
-                        principalColumn: "ProjectTaskID");
                 });
 
             migrationBuilder.CreateTable(
@@ -291,13 +258,13 @@ namespace PMS.Migrations
                 columns: new[] { "UserID", "Email", "IsDeleted", "Name", "Password", "RefreshToken", "Role" },
                 values: new object[,]
                 {
-                    { 1L, "alice@uni.com", false, "Alice Student", "hashed_password", "", "student" },
-                    { 2L, "smith@uni.com", false, "Dr. Smith", "hashed_password", "", "supervisor" },
-                    { 3L, "hashim@uni.com", false, "Hashim", "hashed_password", "", "student" },
-                    { 4L, "charlie@uni.com", false, "Charlie Student", "hashed_password", "", "student" },
-                    { 5L, "brown@uni.com", false, "Dr. Brown", "hashed_password", "", "supervisor" },
-                    { 6L, "agent@smith.com", false, "Agent Smith", "hashed_password", "", "student" },
-                    { 7L, "rebellius@uni.com", false, "Rebellius", "hashed_password", "", "student" }
+                    { 1L, "admin@uni.com", false, "Admin", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "admin" },
+                    { 2L, "smith@uni.com", false, "Dr. Smith", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "supervisor" },
+                    { 3L, "hashim@uni.com", false, "Hashim", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "student" },
+                    { 4L, "charlie@uni.com", false, "Charlie Student", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "student" },
+                    { 5L, "brown@uni.com", false, "Dr. Brown", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "supervisor" },
+                    { 6L, "agent@smith.com", false, "Agent Smith", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "student" },
+                    { 7L, "rebellius@uni.com", false, "Rebellius", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "student" }
                 });
 
             migrationBuilder.InsertData(
@@ -305,27 +272,9 @@ namespace PMS.Migrations
                 columns: new[] { "ProjectID", "Description", "Status", "StudentID", "SupervisorID", "Title" },
                 values: new object[,]
                 {
-                    { 1L, "Research on AI algorithms", "active", 1L, 2L, "AI Research" },
+                    { 1L, "Research on AI algorithms", "active", 4L, 2L, "AI Research" },
                     { 2L, "Research on Optical Character Recognition", "active", 3L, 2L, "OCR Research" },
-                    { 3L, "Development of Blockchain applications", "active", 4L, 5L, "Blockchain Dev" },
-                    { 4L, "Optimize an existing compiler", "active", 3L, null, "Compiler Optimization" },
-                    { 5L, "Develop an augmented virtual reality application", "active", 1L, null, "Augmented Virtual Reality" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Meetings",
-                columns: new[] { "MeetingID", "AttendeeID", "Description", "End", "OrganizerID", "ProjectID", "Start", "Status" },
-                values: new object[,]
-                {
-                    { 1L, 1L, null, new DateTime(2025, 12, 20, 11, 0, 0, 0, DateTimeKind.Utc), 2L, 1L, new DateTime(2025, 12, 20, 10, 0, 0, 0, DateTimeKind.Utc), "pending" },
-                    { 2L, 2L, null, new DateTime(2025, 12, 21, 15, 0, 0, 0, DateTimeKind.Utc), 1L, 1L, new DateTime(2025, 12, 21, 14, 0, 0, 0, DateTimeKind.Utc), "pending" },
-                    { 3L, 1L, null, new DateTime(2025, 12, 22, 10, 30, 0, 0, DateTimeKind.Utc), 2L, 1L, new DateTime(2025, 12, 22, 9, 30, 0, 0, DateTimeKind.Utc), "accepted" },
-                    { 4L, 2L, null, new DateTime(2025, 12, 23, 12, 0, 0, 0, DateTimeKind.Utc), 1L, 1L, new DateTime(2025, 12, 23, 11, 0, 0, 0, DateTimeKind.Utc), "pending" },
-                    { 5L, 3L, null, new DateTime(2025, 12, 20, 14, 0, 0, 0, DateTimeKind.Utc), 2L, 2L, new DateTime(2025, 12, 20, 13, 0, 0, 0, DateTimeKind.Utc), "accepted" },
-                    { 6L, 2L, null, new DateTime(2025, 12, 21, 11, 0, 0, 0, DateTimeKind.Utc), 3L, 2L, new DateTime(2025, 12, 21, 10, 0, 0, 0, DateTimeKind.Utc), "pending" },
-                    { 7L, 3L, null, new DateTime(2025, 12, 22, 16, 0, 0, 0, DateTimeKind.Utc), 2L, 2L, new DateTime(2025, 12, 22, 15, 0, 0, 0, DateTimeKind.Utc), "accepted" },
-                    { 8L, 2L, null, new DateTime(2025, 12, 23, 10, 0, 0, 0, DateTimeKind.Utc), 3L, 2L, new DateTime(2025, 12, 23, 9, 0, 0, 0, DateTimeKind.Utc), "pending" },
-                    { 9L, 4L, null, new DateTime(2025, 12, 24, 11, 0, 0, 0, DateTimeKind.Utc), 5L, 3L, new DateTime(2025, 12, 24, 10, 0, 0, 0, DateTimeKind.Utc), "accepted" }
+                    { 3L, "Development of Blockchain applications", "active", 6L, 5L, "Blockchain Dev" }
                 });
 
             migrationBuilder.InsertData(
@@ -342,13 +291,45 @@ namespace PMS.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "Meetings",
+                columns: new[] { "MeetingID", "AttendeeID", "Description", "End", "OrganizerID", "Start", "Status", "TaskID" },
+                values: new object[,]
+                {
+                    { 1L, 3L, null, new DateTime(2025, 12, 20, 11, 0, 0, 0, DateTimeKind.Utc), 2L, new DateTime(2025, 12, 20, 10, 0, 0, 0, DateTimeKind.Utc), "pending", 1L },
+                    { 2L, 2L, null, new DateTime(2025, 12, 21, 15, 0, 0, 0, DateTimeKind.Utc), 3L, new DateTime(2025, 12, 21, 14, 0, 0, 0, DateTimeKind.Utc), "pending", 2L },
+                    { 3L, 3L, null, new DateTime(2025, 12, 22, 10, 30, 0, 0, DateTimeKind.Utc), 2L, new DateTime(2025, 12, 22, 9, 30, 0, 0, DateTimeKind.Utc), "accepted", 1L },
+                    { 4L, 2L, null, new DateTime(2025, 12, 23, 12, 0, 0, 0, DateTimeKind.Utc), 3L, new DateTime(2025, 12, 23, 11, 0, 0, 0, DateTimeKind.Utc), "pending", 3L },
+                    { 5L, 6L, null, new DateTime(2025, 12, 20, 14, 0, 0, 0, DateTimeKind.Utc), 2L, new DateTime(2025, 12, 20, 13, 0, 0, 0, DateTimeKind.Utc), "accepted", 4L },
+                    { 6L, 2L, null, new DateTime(2025, 12, 21, 11, 0, 0, 0, DateTimeKind.Utc), 6L, new DateTime(2025, 12, 21, 10, 0, 0, 0, DateTimeKind.Utc), "pending", 5L },
+                    { 7L, 6L, null, new DateTime(2025, 12, 22, 16, 0, 0, 0, DateTimeKind.Utc), 2L, new DateTime(2025, 12, 22, 15, 0, 0, 0, DateTimeKind.Utc), "accepted", 4L },
+                    { 8L, 2L, null, new DateTime(2025, 12, 23, 10, 0, 0, 0, DateTimeKind.Utc), 6L, new DateTime(2025, 12, 23, 9, 0, 0, 0, DateTimeKind.Utc), "pending", 5L },
+                    { 9L, 4L, null, new DateTime(2025, 12, 24, 11, 0, 0, 0, DateTimeKind.Utc), 5L, new DateTime(2025, 12, 24, 10, 0, 0, 0, DateTimeKind.Utc), "accepted", 6L }
+                });
+
+            migrationBuilder.InsertData(
                 table: "Notifications",
                 columns: new[] { "NotificationID", "Description", "MeetingID", "RecipientID", "TaskID", "Timestamp", "Type" },
                 values: new object[,]
                 {
-                    { 1L, "Dr. Smith accepted your meeting request.", 3L, 1L, null, new DateTime(2025, 12, 30, 15, 45, 0, 0, DateTimeKind.Utc), "meeting_accepted" },
-                    { 2L, "Literature Review has been marked as completed.", null, 1L, 1L, new DateTime(2025, 12, 28, 10, 0, 0, 0, DateTimeKind.Utc), "task_completed" },
-                    { 3L, "Hashim updated 'Initial Prototype' details.", null, 2L, 5L, new DateTime(2026, 1, 1, 11, 20, 0, 0, DateTimeKind.Utc), "task_updated" },
+                    { 2L, "Literature Review has been marked as completed.", null, 3L, 1L, new DateTime(2025, 12, 28, 10, 0, 0, 0, DateTimeKind.Utc), "task_completed" },
+                    { 3L, "Hashim updated 'Initial Prototype' details.", null, 2L, 5L, new DateTime(2026, 1, 1, 11, 20, 0, 0, DateTimeKind.Utc), "task_updated" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Reminders",
+                columns: new[] { "ReminderID", "MeetingID", "Message", "RecipientID", "RemindAt", "TaskID", "Type" },
+                values: new object[,]
+                {
+                    { 2L, null, "Finalize Dataset Collection draft", 3L, new DateTime(2026, 1, 4, 14, 0, 0, 0, DateTimeKind.Utc), 2L, "task" },
+                    { 4L, null, "Compare Tesseract vs EasyOCR", 6L, new DateTime(2026, 1, 4, 8, 30, 0, 0, DateTimeKind.Utc), 4L, "task" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Notifications",
+                columns: new[] { "NotificationID", "Description", "MeetingID", "RecipientID", "TaskID", "Timestamp", "Type" },
+                values: new object[,]
+                {
+                    { 1L, "Dr. Smith accepted your meeting request.", 3L, 3L, null, new DateTime(2025, 12, 30, 15, 45, 0, 0, DateTimeKind.Utc), "meeting_accepted" },
                     { 4L, "Dr. Brown scheduled a new meeting.", 9L, 4L, null, new DateTime(2026, 1, 2, 9, 0, 0, 0, DateTimeKind.Utc), "meeting_booked" }
                 });
 
@@ -357,10 +338,8 @@ namespace PMS.Migrations
                 columns: new[] { "ReminderID", "MeetingID", "Message", "RecipientID", "RemindAt", "TaskID", "Type" },
                 values: new object[,]
                 {
-                    { 1L, 1L, "Prepare for Dissertation Review", 1L, new DateTime(2026, 1, 4, 9, 0, 0, 0, DateTimeKind.Utc), null, "meeting" },
-                    { 2L, null, "Finalize Dataset Collection draft", 1L, new DateTime(2026, 1, 4, 14, 0, 0, 0, DateTimeKind.Utc), 2L, "task" },
-                    { 3L, 7L, "Review OCR Research with Hashim", 2L, new DateTime(2026, 1, 5, 10, 0, 0, 0, DateTimeKind.Utc), null, "meeting" },
-                    { 4L, null, "Compare Tesseract vs EasyOCR", 3L, new DateTime(2026, 1, 4, 8, 30, 0, 0, DateTimeKind.Utc), 4L, "task" }
+                    { 1L, 1L, "Prepare for Dissertation Review", 3L, new DateTime(2026, 1, 4, 9, 0, 0, 0, DateTimeKind.Utc), null, "meeting" },
+                    { 3L, 7L, "Review OCR Research with Hashim", 2L, new DateTime(2026, 1, 5, 10, 0, 0, 0, DateTimeKind.Utc), null, "meeting" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -394,9 +373,9 @@ namespace PMS.Migrations
                 column: "OrganizerID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Meetings_ProjectID",
+                name: "IX_Meetings_TaskID",
                 table: "Meetings",
-                column: "ProjectID");
+                column: "TaskID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notifications_MeetingID",
@@ -411,21 +390,6 @@ namespace PMS.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Notifications_TaskID",
                 table: "Notifications",
-                column: "TaskID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProgressLogEntries_MeetingID",
-                table: "ProgressLogEntries",
-                column: "MeetingID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProgressLogEntries_ProjectID",
-                table: "ProgressLogEntries",
-                column: "ProjectID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProgressLogEntries_TaskID",
-                table: "ProgressLogEntries",
                 column: "TaskID");
 
             migrationBuilder.CreateIndex(
@@ -489,9 +453,6 @@ namespace PMS.Migrations
 
             migrationBuilder.DropTable(
                 name: "Notifications");
-
-            migrationBuilder.DropTable(
-                name: "ProgressLogEntries");
 
             migrationBuilder.DropTable(
                 name: "Reminders");

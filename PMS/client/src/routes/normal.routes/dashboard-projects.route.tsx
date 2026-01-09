@@ -14,23 +14,19 @@ import ProjectModal, {
 import { Selector } from "../../components/base.components/selector.component";
 import { SlidingActivityCard } from "../../components/base.components/sliding-activity-card.component";
 import { NotificationList } from "../../components/notification-reminder.components/notification-list.component";
-import PageLayout from "../../components/layout.components/page-layout.component";
-import {
-  QueryClient,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../providers/auth.provider";
+import { Box } from "@mui/material";
 
 export default function DashboardProjectsRoute() {
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
 
   const [step, setStep] = useState(0);
-  const [projectModalState, setProjectModalState] = useState<ProjectModalState>(
-    { mode: "create", open: false }
-  );
+  const [projectModalState, setProjectModalState] = useState<ProjectModalState>({
+    mode: "create",
+    open: false,
+  });
   const [projectModalData, setProjectModalData] = useState<ProjectFormData>({
     projectID: 0,
     title: "",
@@ -62,23 +58,24 @@ export default function DashboardProjectsRoute() {
   });
 
   const { data: projects, isLoading: projectsLoading } = useQuery({
-    queryKey: [user.userID.toString(), "projects"],
+    queryKey: [user.userID, "projects"],
     queryFn: async (): Promise<Project[]> =>
       await authorizedAPI.get(`api/users/${user.userID}/projects`).json(),
     retry: 1,
   });
 
-  const { data: unsupervisedProjects, isLoading: unsupervisedProjectsLoading } =
-    useQuery({
-      queryKey: [user.userID.toString(), "projects", "unsupervised"],
+  const { data: unsupervisedProjects, isLoading: unsupervisedProjectsLoading } = useQuery(
+    {
+      queryKey: [user.userID, "projects", "unsupervised"],
       queryFn: async (): Promise<Project[]> =>
         await authorizedAPI.get(`api/projects`).json(),
       enabled: user.role === "supervisor",
       retry: 1,
-    });
+    }
+  );
 
   const { data: reminders, isLoading: remindersLoading } = useQuery({
-    queryKey: [user.userID.toString(), "reminders"],
+    queryKey: [user.userID, "reminders"],
     queryFn: async (): Promise<Reminder[]> =>
       await authorizedAPI.get(`api/users/${user.userID}/reminders`).json(),
     retry: 1,
@@ -86,7 +83,7 @@ export default function DashboardProjectsRoute() {
   });
 
   const { data: notifications, isLoading: notificationsLoading } = useQuery({
-    queryKey: [user.userID.toString(), "notifications"],
+    queryKey: [user.userID, "notifications"],
     queryFn: async (): Promise<Notification[]> =>
       await authorizedAPI.get(`api/users/${user.userID}/notifications`).json(),
     retry: 1,
@@ -144,7 +141,7 @@ export default function DashboardProjectsRoute() {
       method: "post",
       url: `api/users/${user.userID}/projects`,
       data: projectModalData,
-      invalidateQueryKeys: [[user.userID.toString(), "projects"]],
+      invalidateQueryKeys: [[user.userID, "projects"]],
     });
     setProjectModalState((p) => ({ ...p, open: false }));
   };
@@ -154,7 +151,7 @@ export default function DashboardProjectsRoute() {
       method: "put",
       url: `api/users/${user.userID}/projects/${projectModalData.projectID}`,
       data: projectModalData,
-      invalidateQueryKeys: [[user.userID.toString(), "projects"]],
+      invalidateQueryKeys: [[user.userID, "projects"]],
     });
     setProjectModalState((p) => ({ ...p, open: false }));
   };
@@ -164,7 +161,7 @@ export default function DashboardProjectsRoute() {
       method: "delete",
       url: `api/users/${user.userID}/projects/${projectModalData.projectID}`,
       data: {},
-      invalidateQueryKeys: [[user.userID.toString(), "projects"]],
+      invalidateQueryKeys: [[user.userID, "projects"]],
     });
     setProjectModalState((p) => ({ ...p, open: false }));
   };
@@ -175,8 +172,8 @@ export default function DashboardProjectsRoute() {
       url: `api/users/${user.userID}/projects/${selectedProject?.projectID}/join`,
       data: {},
       invalidateQueryKeys: [
-        [user.userID.toString(), "projects"],
-        [user.userID.toString(), "projects", "unsupervised"],
+        [user.userID, "projects"],
+        [user.userID, "projects", "unsupervised"],
       ],
     });
     setSelectedProject(undefined);
@@ -266,7 +263,16 @@ export default function DashboardProjectsRoute() {
 
   return (
     <>
-      <PageLayout.Normal>
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "row",
+          marginLeft: "4.5vw",
+          marginRight: "3vw",
+          marginBottom: "2vh",
+          columnGap: "2vw",
+        }}>
         {/* Left Section - Projects */}
         <ProjectList>
           <ProjectList.Header>
@@ -304,7 +310,7 @@ export default function DashboardProjectsRoute() {
             onBack={() => setStep(0)}
           />
         </SlidingActivityCard>
-      </PageLayout.Normal>
+      </Box>
 
       {/* Project Modal */}
       <ProjectModal open={projectModalState.open}>

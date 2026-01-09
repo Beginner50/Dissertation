@@ -18,7 +18,7 @@ public class ProjectsController : ControllerBase
 
     [Route("/api/projects")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
+    [Authorize(Roles = "supervisor")]
     public async Task<IActionResult> GetUnsupervisedProjects()
     {
         try
@@ -176,8 +176,8 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            await projectService.GenerateProgressLogReport(userID, projectID);
-            return NoContent();
+            var progressLogReport = await projectService.GenerateProgressLogReport(userID, projectID);
+            return File(progressLogReport.File, progressLogReport.ContentType, progressLogReport.Filename);
         }
         catch (Exception e)
         {

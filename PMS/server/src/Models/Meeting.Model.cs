@@ -19,7 +19,7 @@ public class Meeting
     [ForeignKey("AttendeeID")]
     public User Attendee { get; init; }
 
-    public required long ProjectID { get; set; }
-    [ForeignKey("ProjectID")]
-    public Project Project { get; init; }
+    public required long TaskID { get; set; }
+    [ForeignKey("TaskID")]
+    public ProjectTask Task { get; init; }
 }

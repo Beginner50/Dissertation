@@ -4,21 +4,29 @@ import Scheduler from "../../components/scheduler.components/scheduler.component
 import SchedulerActions from "../../components/scheduler.components/scheduler-actions.component";
 import { BookMeetingForm } from "../../components/scheduler.components/book-meeting-form.component";
 import { MeetingDetails } from "../../components/scheduler.components/meeting-details.component";
-import { Typography } from "@mui/material";
+import { Box, Divider, Stack, Typography } from "@mui/material";
 import type { Meeting, MeetingFormData, Project, User } from "../../lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import PageLayout from "../../components/layout.components/page-layout.component";
 import { useAuth } from "../../providers/auth.provider";
+import { AccessTime, Event, Person } from "@mui/icons-material";
 
 export default function SchedulerRoute() {
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
 
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<{
-    start: Date;
-    end: Date;
-  } | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(
+    null
+  );
+
+  const [meetingFormData, setMeetingFormData] = useState<MeetingFormData>({
+    description: "",
+    start: new Date(),
+    end: new Date(),
+    attendeeID: 0,
+    projectID: 0,
+    taskID: 0,
+  });
 
   /* ---------------------------------------------------------------------------------- */
 
@@ -32,55 +40,26 @@ export default function SchedulerRoute() {
       method: string;
       url: string;
       data: any;
-      invalidateQueryKeys: any[][];
-    }) => await authorizedAPI(url, { method: method, json: data }),
-    onSuccess: (_data, variables) =>
-      variables.invalidateQueryKeys.forEach((key) =>
-        queryClient.invalidateQueries({
-          queryKey: key,
-        })
-      ),
+    }) => await authorizedAPI(url, { method, json: data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [user.userID, "meetings"] });
+    },
   });
 
-  const { data: meetingEvents, isLoading: meetingsLoading } = useQuery({
-    queryKey: [user.userID.toString(), "meetings"],
+  const { data: meetingEvents } = useQuery({
+    queryKey: [user.userID, "meetings"],
     queryFn: async (): Promise<Meeting[]> =>
       await authorizedAPI.get(`api/users/${user.userID}/meetings`).json(),
-    select(data) {
-      return data.map((meeting) => ({
-        ...meeting,
-        start: new Date(meeting.start),
-        end: new Date(meeting.end),
-      }));
-    },
+    select: (data) =>
+      data.map((m) => ({ ...m, start: new Date(m.start), end: new Date(m.end) })),
     retry: 1,
   });
 
-  const { data: otherMeetingUsers, isLoading: otherUsersLoading } = useQuery({
-    queryKey: [user.userID.toString(), "projects"],
+  const { data: userProjects } = useQuery({
+    queryKey: [user.userID, "projects"],
     queryFn: async (): Promise<Project[]> =>
       await authorizedAPI.get(`api/users/${user.userID}/projects`).json(),
-    select(data) {
-      if (user.role === "student") {
-        return data
-          .map((p) => ({
-            userID: p.supervisor?.userID ?? 0,
-            name: p.supervisor?.name ?? "",
-            projectID: p.projectID,
-            projectTitle: p.title,
-          }))
-          .filter((u) => u.userID !== 0);
-      } else if (user.role === "supervisor") {
-        return data
-          .map((p) => ({
-            userID: p.student?.userID ?? 0,
-            name: p.student?.name ?? "",
-            projectID: p.projectID,
-            projectTitle: p.title,
-          }))
-          .filter((u) => u.userID !== 0);
-      }
-    },
+    select: (data) => data.filter((p: Project) => p.student?.userID !== 0),
     retry: 1,
   });
 
@@ -89,6 +68,15 @@ export default function SchedulerRoute() {
   const handleSlotSelect = (slot: { start: Date; end: Date }) => {
     setSelectedMeeting(null);
     setSelectedSlot({ start: slot.start, end: slot.end });
+
+    setMeetingFormData({
+      description: "",
+      start: slot.start,
+      end: slot.end,
+      attendeeID: 0,
+      projectID: 0,
+      taskID: 0,
+    });
   };
 
   const handleEventSelect = (arg: EventClickArg) => {
@@ -98,67 +86,106 @@ export default function SchedulerRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const handleBookMeeting = (newMeetingData: MeetingFormData) => {
-    setSelectedSlot(null);
-    console.log("Booking meeting with data:", newMeetingData);
+  const handleDescriptionChange = (val: string) => {
+    setMeetingFormData((prev) => ({ ...prev, description: val }));
+  };
 
+  const handleTimeChange = (type: "start" | "end", val: string) => {
+    const [hours, minutes] = val.split(":").map(Number);
+    setMeetingFormData((prev) => {
+      const date = new Date(prev[type]);
+      date.setHours(hours, minutes);
+      return { ...prev, [type]: date };
+    });
+  };
+
+  const handleProjectChange = (project: Project) => {
+    const attendeeID =
+      user.role === "supervisor" ? project.student?.userID : project.supervisor?.userID;
+
+    setMeetingFormData((prev) => ({
+      ...prev,
+      projectID: project.projectID,
+      attendeeID: attendeeID || 0,
+      taskID: project.tasks?.[0]?.taskID || 0,
+    }));
+  };
+
+  const handleTaskChange = (taskID: number) => {
+    setMeetingFormData({ ...meetingFormData, taskID });
+  };
+
+  /* ---------------------------------------------------------------------------------- */
+
+  const handleBookMeeting = () => {
     mutation.mutate({
       method: "post",
-      url: `api/users/${user.userID}/projects/${newMeetingData.projectID}/meetings`,
-      data: newMeetingData,
-      invalidateQueryKeys: [[user.userID.toString(), "meetings"]],
+      url: `api/users/${user.userID}/meetings`,
+      data: meetingFormData,
     });
+    setSelectedSlot(null);
   };
 
   const handleUpdateDescription = (newDesc: string) => {
     if (!selectedMeeting) return;
-
     setSelectedMeeting({ ...selectedMeeting, description: newDesc });
     mutation.mutate({
       method: "put",
-      url: `api/users/${user.userID}/meetings/${selectedMeeting?.meetingID}/edit-description`,
+      url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}/edit-description`,
       data: { description: newDesc },
-      invalidateQueryKeys: [[user.userID.toString(), "meetings"]],
-    });
-  };
-
-  const handleCancelMeeting = () => {
-    setSelectedMeeting(null);
-
-    mutation.mutate({
-      method: "delete",
-      url: `api/users/${user.userID}/meetings/${selectedMeeting?.meetingID}/cancel`,
-      data: {},
-      invalidateQueryKeys: [[user.userID.toString(), "meetings"]],
     });
   };
 
   const handleAcceptMeeting = () => {
     if (!selectedMeeting) return;
-
-    setSelectedMeeting({ ...selectedMeeting, status: "accepted" });
     mutation.mutate({
       method: "put",
-      url: `api/users/${user.userID}/meetings/${selectedMeeting?.meetingID}/accept`,
+      url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}/accept`,
       data: {},
-      invalidateQueryKeys: [[user.userID.toString(), "meetings"]],
     });
+    setSelectedMeeting(null);
   };
 
   const handleRejectMeeting = () => {
-    setSelectedMeeting(null);
+    if (!selectedMeeting) return;
     mutation.mutate({
       method: "delete",
-      url: `api/users/${user.userID}/meetings/${selectedMeeting?.meetingID}/reject`,
+      url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}/reject`,
       data: {},
-      invalidateQueryKeys: [[user.userID.toString(), "meetings"]],
     });
+    setSelectedMeeting(null);
+  };
+
+  const handleCancelMeeting = () => {
+    if (!selectedMeeting) return;
+    mutation.mutate({
+      method: "delete",
+      url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}/cancel`,
+      data: {},
+    });
+    setSelectedMeeting(null);
   };
 
   /* ---------------------------------------------------------------------------------- */
 
+  const isFormValid = meetingFormData.projectID !== 0 && meetingFormData.taskID !== 0;
+
+  const attendee = userProjects?.find((p) => p.projectID === meetingFormData.projectID)?.[
+    user.role === "supervisor" ? "student" : "supervisor"
+  ];
+  const selectableTasks =
+    userProjects?.find((p) => p.projectID === meetingFormData.projectID)?.tasks || [];
+
   return (
-    <PageLayout.Normal>
+    <Stack
+      direction="row"
+      spacing="2vw"
+      sx={{
+        flexGrow: 1,
+        ml: "4.5vw",
+        mr: "3vw",
+        mb: "2vh",
+      }}>
       <Scheduler
         userID={user.userID}
         meetingData={meetingEvents || []}
@@ -170,56 +197,105 @@ export default function SchedulerRoute() {
         <SchedulerActions.Header
           title={selectedSlot ? "Book Meeting" : "Event Details"}
         />
-        {/* If an empty slot has been selected, show BookMeetingForm */}
         {selectedSlot && (
-          <BookMeetingForm start={selectedSlot.start} end={selectedSlot.end}>
-            <BookMeetingForm.AttendeeSelect
-              otherMeetingUsers={otherMeetingUsers ?? []}
+          <BookMeetingForm>
+            <BookMeetingForm.ProjectSelect
+              projects={userProjects || []}
+              selectedID={meetingFormData.projectID}
+              onProjectChange={handleProjectChange}
             />
+            <BookMeetingForm.TaskSelect
+              tasks={selectableTasks}
+              selectedTaskID={meetingFormData.taskID}
+              onTaskChange={handleTaskChange}
+              disabled={!meetingFormData.projectID}
+            />
+            <BookMeetingForm.Description
+              description={meetingFormData.description}
+              onDescriptionChange={handleDescriptionChange}
+            />
+            <BookMeetingForm.TimePickers
+              start={meetingFormData.start}
+              end={meetingFormData.end}
+              onTimeChange={handleTimeChange}
+            />
+
+            <BookMeetingForm.AttendeeDisplay name={attendee?.name} />
+
             <BookMeetingForm.SubmitButton
+              isValid={isFormValid && !mutation.isPending}
               handleBookMeeting={handleBookMeeting}
             />
           </BookMeetingForm>
         )}
 
-        {/* If a meeting has been selected, show the details */}
         {selectedMeeting && (
-          <MeetingDetails meetingEvent={selectedMeeting}>
-            <MeetingDetails.DescriptionSection
+          <MeetingDetails>
+            <MeetingDetails.Header title={selectedMeeting.task.title} />
+
+            <Stack spacing={1.5} sx={{ mb: 2 }}>
+              <MeetingDetails.Status status={selectedMeeting.status} />
+
+              <MeetingDetails.InfoRow
+                icon={<Person fontSize="small" />}
+                label="Organizer"
+                value={selectedMeeting.organizer.name}
+              />
+
+              <MeetingDetails.InfoRow
+                icon={<Event fontSize="small" />}
+                label="Attendee"
+                value={
+                  selectedMeeting.status === "pending"
+                    ? "Awaiting Confirmation"
+                    : selectedMeeting.attendee.name
+                }
+              />
+
+              <MeetingDetails.InfoRow
+                icon={<AccessTime fontSize="small" />}
+                label="Time"
+                value={`${selectedMeeting.start.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })} - ${selectedMeeting.end.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}`}
+              />
+            </Stack>
+
+            <Divider />
+
+            <MeetingDetails.Description
+              description={selectedMeeting.description}
               isMeetingParticipant={
-                selectedMeeting.attendee.userID === user.userID ||
-                selectedMeeting.organizer.userID === user.userID
+                selectedMeeting.organizer.userID == user.userID ||
+                selectedMeeting.attendee.userID == user.userID
               }
               handleUpdateDescription={handleUpdateDescription}
             />
 
-            {selectedMeeting.status == "pending" && (
-              <SchedulerActions.BookedMeetingActions
-                isOrganizer={selectedMeeting.organizer.userID === user.userID}
-                isAttendee={selectedMeeting.attendee.userID === user.userID}
-                handleCancel={handleCancelMeeting}
-                handleAccept={handleAcceptMeeting}
-                handleReject={handleRejectMeeting}
-              />
+            {selectedMeeting.status === "pending" && (
+              <Box sx={{ mt: 2 }}>
+                <SchedulerActions.BookedMeetingActions
+                  isOrganizer={selectedMeeting.organizer.userID === user.userID}
+                  isAttendee={selectedMeeting.attendee.userID === user.userID}
+                  handleCancel={handleCancelMeeting}
+                  handleAccept={handleAcceptMeeting}
+                  handleReject={handleRejectMeeting}
+                />
+              </Box>
             )}
-
-            <MeetingDetails.MeetingStatus
-              isMeetingParticipant={
-                selectedMeeting.attendee.userID === user.userID ||
-                selectedMeeting.organizer.userID === user.userID
-              }
-              status={selectedMeeting.status}
-            />
           </MeetingDetails>
         )}
 
-        {/* If nothing is selected (default) */}
         {!selectedSlot && !selectedMeeting && (
           <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
             Click an event on the calendar to see details and actions.
           </Typography>
         )}
       </SchedulerActions>
-    </PageLayout.Normal>
+    </Stack>
   );
 }

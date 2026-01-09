@@ -13,9 +13,10 @@ import type {
 } from "../../lib/types";
 import { useParams } from "react-router";
 import FeedbackModal from "../../components/feedback.components/feedback-criteria-modal.component";
-import PageLayout from "../../components/layout.components/page-layout.component";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { baseURL, useAuth } from "../../providers/auth.provider";
+import { Box } from "@mui/material";
+import { useAuth } from "../../providers/auth.provider";
+import { baseURL } from "../../lib/config";
 
 export default function TaskRoute() {
   const { authState, authorizedAPI } = useAuth();
@@ -53,7 +54,7 @@ export default function TaskRoute() {
   });
 
   const { data: task, isLoading: taskLoading } = useQuery({
-    queryKey: ["tasks", taskID?.toString()],
+    queryKey: ["tasks", taskID],
     queryFn: async (): Promise<Task> =>
       await authorizedAPI
         .get(`api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`)
@@ -62,7 +63,7 @@ export default function TaskRoute() {
   });
 
   const { data: submittedDeliverable, isLoading: submittedLoading } = useQuery({
-    queryKey: [taskID?.toString(), "deliverables", "submitted"],
+    queryKey: [taskID, "deliverables", "submitted"],
     queryFn: async (): Promise<Deliverable | null> => {
       try {
         return await authorizedAPI
@@ -81,7 +82,7 @@ export default function TaskRoute() {
   });
 
   const { data: stagedDeliverable, isLoading: stagedLoading } = useQuery({
-    queryKey: [taskID?.toString(), "deliverables", "staged"],
+    queryKey: [taskID, "deliverables", "staged"],
     queryFn: async (): Promise<Deliverable | null> => {
       try {
         return await authorizedAPI
@@ -134,14 +135,14 @@ export default function TaskRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const handleFileUpload = async (file: File) => {
-    /*
-        file.arrayBuffer() returns the file contents as an ArrayBuffer, which is simply
-        a fixed length binary data buffer that cannot be manipulated.
+  /*
+    file.arrayBuffer() returns the file contents as an ArrayBuffer, which is simply
+    a fixed length binary data buffer that cannot be manipulated.
 
-        Thus, by constructing a UInt8Array from the buffer, the contents can be manipulated,
-        and in that case, converted to base64 format that can be processed by the server.
-    */
+    Thus, by constructing a UInt8Array from the buffer, the contents can be manipulated,
+    and in that case, converted to base64 format that can be processed by the server.
+ */
+  const handleFileUpload = async (file: File) => {
     const fileBytes = new Uint8Array(await file.arrayBuffer());
     const base64File = base64js.fromByteArray(fileBytes);
 
@@ -155,7 +156,7 @@ export default function TaskRoute() {
       method: "post",
       url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
       data: deliverableFile,
-      invalidateQueryKeys: [[taskID?.toString(), "deliverables", "staged"]],
+      invalidateQueryKeys: [[taskID, "deliverables", "staged"]],
     });
   };
 
@@ -165,8 +166,8 @@ export default function TaskRoute() {
       url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable/submit`,
       data: {},
       invalidateQueryKeys: [
-        [taskID?.toString(), "deliverables", "staged"],
-        [taskID?.toString(), "deliverables", "submitted"],
+        [taskID, "deliverables", "staged"],
+        [taskID, "deliverables", "submitted"],
       ],
     });
   };
@@ -176,23 +177,19 @@ export default function TaskRoute() {
       method: "delete",
       url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
       data: {},
-      invalidateQueryKeys: [[taskID?.toString(), "deliverables", "staged"]],
+      invalidateQueryKeys: [[taskID, "deliverables", "staged"]],
     });
   };
 
   const handleSubmitFeedback = () => {
-    const filteredCriteria = modalCriteria.filter(
-      (c) => c.description.trim() !== ""
-    );
+    const filteredCriteria = modalCriteria.filter((c) => c.description.trim() !== "");
 
     mutation.mutate(
       {
         method: "post",
         url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback`,
         data: filteredCriteria,
-        invalidateQueryKeys: [
-          [taskID?.toString(), "deliverables", "submitted"],
-        ],
+        invalidateQueryKeys: [[taskID, "deliverables", "submitted"]],
       },
       {
         onSuccess: () => setFeedbackModalOpen(false),
@@ -208,9 +205,7 @@ export default function TaskRoute() {
           method: "post",
           url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/compliance-check`,
           data: {},
-          invalidateQueryKeys: [
-            [taskID?.toString(), "deliverables", "submitted"],
-          ],
+          invalidateQueryKeys: [[taskID, "deliverables", "submitted"]],
         },
         {
           onSuccess: () => setFeedbackComplianceLoading(false),
@@ -224,7 +219,16 @@ export default function TaskRoute() {
 
   return (
     <>
-      <PageLayout.Normal>
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "row",
+          marginLeft: "4.5vw",
+          marginRight: "3vw",
+          marginBottom: "2vh",
+          columnGap: "2vw",
+        }}>
         {/* Left Section - Task Details */}
         <TaskDetails sx={{ flexGrow: 3 }}>
           <TaskDetails.Header
@@ -233,9 +237,7 @@ export default function TaskRoute() {
           />
 
           <TaskDetails.Content>
-            <TaskDetails.Description>
-              {task?.description}
-            </TaskDetails.Description>
+            <TaskDetails.Description>{task?.description}</TaskDetails.Description>
           </TaskDetails.Content>
 
           {tableCriteria.length > 0 && (
@@ -253,8 +255,7 @@ export default function TaskRoute() {
             flexGrow: 1,
             maxWidth: "25vw",
             background: "hsla(0,0%,100%,50%)",
-          }}
-        >
+          }}>
           <TaskActions.Header title="Task Actions" />
 
           {submittedDeliverable && (
@@ -273,9 +274,7 @@ export default function TaskRoute() {
             />
           ) : (
             user.role == "student" && (
-              <TaskActions.DeliverableUpload
-                handleFileUpload={handleFileUpload}
-              />
+              <TaskActions.DeliverableUpload handleFileUpload={handleFileUpload} />
             )
           )}
 
@@ -299,15 +298,14 @@ export default function TaskRoute() {
             {user.role == "student" && (
               <TaskActions.SubmitDeliverableButton
                 disabled={
-                  !stagedDeliverable ||
-                  tableCriteria.some((c) => c.status === "unmet")
+                  !stagedDeliverable || tableCriteria.some((c) => c.status === "unmet")
                 }
                 onClick={handleSubmitDeliverable}
               />
             )}
           </TaskActions.Actions>
         </TaskActions>
-      </PageLayout.Normal>
+      </Box>
 
       <FeedbackModal open={feedbackModalOpen}>
         <FeedbackModal.Header />

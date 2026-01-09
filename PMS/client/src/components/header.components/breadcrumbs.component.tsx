@@ -2,7 +2,7 @@ import { Breadcrumbs as MuiBreadcrumbs, Typography } from "@mui/material";
 import { Link, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { theme } from "../../lib/theme";
-import type { Project, Task, User } from "../../lib/types";
+import type { Project, User } from "../../lib/types";
 import { useAuth } from "../../providers/auth.provider";
 
 export default function Breadcrumbs() {
@@ -16,19 +16,8 @@ export default function Breadcrumbs() {
   const { data: project } = useQuery({
     queryKey: ["projects", projectID],
     queryFn: async (): Promise<Project> =>
-      await authorizedAPI
-        .get(`api/users/${user.userID}/projects/${projectID}`)
-        .json(),
+      await authorizedAPI.get(`api/users/${user.userID}/projects/${projectID}`).json(),
     enabled: projectID != undefined,
-  });
-
-  const { data: task } = useQuery({
-    queryKey: ["tasks", taskID],
-    queryFn: async (): Promise<Task> =>
-      await authorizedAPI
-        .get(`api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`)
-        .json(),
-    enabled: taskID != undefined,
   });
 
   const breadcrumbs = [];
@@ -42,11 +31,14 @@ export default function Breadcrumbs() {
       text: project.title,
     });
 
-    if (taskID && task) {
-      breadcrumbs.push({
-        url: `/projects/${projectID}/tasks/${taskID}`,
-        text: task.title,
-      });
+    if (taskID) {
+      const task = project.tasks?.find((t) => t.taskID.toString() == taskID);
+
+      if (task)
+        breadcrumbs.push({
+          url: `/projects/${projectID}/tasks/${taskID}`,
+          text: task.title,
+        });
     }
   }
 
@@ -61,8 +53,7 @@ export default function Breadcrumbs() {
                 fontWeight: "600",
                 color: isLast ? theme.textStrong : theme.textMuted,
                 "&:hover": { textDecoration: isLast ? "none" : "underline" },
-              }}
-            >
+              }}>
               {link.text}
             </Typography>
           </Link>

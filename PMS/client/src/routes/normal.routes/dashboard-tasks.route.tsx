@@ -7,14 +7,9 @@ import TaskModal, {
   type ModalState,
 } from "../../components/task.components.tsx/task-modal.component";
 import { Selector } from "../../components/base.components/selector.component";
-import PageLayout from "../../components/layout.components/page-layout.component";
 import { useAuth } from "../../providers/auth.provider";
-import {
-  QueryClient,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Box } from "@mui/material";
 
 export default function DashboardTasksRoute() {
   const { authState, authorizedAPI } = useAuth();
@@ -32,9 +27,7 @@ export default function DashboardTasksRoute() {
   });
 
   const [studentSearchTerm, setStudentSearchTerm] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState<User | undefined>(
-    undefined
-  );
+  const [selectedStudent, setSelectedStudent] = useState<User | undefined>(undefined);
 
   const { projectID } = useParams();
 
@@ -61,16 +54,14 @@ export default function DashboardTasksRoute() {
   });
 
   const { data: project, isLoading: projectLoading } = useQuery({
-    queryKey: ["projects", projectID?.toString()],
+    queryKey: ["projects", projectID],
     queryFn: async (): Promise<Project> =>
-      await authorizedAPI
-        .get(`api/users/${user.userID}/projects/${projectID}`)
-        .json(),
+      await authorizedAPI.get(`api/users/${user.userID}/projects/${projectID}`).json(),
     retry: 1,
   });
 
   const { data: tasks, isLoading: tasksLoading } = useQuery({
-    queryKey: [projectID?.toString(), "tasks"],
+    queryKey: [projectID, "tasks"],
     queryFn: async (): Promise<Task[]> =>
       await authorizedAPI
         .get(`api/users/${user.userID}/projects/${projectID}/tasks`)
@@ -78,13 +69,14 @@ export default function DashboardTasksRoute() {
     retry: 1,
   });
 
-  const { data: unsupervisedStudents, isLoading: unsupervisedStudentsLoading } =
-    useQuery({
-      queryKey: [user.userID.toString(), "users", "unsupervised"],
+  const { data: unsupervisedStudents, isLoading: unsupervisedStudentsLoading } = useQuery(
+    {
+      queryKey: [user.userID, "users", "unsupervised"],
       queryFn: async (): Promise<User[]> =>
-        await authorizedAPI.get(`api/users`).json(),
+        await authorizedAPI.get(`api/users/unsupervised`).json(),
       retry: 1,
-    });
+    }
+  );
 
   /* ---------------------------------------------------------------------------------- */
 
@@ -142,9 +134,9 @@ export default function DashboardTasksRoute() {
   const handleCreateTask = () => {
     mutation.mutate({
       method: "post",
-      url: `${origin}/api/users/${user.userID}/projects/${projectID}/tasks`,
+      url: `api/users/${user.userID}/projects/${projectID}/tasks`,
       data: taskModalData,
-      invalidateQueryKeys: [[projectID?.toString(), "tasks"]],
+      invalidateQueryKeys: [[projectID, "tasks"]],
     });
     setTaskModalState((t) => ({ ...t, open: false }));
   };
@@ -154,7 +146,7 @@ export default function DashboardTasksRoute() {
       method: "put",
       url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
       data: taskModalData,
-      invalidateQueryKeys: [[projectID?.toString(), "tasks"]],
+      invalidateQueryKeys: [[projectID, "tasks"]],
     });
     setTaskModalState((t) => ({ ...t, open: false }));
   };
@@ -164,7 +156,7 @@ export default function DashboardTasksRoute() {
       method: "delete",
       url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
       data: taskModalData,
-      invalidateQueryKeys: [[projectID?.toString(), "tasks"]],
+      invalidateQueryKeys: [[projectID, "tasks"]],
     });
     setTaskModalState((t) => ({ ...t, open: false }));
   };
@@ -175,24 +167,42 @@ export default function DashboardTasksRoute() {
       url: `api/users/${user.userID}/projects/${projectID}/add-student/${selectedStudent?.userID}`,
       data: {},
       invalidateQueryKeys: [
-        ["projects", projectID?.toString()],
+        ["projects", projectID],
         [user.userID.toString(), "users", "unsupervised"],
       ],
     });
     setTaskModalState((t) => ({ ...t, open: false }));
   };
 
-  const handleGenerateProgressLogReport = () => {};
+  const handleGenerateProgressLogReport = async () => {
+    const response = await authorizedAPI
+      .get(`api/users/${user.userID}/projects/${projectID}/progress-log`)
+      .blob();
+
+    // 2. Create a temporary URL for the blob
+    const url = window.URL.createObjectURL(response);
+
+    // 3. Create a hidden anchor element to trigger the download
+    const link = document.createElement("a");
+    link.href = url;
+
+    // You can customize the filename here or try to get it from headers
+    link.setAttribute("download", `Project_${projectID}_ProgressLog.pdf`);
+
+    document.body.appendChild(link);
+    link.click();
+
+    // 4. Cleanup
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
 
   /* ---------------------------------------------------------------------------------- */
 
   const filteredStudents = unsupervisedStudents?.filter(
     (s) =>
       s.name.toLowerCase().includes(studentSearchTerm.toLowerCase()) ||
-      s.userID
-        .toString()
-        .toLowerCase()
-        .includes(studentSearchTerm.toLowerCase())
+      s.userID.toString().toLowerCase().includes(studentSearchTerm.toLowerCase())
   );
 
   const formDataIncomplete = (() => {
@@ -274,7 +284,16 @@ export default function DashboardTasksRoute() {
 
   return (
     <>
-      <PageLayout.Normal>
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "row",
+          marginLeft: "4.5vw",
+          marginRight: "3vw",
+          marginBottom: "2vh",
+          columnGap: "2vw",
+        }}>
         {/* Left Section - Tasks */}
         <TaskList sx={{ flexGrow: 3 }}>
           <TaskList.Header>
@@ -315,7 +334,7 @@ export default function DashboardTasksRoute() {
             )}
           </ProjectDetails.Actions>
         </ProjectDetails>
-      </PageLayout.Normal>
+      </Box>
 
       {/* Task Modal */}
       <TaskModal open={taskModalState.open}>
