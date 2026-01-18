@@ -195,6 +195,9 @@ public class ProjectService
     {
         var tasksWithMeetings = await dbContext.Tasks
                                     .Include(t => t.Project)
+                                        .ThenInclude(p => p.Student)
+                                    .Include(t => t.Project)
+                                        .ThenInclude(p => p.Supervisor)
                                     .Include(t => t.Meetings)
                                     .Where(t => t.ProjectID == projectID &&
                                             t.Project.SupervisorID == userID || t.Project.StudentID == userID)

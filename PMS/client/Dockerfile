@@ -14,5 +14,7 @@ RUN npm run build
 FROM node:lts-alpine AS production
 WORKDIR /app
 EXPOSE 3000
-COPY --from=builder ./dist .
-CMD ["npm", "run", "start"]
+COPY --from=builder /app/dist .
+COPY --from=builder /app/package.json .
+COPY --from=builder /app/node_modules ./node_modules
+CMD ["npm", "run", "preview"]

@@ -31,7 +31,9 @@ Refresh Token Request De-duplication:
 let refreshPromise: Promise<any> | null = null;
 const performRefresh = async (): Promise<any> => {
   if (!refreshPromise) {
-    refreshPromise = ky.post(`${baseURL}/api/token/refresh`).json();
+    refreshPromise = ky.post(`${baseURL}/api/token/refresh`, {
+      credentials: "include"
+    }).json();
   }
 
   try {
@@ -49,9 +51,7 @@ const performRefresh = async (): Promise<any> => {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  let initialAuthState = JSON.parse(
-    localStorage.getItem("auth") ?? ""
-  ) as AuthState | null;
+  let initialAuthState = JSON.parse(localStorage.getItem("auth") ?? "null") as AuthState | null;
 
   if (!initialAuthState) {
     initialAuthState = {
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           beforeRequest: [
             (request) => {
               const authState: AuthState = JSON.parse(
-                localStorage.getItem("auth") ?? ""
+                localStorage.getItem("auth") ?? "null"
               );
 
               if (authState.token) {

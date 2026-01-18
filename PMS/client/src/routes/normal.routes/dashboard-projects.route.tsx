@@ -9,6 +9,7 @@ import type {
 } from "../../lib/types";
 import { useCallback, useState } from "react";
 import ProjectModal, {
+  type ModalMode,
   type ModalState as ProjectModalState,
 } from "../../components/project.components/project-modal.component";
 import { Selector } from "../../components/base.components/selector.component";
@@ -194,6 +195,7 @@ export default function DashboardProjectsRoute() {
     setProjectModalState((p) => ({ ...p, open: false }));
   };
 
+  // TO BE REMOVED
   const handleJoinProject = () => {
     mutation.mutate({
       method: "put",
@@ -210,6 +212,7 @@ export default function DashboardProjectsRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
+  // TO BE REMOVED
   const filteredProjects =
     unsupervisedProjects?.filter(
       (p) =>
@@ -263,6 +266,7 @@ export default function DashboardProjectsRoute() {
         />
       </ProjectModal.Fields>
     ),
+    // TO BE REMOVED
     "join-project": (
       <Selector>
         <Selector.Search
@@ -309,11 +313,11 @@ export default function DashboardProjectsRoute() {
                 handleCreateProjectClick={handleCreateProjectClick}
               />
             )}
-            {user.role == "supervisor" && (
+            {/* {user.role == "supervisor" && (
               <ProjectList.JoinProjectButton
                 handleJoinProjectClick={handleJoinProjectClick}
               />
-            )}
+            )} */}
           </ProjectList.Header>
 
           <ProjectList.Content
@@ -353,7 +357,7 @@ export default function DashboardProjectsRoute() {
           handleCreateProject={handleCreateProject}
           handleEditProject={handleEditProject}
           handleArchiveProject={handleArchiveProject}
-          handleJoinProject={handleJoinProject}
+          // handleJoinProject={handleJoinProject}
         />
       </ProjectModal>
     </>

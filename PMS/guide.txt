@@ -13,8 +13,15 @@ DOCKER ORCHESTRATION:
     single command. As such, no other configurations will be required when setting up the project
     in another machine, be it windows or linux.
 
-    To run the website (development) 
-        docker compose --profiles development up --build
+    INSTALLATION:
+    1) Download docker desktop (or only the docker engine). On windows, docker desktop is the only/better option.
+
+    2) After the docker engine is running, install the docker extension in vs code
+
+    3) Open docker-compose.yaml and you will see `Run All Services` above service. Click on it
+       (Or open PMS in terminal and run `docker compose up --build`)
+
+    4) Navigate to localhost:3000
 
 ----------------------------------------- Client -------------------------------------------
 

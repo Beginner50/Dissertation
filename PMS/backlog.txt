@@ -1,0 +1,15 @@
+Pending Tasks
+
+    1) Find a way to reduce data sent to LLM (Highest)
+    2) Decide whether to switch to social login (google, outlook, ...).
+       (This will involve adding users to a wait list and overhauling admin dashboard significantly)
+        PROS:
+        Email notifications not spammed to arbitrary emails set by users to login.
+        CONS:
+        Using the system requires admin approval and getting past a wait list.
+
+    3) Figure out how and if students should be able to create and manage unsupervised projects
+    4) Find a user friendly mechanism to allow supervisors to prevent students from submitting
+       deliverables when providing feedback
+    5) Make the nav links more responsive
+    6) Improve progress log report generation

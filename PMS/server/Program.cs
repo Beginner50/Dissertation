@@ -287,7 +287,8 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseHttpsRedirection();
+    // HTTPs disabled for now
+    // app.UseHttpsRedirection();
 }
 
 app.MapControllers();

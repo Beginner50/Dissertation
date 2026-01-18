@@ -12,7 +12,9 @@ import {
   FormControl,
 } from "@mui/material";
 
-export type ModalMode = "create" | "edit" | "join-project" | "archive";
+export type ModalMode = "create" | "edit" 
+  | "join-project"
+  | "archive";
 export type ModalState = {
   mode: ModalMode;
   open: boolean;
@@ -155,7 +157,7 @@ ProjectModal.Actions = ({
   handleCancelClick: () => void;
   handleCreateProject: () => void;
   handleEditProject: () => void;
-  handleJoinProject: () => void;
+  handleJoinProject?: () => void;
   handleArchiveProject: () => void;
 }) => {
   const labels = {

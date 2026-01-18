@@ -21,4 +21,4 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS production
 WORKDIR /app
 COPY --from=builder /app/out .
 EXPOSE 5081
-ENTRYPOINT [ "dotnet", "DotNet.Docker.dll" ]
+ENTRYPOINT [ "dotnet", "PMS.dll" ]
