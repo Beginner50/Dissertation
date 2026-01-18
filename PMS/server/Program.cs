@@ -10,25 +10,38 @@ using PMS.Lib;
 using Microsoft.AspNetCore.Authorization;
 
 /*
-    The web application lifecycle is divived into 3 distinct phases:
-    1) Builder Phase
-       The web application has not yet been built/instantiated yet.
+    The .NET Core web application (generic host) lifecycle can be broadly divided into 
+    three phases:
 
-       In this phase, services are registered.
+        1) Configuration Phase
+           The application host being constructed has not yet been instantiated.
 
-    2) Instantiated Phase
+           In this phase, services are registered with the dependency injection container,
+           which defines how these services (such as database contexts, authentication handlers,
+           and custom services) are created and managed throughout the application's lifetime.
 
-    3) Running Phase
-       The web application now listens and serves HTTP requests.
+        2) Build Phase
+           The application host has been instantiated but not yet started.
 
-       The request pipeline is configured in this phase.
+           In this phase, the middleware pipeline is configured. Middleware components are added
+           to the pipeline to handle HTTP requests and responses. This includes setting up routing,
+           authentication, authorization, and other middleware necessary for the application's 
+           functionality.
+
+        3) Execution Phase
+           The application host is running and listens for incoming HTTP requests.
 */
 
-/*------------------------------------ Builder Phase --------------------------------------*/
+/*------------------------------------ Configuration Phase --------------------------------------*/
 var builder = WebApplication.CreateBuilder(args);
 
+// Allow access to the HTTP context in services (request, response, headers, etc.)
+builder.Services.AddHttpContextAccessor();
+
+// Configure logging to output logs to the console
 builder.Logging.AddConsole();
 
+// Allow API endpoint testing via OpenAPI in development environment
 builder.Services.AddOpenApi();
 
 /*
@@ -61,13 +74,14 @@ Note:
     For example:
         A malicious origin may cause damage by sending a DELETE request on a resource without
         needing to read the response of the request.
+
+        Curl can bypass CORS entirely since it does not enforce SOP.
 */
 var allowedOrigins = new List<string> {
      "http://localhost:3000",
      "https://localhost:80",
      "https://website.com"
 };
-
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -79,10 +93,11 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddHttpContextAccessor();
 builder.Services.Configure<RouteOptions>(options =>
     options.LowercaseUrls = true);
 
+
+// Create and initialize the symmetric security key for signing the JSON web token
 var symmetricKey = new SymmetricSecurityKey(
     Encoding.UTF8.GetBytes(builder.Configuration["JWT_SECRET_KEY"]
     ?? "SECRET_KEY_HERE_32_CHARACTERS"
@@ -205,12 +220,29 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddDbContext<PMSDbContext>(); // Database Context Registration
 builder.Services.AddControllers();
 
+
+/*------------------------------------ Build Phase --------------------------------------*/
+
 var app = builder.Build();
 
-// --- 2. DATABASE INITIALIZATION ---
+/*
+Migrations:
+    Broadly speaking, migrations act as a version control system for the database schema, 
+    allowing the database schema over time without (potentially) losing existing data.
 
-// Apply migrations automatically on startup
-// Using MigrateAsync ensures the DB is created and seeded before the app starts
+    The way it works is that it syncs the database schema with the current model definition 
+    generated from running the `dotnet ef migrations add <MigrationName>` command, from the
+    DbContext and entity classes in the Models directory.
+
+Scope:
+    Since services registered within the Dependency Injection container has a lifetime and is
+    normally used within the scope of an HTTP request, and since the application has not yet
+    started handling requests, a scope needs to be created manually to obtain the required
+    services from the service provider (DbContext).
+
+    The following code then applies any pending migrations for the context to the database/
+    syncs the database schema with the current model definition automatically.
+*/
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -218,15 +250,36 @@ using (var scope = app.Services.CreateScope())
     await context.Database.MigrateAsync();
 }
 
-// --- 3. MIDDLEWARE PIPELINE (ORDER MATTERS) ---
+/*
+    The HTTP request pipeline is as follows:
 
+          HTTP Request
+               |
+            Routing
+               |
+              CORS
+               |
+         Authentication
+               |
+          Authorization
+               |
+        ----------------
+        |              |
+     OpenAPI     HTTPS Redirection 
+  (API Reference)      |
+        |              |
+        ----------------
+               |
+          Controllers
+               |
+          HTTP Response
+*/
 app.UseRouting();
 app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// API endpoint Testing
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -238,5 +291,8 @@ else
 }
 
 app.MapControllers();
+
+
+/*------------------------------------ Execution Phase --------------------------------------*/
 
 app.Run();

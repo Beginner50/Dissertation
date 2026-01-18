@@ -12,16 +12,19 @@ namespace PMS.Services;
 public class TaskDeliverableService
 {
     protected readonly PMSDbContext dbContext;
+    protected readonly NotificationService notificationService;
     protected readonly ReminderService reminderService;
     protected readonly ILogger<TaskDeliverableService> logger;
 
     public TaskDeliverableService(
         PMSDbContext dbContext,
+        NotificationService notificationService,
         ReminderService reminderService,
         ILogger<TaskDeliverableService> logger
     )
     {
         this.dbContext = dbContext;
+        this.notificationService = notificationService;
         this.reminderService = reminderService;
         this.logger = logger;
     }
@@ -34,7 +37,6 @@ public class TaskDeliverableService
             {
                 DeliverableID = t.StagedDeliverable.DeliverableID,
                 Filename = t.StagedDeliverable.Filename,
-                TableOfContent = t.StagedDeliverable.TableOfContent,
                 SubmissionTimestamp = t.StagedDeliverable.SubmissionTimestamp,
                 SubmittedBy = new UserLookupDTO
                 {
@@ -123,15 +125,12 @@ public class TaskDeliverableService
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
 
-        var toc = contentType.Contains("pdf") ? PDFUtils.GenerateTableOfContent(fileData) : "";
-
         var deliverable = new Deliverable
         {
             File = fileData,
             Filename = filename,
             ContentType = contentType,
             SubmissionTimestamp = DateTime.UtcNow,
-            TableOfContent = toc,
             TaskID = taskID,
             SubmittedByID = userID
         };
@@ -212,7 +211,7 @@ public class TaskDeliverableService
 
                 await dbContext.SaveChangesAsync();
 
-                // await reminderService.CreateTaskReminder(task.ProjectTaskID, ReminderType.TASK_COMPLETED);
+                await notificationService.CreateTaskNotification(task.ProjectTaskID, NotificationType.DELIVERABLE_SUBMITTED);
 
                 await transaction.CommitAsync();
             }

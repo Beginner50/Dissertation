@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { theme } from "../../lib/theme";
-import { Box, Typography, type SxProps, IconButton } from "@mui/material";
+import { Box, Typography, type SxProps } from "@mui/material";
 import type { Theme } from "@emotion/react";
 
 export function TaskDetails({
@@ -24,42 +24,35 @@ export function TaskDetails({
         maxHeight: "78vh",
         boxShadow: theme.shadowSoft,
         ...sx,
-      }}
-    >
+      }}>
       {children}
     </Box>
   );
 }
 
-TaskDetails.Header = ({
-  title,
-  deadline,
-}: {
-  title: string;
-  deadline: string;
-}) => {
+TaskDetails.Header = ({ title, deadline }: { title: string; deadline: string }) => {
+  const datePart = deadline.split("T")[0] ?? "";
+  const timePart = deadline.split("T")[1]?.slice(0, 5) ?? "";
+
   return (
     <Box
       sx={{
         marginBottom: "15px",
         paddingBottom: "10px",
         borderBottom: `1px solid ${theme.borderSoft}`,
-      }}
-    >
+      }}>
       <Typography
         variant="h1"
         component="h1"
-        sx={{ fontSize: "1.5rem", fontWeight: 700, color: theme.textStrong }}
-      >
+        sx={{ fontSize: "1.5rem", fontWeight: 700, color: theme.textStrong }}>
         {title}
       </Typography>
       <Typography
         component="p"
-        sx={{ fontSize: "0.9rem", color: theme.textMuted, marginTop: "4px" }}
-      >
+        sx={{ fontSize: "0.9rem", color: theme.textMuted, marginTop: "4px" }}>
         Deadline:{" "}
         <Box component="strong" sx={{ color: theme.textStrong }}>
-          {deadline}
+          {datePart} {timePart}
         </Box>
       </Typography>
     </Box>
@@ -73,26 +66,17 @@ TaskDetails.Content = ({ children }: { children?: ReactNode }) => {
         display: "flex",
         gap: "20px",
         marginBottom: "20px",
-        // Allow wrapping on very small screens, stacking vertically
         flexDirection: { xs: "column", sm: "row" },
-      }}
-    >
+      }}>
       {children}
     </Box>
   );
 };
 
-TaskDetails.Description = ({
-  children: description,
-}: {
-  children: ReactNode;
-}) => {
+TaskDetails.Description = ({ children: description }: { children: ReactNode }) => {
   return (
     <Box sx={{ flex: 1, minWidth: 0 }}>
-      <Typography
-        component="p"
-        sx={{ color: theme.textNormal, lineHeight: 1.6 }}
-      >
+      <Typography component="p" sx={{ color: theme.textNormal, lineHeight: 1.6 }}>
         {description}
       </Typography>
     </Box>

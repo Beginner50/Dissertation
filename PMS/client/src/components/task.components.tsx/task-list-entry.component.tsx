@@ -68,6 +68,9 @@ TaskListEntry.Link = ({
   url: string;
   dueDate: string;
 }) => {
+  const datePart = dueDate.split("T")[0];
+  const timePart = dueDate.split("T")[1].slice(0, 5);
+
   const deadline = new Date(dueDate);
   const isDeadlinePast =
     !Number.isNaN(deadline.getTime()) && deadline.getTime() < Date.now();
@@ -101,7 +104,7 @@ TaskListEntry.Link = ({
           }}>
           Deadline:{" "}
           <strong style={{ fontWeight: isDeadlinePast ? 400 : 600 }}>
-            {deadline.toLocaleDateString("en-GB")}
+            {datePart} {timePart}
           </strong>
         </Typography>
       }

@@ -65,12 +65,13 @@ export type FeedbackCriteria = {
   feedbackCriteriaID: number;
   description: string;
   status: "met" | "unmet" | "overridden";
+  changeObserved: string;
 };
 
 export type Meeting = {
   meetingID: number;
-  start: Date;
-  end: Date;
+  start: string;
+  end: string;
   description: string;
   task: { taskID: number; title: string };
   organizer: { userID: number; name: string; email: string };
@@ -80,8 +81,8 @@ export type Meeting = {
 
 export type MeetingFormData = {
   description: string;
-  start: Date;
-  end: Date;
+  start: string;
+  end: string;
   attendeeID: number;
   projectID: number;
   taskID: number;

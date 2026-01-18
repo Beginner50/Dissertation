@@ -16,7 +16,6 @@ import FeedbackModal from "../../components/feedback.components/feedback-criteri
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box } from "@mui/material";
 import { useAuth } from "../../providers/auth.provider";
-import { baseURL } from "../../lib/config";
 
 export default function TaskRoute() {
   const { authState, authorizedAPI } = useAuth();
@@ -27,7 +26,7 @@ export default function TaskRoute() {
     useState<boolean>(false);
 
   const [tableCriteria, setTableCriteria] = useState<FeedbackCriteria[]>([]);
-  const [modalCriteria, setModalCriteria] = useState<FeedbackCriteria[]>([]);
+  const [modalCriteria, setModalCriteria] = useState<Partial<FeedbackCriteria>[]>([]);
 
   const { projectID, taskID } = useParams();
 
@@ -98,6 +97,7 @@ export default function TaskRoute() {
       }
     },
     retry: 1,
+    enabled: user.role != "supervisor",
   });
 
   useEffect(() => {
@@ -120,12 +120,31 @@ export default function TaskRoute() {
       })
     );
   };
+
   const handleAddCriterion = () => {
-    setModalCriteria((prev) => [
-      ...prev,
-      { feedbackCriteriaID: 0, description: "", status: "unmet" },
-    ]);
+    setModalCriteria((prev) => [...prev, { description: "", status: "unmet" }]);
   };
+
+  const handleCriterionDescriptionChange = (
+    updatedCriteria: Partial<FeedbackCriteria>
+  ) => {
+    const newModalCriteria = [
+      ...modalCriteria.filter(
+        (c) => c.feedbackCriteriaID != updatedCriteria.feedbackCriteriaID
+      ),
+      updatedCriteria,
+    ];
+    setModalCriteria(newModalCriteria);
+  };
+
+  const handleCriterionDelete = (criterionToDelete: Partial<FeedbackCriteria>) => {
+    setModalCriteria(
+      modalCriteria.filter(
+        (criteria) => criteria.feedbackCriteriaID != criterionToDelete.feedbackCriteriaID
+      )
+    );
+  };
+
   const handleCancelClick = () => {
     setFeedbackModalOpen(false);
   };
@@ -134,6 +153,36 @@ export default function TaskRoute() {
   };
 
   /* ---------------------------------------------------------------------------------- */
+
+  const handleOpenStagedDeliverable = async () => {
+    try {
+      const blob = await authorizedAPI
+        .get(
+          `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`
+        )
+        .blob();
+
+      const fileUrl = window.URL.createObjectURL(blob);
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error("Could not open staged deliverable:", error);
+    }
+  };
+
+  const handleOpenSubmittedDeliverable = async () => {
+    try {
+      const blob = await authorizedAPI
+        .get(
+          `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable?file=true`
+        )
+        .blob();
+
+      const fileUrl = window.URL.createObjectURL(blob);
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error("Could not open submitted deliverable:", error);
+    }
+  };
 
   /*
     file.arrayBuffer() returns the file contents as an ArrayBuffer, which is simply
@@ -182,7 +231,7 @@ export default function TaskRoute() {
   };
 
   const handleSubmitFeedback = () => {
-    const filteredCriteria = modalCriteria.filter((c) => c.description.trim() !== "");
+    const filteredCriteria = modalCriteria.filter((c) => c?.description?.trim() !== "");
 
     mutation.mutate(
       {
@@ -230,7 +279,7 @@ export default function TaskRoute() {
           columnGap: "2vw",
         }}>
         {/* Left Section - Task Details */}
-        <TaskDetails sx={{ flexGrow: 3 }}>
+        <TaskDetails sx={{ maxWidth: "63vw", flexGrow: 3 }}>
           <TaskDetails.Header
             title={task?.title ?? "Task Title"}
             deadline={task?.dueDate ?? "Due Date"}
@@ -253,7 +302,6 @@ export default function TaskRoute() {
         <TaskActions
           sx={{
             flexGrow: 1,
-            maxWidth: "25vw",
             background: "hsla(0,0%,100%,50%)",
           }}>
           <TaskActions.Header title="Task Actions" />
@@ -261,15 +309,15 @@ export default function TaskRoute() {
           {submittedDeliverable && (
             <DeliverableCard
               cardDescription="Submitted Deliverable"
-              url={`${baseURL}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable?file=true`}
               deliverable={submittedDeliverable}
+              onOpenDeliverable={handleOpenSubmittedDeliverable}
             />
           )}
           {stagedDeliverable ? (
             <DeliverableCard
               cardDescription="Staged Deliverable"
-              url={`${baseURL}/api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`}
               deliverable={stagedDeliverable}
+              onOpenDeliverable={handleOpenStagedDeliverable}
               onRemove={handleRemoveStagedDeliverable}
             />
           ) : (
@@ -307,13 +355,15 @@ export default function TaskRoute() {
         </TaskActions>
       </Box>
 
+      {/* Feedback Modal */}
       <FeedbackModal open={feedbackModalOpen}>
         <FeedbackModal.Header />
 
         <FeedbackModal.Content>
           <FeedbackModal.CriteriaList
             criteria={modalCriteria}
-            onUpdateCriteria={setModalCriteria}
+            onCriterionDescriptionChange={handleCriterionDescriptionChange}
+            onCriterionDelete={handleCriterionDelete}
           />
           <FeedbackModal.AddButton onAdd={handleAddCriterion} />
         </FeedbackModal.Content>
@@ -321,7 +371,6 @@ export default function TaskRoute() {
         <FeedbackModal.Actions
           onCancel={handleCancelClick}
           onSubmit={handleSubmitFeedback}
-          disabled={modalCriteria.every((c) => c.description.trim() === "")}
         />
       </FeedbackModal>
     </>

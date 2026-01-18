@@ -201,3 +201,6 @@
 /home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/System.Management.dll
 /home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/runtimes/win/lib/net7.0/System.Management.dll
 /home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/BCrypt.Net-Next.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/BouncyCastle.Cryptography.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/MailKit.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/MimeKit.dll

@@ -40,22 +40,22 @@ public class TokenUtils
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public static JwtSecurityToken? DecodeToken(string authHeader)
-    {
-        if (authHeader == "") return null;
+    // public static JwtSecurityToken? DecodeToken(string authHeader)
+    // {
+    //     if (authHeader == "") return null;
 
-        // Strips out "Bearer " prefix
-        var token = authHeader.Substring(7).Trim();
-        try
-        {
-            var handler = new JwtSecurityTokenHandler();
+    //     // Strips out "Bearer " prefix
+    //     var token = authHeader.Substring(7).Trim();
+    //     try
+    //     {
+    //         var handler = new JwtSecurityTokenHandler();
 
-            if (handler.CanReadToken(token))
-            {
-                return handler.ReadJwtToken(token);
-            }
-        }
-        catch { }
-        return null;
-    }
+    //         if (handler.CanReadToken(token))
+    //         {
+    //             return handler.ReadJwtToken(token);
+    //         }
+    //     }
+    //     catch { }
+    //     return null;
+    // }
 }

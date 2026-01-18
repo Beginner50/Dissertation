@@ -7,6 +7,7 @@ public class FeedbackCriteria
     public long FeedbackCriteriaID { get; set; }
     public required string Description { get; set; }
     public required string Status { get; set; }
+    public string ChangeObserved { get; set; }
 
     public required long DeliverableID { get; set; }
     [ForeignKey("DeliverableID")]

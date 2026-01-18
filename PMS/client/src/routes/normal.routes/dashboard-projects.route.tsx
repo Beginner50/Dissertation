@@ -36,6 +36,34 @@ export default function DashboardProjectsRoute() {
   const [selectedProject, setSelectedProject] = useState<Project>();
 
   /* ---------------------------------------------------------------------------------- */
+  /*
+    More information: https://tanstack.com/query/latest/docs/framework/react/overview
+
+    Tanstack query is a popular library for managing server state, syncing server side data
+    from APIs with the client side components. 
+
+    The way it works is that whenever a component re-renders, queries first serve data from
+    the cache while fetching data in the background, ensuring UI remains responsive. The 
+    problems that this approach solves is listed in the link above.
+
+    There are 3 core concepts in Tanstack Query:
+    1) Queries
+       A Query is a dependency on an asynchronous source of data that is tied to a unique key.
+
+       For example, given a query has key [user.userID, "projects"], whenever the userID changes,
+       tanstack query will trigger a new render cycle to fetch the data.
+      
+    2) Mutations
+       Mutations represent side effects that modify data on the server (POST, PATCH, DELETE)
+
+    3) Query Invalidation
+       Mutations are generally followed by query invalidation, whereby keys can be marked as
+       stale to force the corresponding queries to re-fetch data automatically.
+      
+    Since queries and mutations operate on a global state, they can communicate from separate
+    components, allowing queries invalidated from one component to affect other mounted
+    components elsewhere. 
+  */
 
   const queryClient = useQueryClient();
   const mutation = useMutation({

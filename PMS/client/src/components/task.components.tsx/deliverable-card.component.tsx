@@ -1,4 +1,4 @@
-import { Description, Download, Delete } from "@mui/icons-material";
+import { Description, Download, Delete, RemoveRedEye } from "@mui/icons-material";
 import {
   Card,
   Avatar,
@@ -13,14 +13,14 @@ import { theme } from "../../lib/theme";
 
 export default function DeliverableCard({
   cardDescription,
-  url,
   deliverable,
+  onOpenDeliverable,
   onRemove,
   sx,
 }: {
   cardDescription: string;
-  url: string;
   deliverable: Deliverable;
+  onOpenDeliverable: () => void;
   onRemove?: () => void;
   sx?: SxProps;
 }) {
@@ -33,8 +33,7 @@ export default function DeliverableCard({
         bgcolor: isStaged ? theme.borderSoft : "hsl(0,0%,100%)",
         borderColor: theme.borderNormal,
         ...sx,
-      }}
-    >
+      }}>
       <Box sx={{ p: 1.5 }}>
         <Stack direction="row" spacing={2} alignItems="center">
           <DeliverableCard.FileIcon isStaged={isStaged} />
@@ -46,8 +45,8 @@ export default function DeliverableCard({
           </Box>
 
           <DeliverableCard.Actions
-            url={url}
             filename={deliverable.filename}
+            onOpenDeliverable={onOpenDeliverable}
             onRemove={onRemove}
           />
         </Stack>
@@ -62,8 +61,7 @@ DeliverableCard.FileIcon = ({ isStaged }: { isStaged: boolean }) => (
       bgcolor: isStaged ? "warning.main" : "primary.main",
       width: 40,
       height: 40,
-    }}
-  >
+    }}>
     <Description />
   </Avatar>
 );
@@ -73,8 +71,7 @@ DeliverableCard.Status = ({ isStaged }: { isStaged: boolean }) => (
     variant="caption"
     color={isStaged ? "warning.dark" : "primary.main"}
     fontWeight={800}
-    display="block"
-  >
+    display="block">
     {isStaged ? "Staged" : "Submitted"}
   </Typography>
 );
@@ -92,12 +89,12 @@ DeliverableCard.Date = ({ timestamp }: { timestamp: string }) => (
 );
 
 DeliverableCard.Actions = ({
-  url,
   filename,
+  onOpenDeliverable,
   onRemove,
 }: {
-  url: string;
   filename: string;
+  onOpenDeliverable: () => void;
   onRemove?: () => void;
 }) => {
   return (
@@ -108,8 +105,8 @@ DeliverableCard.Actions = ({
         </IconButton>
       )}
 
-      <IconButton size="small" component="a" href={url} download={filename}>
-        <Download fontSize="small" />
+      <IconButton size="small" component="a" onClick={onOpenDeliverable}>
+        <RemoveRedEye fontSize="small" />
       </IconButton>
     </Stack>
   );

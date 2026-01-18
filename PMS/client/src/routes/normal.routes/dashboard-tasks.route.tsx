@@ -174,27 +174,33 @@ export default function DashboardTasksRoute() {
     setTaskModalState((t) => ({ ...t, open: false }));
   };
 
+  /*
+    The pdf file sent from the server is fetched and stored as an BLOB (Binary Large Object)
+    object in memory.
+
+    Since the browser cannot directly open BLOB objects, a temporary URL is created using the
+    URL.createObjectURL() method, which generates a unique URL that points to the BLOB data.
+
+    window.open() is then used to open this temporary URL in a new browser tab. 
+
+      The "_blank" parameter specifies that the URL should be opened in a new tab,
+      while "noopener,noreferrer" are security features to prevent the new page from
+      accessing the original page's window object and prevent security vulnerabilities.
+
+      For example, a malicious file will not be able to use window.open to redirect
+      the original page to a phishing site.
+  */
   const handleGenerateProgressLogReport = async () => {
-    const response = await authorizedAPI
-      .get(`api/users/${user.userID}/projects/${projectID}/progress-log`)
-      .blob();
+    try {
+      const blob = await authorizedAPI
+        .get(`api/users/${user.userID}/projects/${projectID}/progress-log`)
+        .blob();
 
-    // 2. Create a temporary URL for the blob
-    const url = window.URL.createObjectURL(response);
-
-    // 3. Create a hidden anchor element to trigger the download
-    const link = document.createElement("a");
-    link.href = url;
-
-    // You can customize the filename here or try to get it from headers
-    link.setAttribute("download", `Project_${projectID}_ProgressLog.pdf`);
-
-    document.body.appendChild(link);
-    link.click();
-
-    // 4. Cleanup
-    link.parentNode?.removeChild(link);
-    window.URL.revokeObjectURL(url);
+      const fileUrl = window.URL.createObjectURL(blob);
+      window.open(fileUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error("Could not generate progress log report!");
+    }
   };
 
   /* ---------------------------------------------------------------------------------- */

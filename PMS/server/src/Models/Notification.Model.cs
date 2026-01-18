@@ -12,12 +12,4 @@ public class Notification
     public required long RecipientID { get; set; }
     [ForeignKey("RecipientID")]
     public User Recipient { get; init; }
-
-    public long? MeetingID { get; set; }
-    [ForeignKey("MeetingID")]
-    public Meeting? Meeting { get; set; }
-
-    public long? TaskID { get; set; }
-    [ForeignKey("TaskID")]
-    public ProjectTask? Task { get; set; }
 }

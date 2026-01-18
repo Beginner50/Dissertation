@@ -15,15 +15,18 @@ public enum NotificationType
     TASK_UPDATED,
     TASK_DELETED,
     DELIVERABLE_SUBMITTED,
-    FEEDBACK_PROVIDED
+    FEEDBACK_PROVIDED,
+    FEEDBACK_UPDATED,
 }
 
 public class NotificationService
 {
     protected readonly PMSDbContext dbContext;
-    public NotificationService(PMSDbContext dbContext)
+    protected readonly ILogger<NotificationService> logger;
+    public NotificationService(PMSDbContext dbContext, ILogger<NotificationService> logger)
     {
         this.dbContext = dbContext;
+        this.logger = logger;
     }
 
     public async Task<IEnumerable<NotificationDTO>> GetAllNotifications(long userID)
@@ -58,7 +61,6 @@ public class NotificationService
                     Type = "meeting",
                     Description = $"{meeting.Organizer.Name} has booked a meeting with you.",
                     RecipientID = meeting.AttendeeID,
-                    MeetingID = meetingID
                 };
                 await dbContext.AddAsync(notification);
                 break;
@@ -68,7 +70,6 @@ public class NotificationService
                     Type = "meeting",
                     Description = $"{meeting.Organizer.Name} has cancelled a meeting with you.",
                     RecipientID = meeting.AttendeeID,
-                    MeetingID = meetingID
                 };
                 await dbContext.AddAsync(notification);
                 break;
@@ -78,7 +79,6 @@ public class NotificationService
                     Type = "meeting",
                     Description = $"{meeting.Attendee.Name} has accepted your meeting.",
                     RecipientID = meeting.OrganizerID,
-                    MeetingID = meetingID
                 };
                 await dbContext.AddAsync(notification);
                 break;
@@ -88,7 +88,6 @@ public class NotificationService
                     Type = "meeting",
                     Description = $"{meeting.Attendee.Name} has rejected your meeting.",
                     RecipientID = meeting.OrganizerID,
-                    MeetingID = meetingID
                 };
                 await dbContext.AddAsync(notification);
                 break;
@@ -121,7 +120,6 @@ public class NotificationService
                         Type = "task",
                         Description = $"{task.Project.Supervisor.Name} has created a new task: {task.Title}",
                         RecipientID = (long)task.Project.StudentID,
-                        TaskID = taskID
                     };
                     await dbContext.AddAsync(notification);
                 }
@@ -134,7 +132,6 @@ public class NotificationService
                         Type = "task",
                         Description = $"{task.Project.Supervisor.Name} has updated task: {task.Title}",
                         RecipientID = (long)task.Project.StudentID,
-                        TaskID = taskID
                     };
                     await dbContext.AddAsync(notification);
                 }
@@ -147,7 +144,6 @@ public class NotificationService
                         Type = "task",
                         Description = $"{task.Project.Supervisor.Name} has deleted task: {task.Title}",
                         RecipientID = (long)task.Project.StudentID,
-                        TaskID = taskID
                     };
                     await dbContext.AddAsync(notification);
                 }
@@ -158,7 +154,6 @@ public class NotificationService
                     Type = "task",
                     Description = $"{task.Project.Student.Name} has submitted a deliverable for task: {task.Title}",
                     RecipientID = (long)task.Project.SupervisorID,
-                    TaskID = taskID
                 };
                 await dbContext.AddAsync(notification);
                 break;
@@ -168,7 +163,15 @@ public class NotificationService
                     Type = "task",
                     Description = $"{task.Project.Supervisor.Name} provided feedback for task: {task.Title}",
                     RecipientID = (long)task.Project.StudentID,
-                    TaskID = taskID
+                };
+                await dbContext.AddAsync(notification);
+                break;
+            case NotificationType.FEEDBACK_UPDATED:
+                notification = new Notification
+                {
+                    Type = "task",
+                    Description = $"{task.Project.Supervisor.Name} updated feedback for task: {task.Title}",
+                    RecipientID = (long)task.Project.StudentID,
                 };
                 await dbContext.AddAsync(notification);
                 break;

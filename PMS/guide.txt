@@ -3,106 +3,233 @@
 The following document will serve as a guide for understanding the project.
 
 The project will be divided into 2 parts:
-    - client  (This will host the code pertinent to the website/interface including data access)
-    - server  (This will host the code pertinent to the services as described in the UML design
-               section, made accessible via REST apis)
+ - client (This will host the code pertinent to the website/interface including data access)
+ - server (This will host the code pertinent to the services as described in the UML design
+           section, made accessible via REST apis)
 
+DOCKER ORCHESTRATION: 
+    For the sake of making deployment easy, Docker (w/ Docker Compose) will be used to host and
+    orchestrate the different components of the system (client, server, database) in one
+    single command. As such, no other configurations will be required when setting up the project
+    in another machine, be it windows or linux.
 
-DOCKER ORCHESTRATION:
-For the sake of making deployment easy, Docker (w/ Docker Compose) will be used to host and
-orchestrate the different components of the system (client, server, database) in one single
-command. As such, no other configurations will be required when setting up the project in
-another machine, be it windows or linux.
-
-To run the website (production)
-    docker compose --profiles production up
-
-To run the tests
-    docker compose --profiles test up
-
+    To run the website (development) 
+        docker compose --profiles development up --build
 
 ----------------------------------------- Client -------------------------------------------
 
-The client facing part of the website will be made using React along with the following
+The client facing part of the website will be made using React along with the following 
 dependencies listed below:
-    - Typescript       (A superset of javascript that includes type safety to improve code
-                        readability, maintenance and debugging)
-    - Vite             (Provides a development server and bundler to convert the React code 
-                        + Typescript code into javascript, which the web browser can understand)
-    - Tanstack Router  (A routing library that allows for routing without resulting in a full 
-                        page reload)
-    - React Auth Kit   (An authentication library for abstracting the process of JWT authentication)
-    - Material UI      (React UI library that provides components for structuring UI)
 
+ - Typescript     (A superset of javascript that includes type safety to improve code 
+                   readability, maintenance and debugging)
+
+ - Vite           (Provides a development server and bundler to convert the React code + Typescript
+                   code into javascript, which the web browser can understand)
+
+ - React Router   (Provides static routing on the client side)
+
+ - Material UI    (React UI library that provides components for structuring UI)
+
+ - Fullcalendar   (Provides a scheduler component to schedule meetings)
+
+ - TanStack Query (Provides declarative server-state management, caching, and automatic revalidation to keep the UI synchronized with the server)
 
 PROJECT STRUCTURE: 
-        .
-        ├── eslint.config.js
-        ├── index.html
-        ├── package.json
-        ├── package-lock.json
-        ├── prettier.config.js
-        ├── public
-        ├── README.md
-        ├── src
-        │   ├── components
-        │   │   └── Header.tsx
-        │   ├── integrations
-        │   │   └── tanstack-query
-        │   │       ├── devtools.tsx
-        │   │       └── root-provider.tsx
-        │   ├── logo.svg
-        │   ├── main.tsx
-        │   ├── reportWebVitals.ts
-        │   ├── routes
-        │   │   ├── demo
-        │   │   │   └── tanstack-query.tsx
-        │   │   ├── index.tsx
-        │   │   └── __root.tsx
-        │   ├── routeTree.gen.ts
-        │   └── styles.css
-        ├── tsconfig.json
-        └── vite.config.ts
-
-I will mainly elaborate on the src/ directory since the rest are essentially configuration files
-for the package manager (npm) or code editor, and have little bearing on the project.
+    .
+    ├── Dockerfile
+    ├── eslint.config.js
+    ├── index.html
+    ├── package.json
+    ├── package-lock.json
+    ├── public
+    ├── README.md
+    ├── src
+    │   ├── components
+    │   │   ├── base.components
+    │   │   ├── feedback.components
+    │   │   ├── header.components
+    │   │   ├── notification-reminder.components
+    │   │   ├── project.components
+    │   │   ├── scheduler.components
+    │   │   ├── task.components.tsx
+    │   │   └── user.components
+    │   ├── index.css
+    │   ├── lib
+    │   │   ├── config.ts
+    │   │   ├── theme.ts
+    │   │   └── types.ts
+    │   ├── main.tsx
+    │   ├── providers
+    │   │   └── auth.provider.tsx
+    │   └── routes
+    │       ├── admin.routes
+    │       │   ├──  admin-routes.layout.tsx
+    │       │   └── dashboard-users.route.tsx
+    │       ├── index.route.tsx
+    │       ├── normal.routes
+    │       │   ├── dashboard-projects.route.tsx
+    │       │   ├── dashboard-tasks.route.tsx
+    │       │   ├──  normal-routes.layout.tsx
+    │       │   ├── scheduler.route.tsx
+    │       │   └── task.route.tsx
+    │       └── sign-in.route.tsx
+    ├── tsconfig.app.json
+    ├── tsconfig.json
+    ├── tsconfig.node.json
+    └── vite.config.ts 
 
 IMPORTANT FILES:
-1) src/routes/
-   Tanstack router uses file-based routing, and therefore the structure of the routes directory
-   and a given route (page) within it reflects the url segment that it will take. For example,
-    src/routes/index        -> http://website/
-    src/routes/demo/        -> http://website/demo
-    src/routes/demo/$id     -> http://website/demo/{id} (id can be any integer here)
+    src/routes/
+       Contains the "page" level components. Unlike file-based systems, React Router uses
+       a declarative approach where these files are mapped to URL paths in the main application
+       configuration. The structure is categorized into:
 
-    When building the project (npm run build), vite will analyse the routes directory and convert
-    these file-based routes into actual routes in routeTree.gen.ts. The application will then only
-    need to read routeTree.gen.ts
+            admin.routes: 
+                Pages accessible only to administrators (e.g. User Management).
 
-2) src/main.tsx
-   This will be the entrypoint of the application and it serves 2 purposes:
-   -  It creates the router and performs some configuration to make it type-safe.
-   -  It will render the entire react application inside index.html 
+            normal.routes: 
+                Core application pages for Students and Supervisors.
 
-3) index.html
-    When hosting the application, the web server will only need to host this static index.html
-    file. After building the application, it will contain the necessary scripts that will
-    populate it with the elements from the React application
+            layout.tsx files:
+                Shared UI wrappers that contain persistent elements like navigation bars and
+                sidebars for specific route groups.
 
-4) src/components
-    This is the directory for storing the components of the application (used in the routes)
+    src/components/
+        Contains modular UI elements used across various routes. These are categorized by feature
+        (e.g., project, task, feedback) to ensure maintainability. Complex elements use a
+        Composite Component pattern to isolate state, preventing parent-level re-renders during
+        local updates.
 
-5) src/integrations
-    This is a directory that connects external libraries with the React + Tanstack Router
-    framework.
+    src/main.tsx
+        The entry point of the client application. It initializes the React root, configures the
+        QueryClient for TanStack Query, and renders the top-level Router provider into the
+        index.html template.
 
+    src/providers/
+         Houses Context Providers that manage global state. The auth.provider.tsx is critical
+         as it tracks the user's authentication status and roles across the entire application
+         lifecycle.
 
-SPECIAL ROUTE FILES:
-Tanstack file-based routing provides special files to allow users to define how the url segments
-map to the each route file. The Tanstack Router documentation provides more information on this:
-    https://tanstack.com/router/latest/docs/framework/react/routing/routing-concepts
+    src/lib/
+        Contains shared utilities.
 
+    index.html
+        The static entry point for the web server. During the build process, Vite injects the
+        bundled JavaScript, which then "hydrates" this file with the React application.
 
-Server:
-    Create a migration:
-        dotnet ef migrations add InitialCreate
+----------------------------------------- Server -------------------------------------------
+
+The server is built using ASP.NET Core Web API following a layered architecture to ensure
+separation of concerns between HTTP handling and business logic. The dependencies used:
+
+- .NET Core Entity Framework Core   (An object relational mapper that allows database 
+                                     interactions using C# objects, eliminating the need to
+                                     write SQL statements)
+    
+- Npgsql                            (.NET Provider for PostgreSQL, allowing EF Core to
+                                     communicate with the PostgreSQL DBMS)
+
+- Google Generative AI              (Google's C# sdk for interacting with Gemini AI's services)
+
+PROJECT STRUCTURE:
+    .
+    ├── appsettings.Development.json
+    ├── appsettings.json
+    ├── Dockerfile
+    ├── Migrations
+    ├── PMS.csproj
+    ├── PMS.slnx
+    ├── Program.cs
+    ├── Properties
+    │   └── launchSettings.json
+    └── src
+        ├── Controllers
+        │   ├── Feedback.Controller.cs
+        │   ├── Meetings.Controller.cs
+        │   ├── Notifications.Controller.cs
+        │   ├── Projects.Controller.cs
+        │   ├── ProjectTasks.Controller.cs
+        │   ├── Reminders.Controller.cs
+        │   ├── TaskDeliverables.Controller.cs
+        │   └── Users.Controller.cs
+        ├── DTOs
+        │   ├── Feedback.DTOs
+        │   ├── Meeting.DTOs
+        │   ├── Notification.DTOs
+        │   ├── Project.DTOs
+        │   ├── ProjectTask.DTOs
+        │   ├── Reminder.DTOs
+        │   ├── TaskDeliverable.DTOs
+        │   └── User.DTOs
+        ├── Lib
+        │   ├── AIUtils.Lib.cs
+        │   ├── MailUtils.Lib.cs
+        │   ├── OwnershipRBAC.Lib.cs
+        │   ├── PdfUtils.Lib.cs
+        │   └── TokenUtils.Lib.cs
+        ├── Models
+        │   ├── Deliverable.Model.cs
+        │   ├── FeedbackCriteria.Model.cs
+        │   ├── Meeting.Model.cs
+        │   ├── Notification.Model.cs
+        │   ├──  PMS.DBContext.cs
+        │   ├── Project.Model.cs
+        │   ├── ProjectTask.Model.cs
+        │   ├── Reminder.Model.cs
+        │   └── User.Model.cs
+        └── Services
+            ├── Feedback.Service.cs
+            ├── Meeting.Service.cs
+            ├── Notification.Service.cs
+            ├── Project.Service.cs
+            ├── ProjectTask.Service.cs
+            ├── Reminder.Service.cs
+            ├── TaskDeliverable.Service.cs
+            └── User.Service.cs 
+
+IMPORTANT FILES / DIRECTORIES:
+
+    Program.cs
+        The main entry point of the server application. It manages the ASP.NET Core application
+        lifecycle.
+
+    Models/
+        Contains the domain entities representing the system's data structure. 
+            - PMS.DBContext.cs:
+                The primary class that coordinates Entity Framework Core functionality for
+                the project. It acts as the bridge between C# objects and the PostgreSQL database
+                (via Npgsql).
+
+    Controllers/
+        The API's entry points. These classes handle incoming HTTP requests, validate 
+        input via DTOs, and return appropriate HTTP status codes. They delegate business logic
+        to the Service layer.
+
+    Services/
+        This layer contains the core Business Logic. By isolating logic here, the 
+        application becomes more modular and testable. Services interact with the 
+        DBContext to perform CRUD operations. 
+
+    DTOs/
+        Data Transfer Objects used to define the contract of the API. These ensure 
+        that internal Database Models are not exposed directly to the client, 
+        allowing for better security and decoupling of the frontend and backend.
+
+    Lib/
+        Internal utility libraries that provide shared functionality across the application:
+            - AIUtils.Lib.cs:
+                Interfaces with Google Generative AI to automate feedback 
+                and logging.
+
+            - TokenUtils.Lib.cs:
+                Manages the generation and validation of JWT tokens.
+
+            - OwnershipRBAC.Lib.cs:
+                Implements Role-Based Access Control logic to ensure users can only access 
+                projects they own or are assigned to.
+
+    Migrations/
+        Contains auto-generated files that track changes to the database schema. 
+        Using Entity Framework Core Migrations acts as version control for the 
+        database, allowing the schema to evolve safely without manual SQL scripts.

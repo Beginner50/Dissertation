@@ -7,7 +7,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Edit, Save, Close, Event, Person, AccessTime, Info } from "@mui/icons-material";
+import { Edit, Save, Close, Info } from "@mui/icons-material";
 import { useEffect, useState, type ReactNode } from "react";
 import type { Meeting } from "../../lib/types";
 
@@ -16,7 +16,7 @@ export function MeetingDetails({ children }: { children: ReactNode }) {
 }
 
 MeetingDetails.Header = ({ title }: { title: string }) => (
-  <Typography variant="h6" gutterBottom color="primary.main" sx={{ fontWeight: 600 }}>
+  <Typography variant="h6" gutterBottom color="primaryMain" sx={{ fontWeight: 600 }}>
     {title}
   </Typography>
 );
@@ -25,7 +25,7 @@ MeetingDetails.InfoRow = ({
   icon,
   label,
   value,
-  valueColor = "text.primary",
+  valueColor = "textPrimary",
 }: {
   icon: ReactNode;
   label: string;
@@ -33,7 +33,7 @@ MeetingDetails.InfoRow = ({
   valueColor?: string;
 }) => (
   <Stack direction="row" spacing={1.5} alignItems="center">
-    <Box sx={{ color: "text.secondary", display: "flex" }}>{icon}</Box>
+    <Box sx={{ color: "textSecondary", display: "flex" }}>{icon}</Box>
     <Typography variant="body2" sx={{ fontWeight: 500, minWidth: 80 }}>
       {label}:
     </Typography>
@@ -116,7 +116,7 @@ MeetingDetails.Description = ({
       ) : (
         <Typography
           variant="body2"
-          color="text.secondary"
+          color="textSecondary"
           sx={{ mt: 0.5, fontStyle: description ? "normal" : "italic" }}>
           {description || "No description provided."}
         </Typography>

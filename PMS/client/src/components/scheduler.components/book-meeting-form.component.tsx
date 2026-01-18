@@ -39,31 +39,41 @@ BookMeetingForm.Description = ({
 BookMeetingForm.TimePickers = ({
   start,
   end,
-  onTimeChange,
+  onStartChange,
+  onEndChange,
 }: {
-  start: Date;
-  end: Date;
-  onTimeChange: (type: "start" | "end", newVal: string) => void;
-}) => (
-  <Box display="flex" sx={{ gap: "1rem" }}>
-    <TextField
-      label="Start Time"
-      type="time"
-      value={start.toTimeString().slice(0, 5)}
-      onChange={(e) => onTimeChange("start", e.target.value)}
-      fullWidth
-      size="small"
-    />
-    <TextField
-      label="End Time"
-      type="time"
-      value={end.toTimeString().slice(0, 5)}
-      onChange={(e) => onTimeChange("end", e.target.value)}
-      fullWidth
-      size="small"
-    />
-  </Box>
-);
+  start: string;
+  end: string;
+  onStartChange: (start: string) => void;
+  onEndChange: (end: string) => void;
+}) => {
+  const startDatePart = start.split("T")[0];
+  const startTimePart = start.split("T")[1]?.slice(0, 5) ?? "00:00";
+
+  const endDatePart = end.split("T")[0];
+  const endTimePart = end.split("T")[1]?.slice(0, 5) ?? "00:00";
+
+  return (
+    <Box display="flex" sx={{ gap: "1rem" }}>
+      <TextField
+        label="Start Time"
+        type="time"
+        value={startTimePart}
+        onChange={(e) => onStartChange(`${startDatePart}T${e.target.value}Z`)}
+        fullWidth
+        size="small"
+      />
+      <TextField
+        label="End Time"
+        type="time"
+        value={endTimePart}
+        onChange={(e) => onEndChange(`${endDatePart}T${e.target.value}Z`)}
+        fullWidth
+        size="small"
+      />
+    </Box>
+  );
+};
 
 BookMeetingForm.ProjectSelect = ({
   projects,

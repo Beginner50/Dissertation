@@ -1,5 +1,4 @@
-import { theme } from "../../lib/theme";
-import type { FeedbackCriteria } from "../../lib/types";
+import { useState } from "react";
 import {
   Box,
   IconButton,
@@ -8,14 +7,21 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Typography,
+  Collapse,
   type SxProps,
 } from "@mui/material";
-
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
-import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+import {
+  Check as CheckIcon,
+  Close as CloseIcon,
+  ToggleOff as ToggleOffIcon,
+  ToggleOn,
+  KeyboardArrowDown,
+  KeyboardArrowUp,
+} from "@mui/icons-material";
+import { theme } from "../../lib/theme";
+import type { FeedbackCriteria } from "../../lib/types";
 import type { Theme } from "@emotion/react";
-import { ToggleOn } from "@mui/icons-material";
 
 export default function FeedbackCriteriaTable({
   sx,
@@ -23,7 +29,7 @@ export default function FeedbackCriteriaTable({
   overrideToggleEnabled,
   onOverrideToggle,
 }: {
-  sx?: SxProps<Theme> | undefined;
+  sx?: SxProps<Theme>;
   criteria: FeedbackCriteria[];
   overrideToggleEnabled: boolean;
   onOverrideToggle?: (id: number) => void;
@@ -33,143 +39,42 @@ export default function FeedbackCriteriaTable({
       <Table
         size="small"
         sx={{
+          tableLayout: "fixed",
           border: `1px solid ${theme.borderSoft}`,
           borderRadius: "6px",
-          th: {
-            fontSize: "0.95rem",
-            paddingY: "12px",
-          },
-          td: {
-            fontSize: "0.95rem",
-            paddingY: "12px",
-          },
-        }}
-      >
+          "th, td": { fontSize: "0.95rem", paddingY: "12px" },
+        }}>
         <TableHead>
-          <TableRow>
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                backgroundColor: "#f8f8f8",
-                borderBottom: `2px solid ${theme.borderSoft}`,
-                padding: "10px 8px",
-                color: theme.textStrong,
-              }}
-            >
+          <TableRow sx={{ backgroundColor: "#f8f8f8" }}>
+            {/* Cell Reserved for Collapse Button */}
+            <TableCell />
+
+            <TableCell sx={{ fontWeight: 600, color: theme.textStrong, width: "35vw" }}>
               Criteria
             </TableCell>
             <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: "1rem",
-                backgroundColor: "#f8f8f8",
-                borderBottom: `2px solid ${theme.borderSoft}`,
-                padding: "10px 8px",
-                color: theme.status.completed,
-              }}
-            >
-              {" "}
+              align="center"
+              sx={{ fontWeight: 600, color: theme.status.completed }}>
               Met
             </TableCell>
             <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: "1rem",
-                backgroundColor: "#f8f8f8",
-                borderBottom: `2px solid ${theme.borderSoft}`,
-                padding: "10px 8px",
-                color: theme.status.missing,
-              }}
-            >
+              align="center"
+              sx={{ fontWeight: 600, color: theme.status.missing }}>
               Unmet
             </TableCell>
-            <TableCell
-              sx={{
-                fontWeight: 600,
-                fontSize: "1rem",
-                backgroundColor: "#f8f8f8",
-                borderBottom: `2px solid ${theme.borderSoft}`,
-                padding: "10px 8px",
-              }}
-            >
+            <TableCell align="center" sx={{ fontWeight: 600 }}>
               Override
             </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {criteria.map((c) => (
-            <TableRow key={c.feedbackCriteriaID}>
-              {/* Criteria Description */}
-              <TableCell
-                sx={{
-                  borderBottom: `1px solid ${theme.borderSoft}`,
-                  fontWeight: c.status !== "met" ? 700 : 500,
-                  fontSize: "1rem",
-                  color:
-                    c.status === "met"
-                      ? theme.textStrong
-                      : c.status === "unmet"
-                      ? theme.status.missing
-                      : theme.link,
-                }}
-              >
-                {c.description}
-              </TableCell>
-
-              {/* Met Status */}
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  padding: "12px",
-                  width: "64px",
-                }}
-              >
-                {c.status === "met" && (
-                  <CheckIcon
-                    sx={{
-                      color: theme.status.completed,
-                      fontSize: "1.4rem",
-                    }}
-                  />
-                )}
-              </TableCell>
-
-              {/* Unmet Status */}
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  padding: "12px",
-                  width: "64px",
-                }}
-              >
-                {c.status === "unmet" && (
-                  <CloseIcon
-                    sx={{
-                      color: theme.status.missing,
-                      fontSize: "1.6rem",
-                    }}
-                  />
-                )}
-              </TableCell>
-
-              {/* Override Status */}
-              <TableCell
-                sx={{
-                  textAlign: "center",
-                  padding: "12px",
-                  width: "64px",
-                }}
-              >
-                {overrideToggleEnabled &&
-                  (c.status === "unmet" || c.status === "overridden") &&
-                  onOverrideToggle && (
-                    <FeedbackCriteriaTable.OverrideToggleButton
-                      isToggled={c.status == "overridden"}
-                      onClick={() => onOverrideToggle(c.feedbackCriteriaID)}
-                    />
-                  )}
-              </TableCell>
-            </TableRow>
+            <FeedbackCriteriaTable.Row
+              key={c.feedbackCriteriaID}
+              criterion={c}
+              overrideToggleEnabled={overrideToggleEnabled}
+              onOverrideToggle={onOverrideToggle}
+            />
           ))}
         </TableBody>
       </Table>
@@ -177,20 +82,102 @@ export default function FeedbackCriteriaTable({
   );
 }
 
+FeedbackCriteriaTable.Row = ({
+  criterion: c,
+  overrideToggleEnabled,
+  onOverrideToggle,
+}: {
+  criterion: FeedbackCriteria;
+  overrideToggleEnabled: boolean;
+  onOverrideToggle?: (id: number) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const hasObservation = Boolean(c.changeObserved);
+
+  return (
+    <>
+      <TableRow>
+        <TableCell>
+          {hasObservation && (
+            <IconButton size="small" onClick={() => setOpen(!open)}>
+              {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+            </IconButton>
+          )}
+        </TableCell>
+
+        <TableCell
+          sx={{
+            fontWeight: c.status !== "met" ? 700 : 500,
+            color:
+              c.status === "met"
+                ? theme.textStrong
+                : c.status === "unmet"
+                ? theme.status.missing
+                : theme.link,
+          }}>
+          {c.description}
+        </TableCell>
+
+        <TableCell align="center">
+          {c.status === "met" && <CheckIcon sx={{ color: theme.status.completed }} />}
+        </TableCell>
+
+        <TableCell align="center">
+          {c.status === "unmet" && <CloseIcon sx={{ color: theme.status.missing }} />}
+        </TableCell>
+
+        <TableCell align="center">
+          {overrideToggleEnabled &&
+            (c.status === "unmet" || c.status === "overridden") &&
+            onOverrideToggle && (
+              <FeedbackCriteriaTable.OverrideToggleButton
+                isToggled={c.status === "overridden"}
+                onClick={() => onOverrideToggle(c.feedbackCriteriaID)}
+              />
+            )}
+        </TableCell>
+      </TableRow>
+
+      {/* Collapsible Nested Row */}
+      {open && (
+        <TableRow>
+          <TableCell
+            sx={{
+              paddingBottom: 0,
+              paddingTop: 0,
+            }}
+            colSpan={5}>
+            <Collapse in={open} timeout="auto" unmountOnExit>
+              <Typography
+                variant="subtitle2"
+                gutterBottom
+                component="div"
+                sx={{ color: theme.link }}>
+                Change Observed
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {c.changeObserved}
+              </Typography>
+            </Collapse>
+          </TableCell>
+        </TableRow>
+      )}
+    </>
+  );
+};
+
 FeedbackCriteriaTable.OverrideToggleButton = ({
   isToggled,
   onClick,
 }: {
   isToggled: boolean;
   onClick: () => void;
-}) => {
-  return (
-    <IconButton size="small" onClick={onClick} sx={{ padding: 0 }}>
-      {isToggled ? (
-        <ToggleOn sx={{ fontSize: "1.6rem", color: theme.link }} />
-      ) : (
-        <ToggleOffIcon sx={{ fontSize: "1.6rem" }} />
-      )}
-    </IconButton>
-  );
-};
+}) => (
+  <IconButton size="small" onClick={onClick} sx={{ padding: 0 }}>
+    {isToggled ? (
+      <ToggleOn sx={{ fontSize: "1.6rem", color: theme.link }} />
+    ) : (
+      <ToggleOffIcon sx={{ fontSize: "1.6rem" }} />
+    )}
+  </IconButton>
+);

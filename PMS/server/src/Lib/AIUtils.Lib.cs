@@ -7,156 +7,65 @@ using Type = Google.GenAI.Types.Type;
 
 namespace PMS.Lib;
 
-public class PageRange
+public class AIFeedbackResponse
 {
-    public int StartPage { get; set; }
-    public int EndPage { get; set; }
+    public long FeedbackCriteriaID { get; set; }
+    public string Status { get; set; }
+    public string ChangeObserved { get; set; }
 }
 
 // More information on: https://googleapis.github.io/dotnet-genai/#full-api-reference
 public class AIUtils
 {
-    public static async Task<IEnumerable<PageRange>> LocatePagesFromCriteria(
-        Client client,
-        List<FeedbackCriteria> feedbackCriterias,
-        string tableOfContents,
-        GetProjectTaskDTO task,
-        ILogger? logger = null
-    )
+    public static async Task<IEnumerable<AIFeedbackResponse>> EvaluateCriteria(
+    Client client,
+    ProjectTask task,
+    byte[] previousDeliverable,
+    byte[] newDeliverable,
+    List<FeedbackCriteria> feedbackCriterias,
+    ILogger? logger
+)
     {
-        var pageRangeSchema = new Schema
-        {
-            Type = Type.OBJECT,
-            Properties = new Dictionary<string, Schema>
-            {
-                {"StartPage", new Schema{Type=Type.INTEGER, Title="Start Page"}},
-                {"EndPage", new Schema{Type=Type.INTEGER, Title="End Page"}}
-            },
-            Required = new List<string> { "StartPage", "EndPage" }
-        };
-
-        var pageRangeListSchema = new Schema
-        {
-            Type = Type.ARRAY,
-            Items = pageRangeSchema,
-            Title = "Page Ranges"
-        };
-
-        var prompt = $$"""
-        {{task.Title}}
-        {{task.Description}}
-
-        Analyze this Table of Contents and the feedback criteria below. 
-        Identify the specific page ranges based on the information below.
-        If you cannot find specific content, search for the most similar
-        content for a feedback criteria. Otherwise, if there is no specific
-        content, then select all pages
-    
-        TOC: {{tableOfContents}}
-        Criteria: {{string.Join("; ", feedbackCriterias
-            .Where(c => c.Status == "unmet")
-            .Select(c =>
-            $"\n{c.FeedbackCriteriaID}: {c.Description}"
-            ))}}
-        
-        Example Output:
-            [{StartPage: 1, EndPage: 4}, {StartPage: 8, EndPage: 8}]
-        """;
-
-        logger?.LogDebug("{prompt}", prompt);
-
-        var response = await client.Models.GenerateContentAsync(
-            model: "gemini-2.5-flash", contents: prompt,
-            config: new GenerateContentConfig
-            {
-                ResponseMimeType = "application/json",
-                ResponseSchema = pageRangeListSchema
-            }
-        );
-        logger?.LogDebug(JsonSerializer.Serialize(response));
-
-        var jsonText = response.Candidates[0].Content.Parts[0].Text;
-
-        try
-        {
-            logger?.LogDebug("{jsonText}", jsonText);
-            return JsonSerializer.Deserialize<List<PageRange>>(jsonText);
-        }
-        catch (JsonException)
-        {
-            return [];
-        }
-    }
-
-    public static async Task<IEnumerable<FeedbackDTO>> EvaluateCriteria(
-        Client client,
-        byte[] pdfDocument,
-        List<FeedbackCriteria> feedbackCriterias,
-        GetProjectTaskDTO task,
-        ILogger? logger
-    )
-    {
-        var feedbackCriteriaSchema = new Schema
-        {
-            Type = Type.OBJECT,
-            Properties = new Dictionary<string, Schema>
-            {
-                {"FeedbackCriteriaID", new Schema{Type=Type.NUMBER, Title="Feedback Criteria ID"}},
-                {"Description", new Schema{Type=Type.STRING, Title="Description"}},
-                {"Status", new Schema{Type=Type.STRING, Title="Status", Enum=new List<string>{"met", "unmet"}}},
-            },
-            Required = new List<string>(["FeedbackCriteriaID", "Description", "Status"])
-        };
-
         var feedbackCriteriaListSchema = new Schema
         {
             Type = Type.ARRAY,
-            Items = feedbackCriteriaSchema,
-            Title = "Feedback Criteria List"
-        };
-
-        var prompt = $$"""
-        {{task.Title}}
-        {{task.Description}}
-
-        Review the compliance of the document against the feedback criteria listed:
-        {{string.Join("\n", feedbackCriterias
-            .Where(c => c.Status == "unmet")
-            .Select(c =>
-            new
+            Items = new Schema
             {
-                c.FeedbackCriteriaID,
-                c.Description,
-                c.Status
+                Type = Type.OBJECT,
+                Properties = new Dictionary<string, Schema> {
+                {"FeedbackCriteriaID", new Schema{Type=Type.NUMBER}},
+                {"Status", new Schema{Type=Type.STRING, Enum=new List<string>{"met", "unmet"}}},
+                {"ChangeObserved", new Schema{Type=Type.STRING, Description="What specific change was made between documents?"}},
+            },
+                Required = new List<string>(["FeedbackCriteriaID", "Status", "ChangeObserved"])
             }
-        ))}}
-
-        If the document complies with a feedback, its status is 'met'. Otherwise, its
-        status remains 'unmet'
-
-        You SHOULD NOT create new feedback criteria, only change the status of the criteria
-        given and output them as shown below:
-
-        Example:
-        [{FeedbackCriteriaID: 1, Description: "Tabulate results", Status: "met"}, ... ]
-        """;
-        logger?.LogDebug("{prompt}", prompt);
+        };
 
         var userContent = new Content
         {
             Role = "user",
             Parts = new List<Part>
-            {
-                new Part{Text = prompt},
-                new Part
-                {
-                    InlineData= new Blob
-                    {
-                        MimeType = "application/pdf",
-                        Data = pdfDocument
-                    }
-                }
-            }
+        {
+            new Part { Text = $"""
+                TASK CONTEXT: {task.Title} - {task.Description}
+                
+                OBJECTIVE:
+                Compare the 'New Deliverable' against the 'Previous Deliverable'. 
+                Determine if the following 'unmet' criteria have been addressed.
+                
+                CRITERIA:
+                {string.Join("\n", feedbackCriterias
+                       .Select(c => $"ID:{c.FeedbackCriteriaID} | Requirement: {c.Description}"))}
+
+                INSTRUCTIONS:
+                1. Identify changes between the previous and new version.
+                2. If the change satisfies the requirement, set Status to 'met'.
+                3. Describe the what was added/removed in 'ChangeObserved'.
+                """
+            },
+            new Part { InlineData = new Blob { MimeType = "application/pdf", Data = previousDeliverable } },
+            new Part { InlineData = new Blob { MimeType = "application/pdf", Data = newDeliverable } }
+        }
         };
 
         var response = await client.Models.GenerateContentAsync(
@@ -165,19 +74,12 @@ public class AIUtils
             config: new GenerateContentConfig
             {
                 ResponseMimeType = "application/json",
-                ResponseJsonSchema = feedbackCriteriaListSchema
+                ResponseJsonSchema = feedbackCriteriaListSchema,
+                Temperature = 0.1f
             }
         );
 
         var jsonText = response.Candidates[0].Content.Parts[0].Text;
-        try
-        {
-            logger?.LogDebug(jsonText);
-            return JsonSerializer.Deserialize<List<FeedbackDTO>>(jsonText);
-        }
-        catch (JsonException e)
-        {
-            return [];
-        }
+        return JsonSerializer.Deserialize<List<AIFeedbackResponse>>(jsonText) ?? new List<AIFeedbackResponse>();
     }
 }

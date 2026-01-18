@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -14,13 +14,7 @@ import {
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
-
-// The specific type you provided
-export type FeedbackCriteria = {
-  feedbackCriteriaID: number;
-  description: string;
-  status: "met" | "unmet" | "overridden";
-};
+import type { FeedbackCriteria } from "../../lib/types";
 
 export default function FeedbackModal({
   open,
@@ -38,8 +32,7 @@ export default function FeedbackModal({
           sx: { maxWidth: "50vw", mx: "auto" },
         },
       }}
-      keepMounted
-    >
+      keepMounted>
       {children}
     </Dialog>
   );
@@ -61,73 +54,83 @@ FeedbackModal.Content = ({ children }: { children: ReactNode }) => (
 
 FeedbackModal.CriteriaList = ({
   criteria,
-  onUpdateCriteria,
+  onCriterionDescriptionChange,
+  onCriterionDelete,
 }: {
-  criteria: FeedbackCriteria[];
-  onUpdateCriteria: (newCriteria: FeedbackCriteria[]) => void;
+  criteria: Partial<FeedbackCriteria>[];
+  onCriterionDescriptionChange: (updated: Partial<FeedbackCriteria>) => void;
+  onCriterionDelete: (criterionToDelete: Partial<FeedbackCriteria>) => void;
 }) => {
-  const handleDescriptionChange = (index: number, value: string) => {
-    const updated = [...criteria];
-    // Update only the description property
-    updated[index] = { ...updated[index], description: value };
-    onUpdateCriteria(updated);
-  };
-
-  const removeCriterion = (index: number) => {
-    onUpdateCriteria(criteria.filter((_, i) => i !== index));
-  };
-
   return (
     <Stack spacing={2}>
-      <Typography variant="subtitle2" color="text.secondary">
+      <Typography variant="subtitle2" color="textSecondary">
         Required Changes / Criteria
       </Typography>
+
       {criteria.map((item, index) => (
-        <Box
+        <FeedbackModal.CriterionInput
           key={index}
-          sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}
-        >
-          {/* Numbered list based on index */}
-          <Typography sx={{ mt: 1, fontWeight: "bold", minWidth: "20px" }}>
-            {index + 1}.
-          </Typography>
-
-          <FormControl fullWidth>
-            <TextField
-              fullWidth
-              multiline
-              size="small"
-              placeholder="Describe what needs to be fixed..."
-              value={item.description}
-              onChange={(e) => handleDescriptionChange(index, e.target.value)}
-            />
-          </FormControl>
-
-          <IconButton
-            color="error"
-            onClick={() => removeCriterion(index)}
-            sx={{ mt: 0.5 }}
-            title="Delete criterion"
-          >
-            <DeleteOutlineIcon fontSize="small" />
-          </IconButton>
-        </Box>
+          index={index}
+          item={item}
+          onDescriptionChange={onCriterionDescriptionChange}
+          onDelete={onCriterionDelete}
+        />
       ))}
 
       {criteria.length === 0 && (
         <Typography
           variant="body2"
-          sx={{
-            fontStyle: "italic",
-            color: "gray",
-            textAlign: "center",
-            py: 2,
-          }}
-        >
+          sx={{ fontStyle: "italic", color: "gray", textAlign: "center", py: 2 }}>
           No feedback criteria added yet.
         </Typography>
       )}
     </Stack>
+  );
+};
+
+FeedbackModal.CriterionInput = ({
+  index,
+  item,
+  onDescriptionChange,
+  onDelete,
+}: {
+  index: number;
+  item: Partial<FeedbackCriteria>;
+  onDescriptionChange: (updated: Partial<FeedbackCriteria>) => void;
+  onDelete: (item: Partial<FeedbackCriteria>) => void;
+}) => {
+  const [localText, setLocalText] = useState(item.description ?? "");
+
+  return (
+    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
+      <Typography sx={{ mt: 1, fontWeight: "bold", minWidth: "20px" }}>
+        {index + 1}.
+      </Typography>
+
+      <FormControl fullWidth>
+        <TextField
+          fullWidth
+          multiline
+          size="small"
+          placeholder="Describe what needs to be fixed..."
+          value={localText}
+          onChange={(e) => setLocalText(e.target.value)}
+          onBlur={() => {
+            if (localText !== item.description) {
+              onDescriptionChange({ ...item, description: localText });
+            }
+          }}
+        />
+      </FormControl>
+
+      <IconButton
+        color="error"
+        onClick={() => onDelete(item)}
+        sx={{ mt: 0.5 }}
+        title="Delete criterion">
+        <DeleteOutlineIcon fontSize="small" />
+      </IconButton>
+    </Box>
   );
 };
 
@@ -137,8 +140,7 @@ FeedbackModal.AddButton = ({ onAdd }: { onAdd: () => void }) => (
     variant="outlined"
     size="small"
     onClick={onAdd}
-    sx={{ alignSelf: "flex-start", ml: 4 }} // Align with the text fields
-  >
+    sx={{ alignSelf: "flex-start", ml: 4 }}>
     Add Criterion
   </Button>
 );
@@ -156,12 +158,7 @@ FeedbackModal.Actions = ({
     <Button onClick={onCancel} color="inherit">
       Cancel
     </Button>
-    <Button
-      variant="contained"
-      onClick={onSubmit}
-      disabled={disabled}
-      color="primary"
-    >
+    <Button variant="contained" onClick={onSubmit} disabled={disabled} color="primary">
       Submit Feedback
     </Button>
   </DialogActions>

@@ -8,11 +8,13 @@ namespace PMS.Services;
 
 public class ProjectTaskService
 {
+    protected readonly NotificationService notificationService;
     protected readonly ReminderService reminderService;
     protected readonly PMSDbContext dbContext;
-    public ProjectTaskService(PMSDbContext dbContext, ReminderService reminderService)
+    public ProjectTaskService(PMSDbContext dbContext, NotificationService notificationService, ReminderService reminderService)
     {
         this.dbContext = dbContext;
+        this.notificationService = notificationService;
         this.reminderService = reminderService;
     }
 
@@ -98,7 +100,9 @@ public class ProjectTaskService
                 dbContext.Tasks.Add(newTask);
                 await dbContext.SaveChangesAsync();
 
+                await notificationService.CreateTaskNotification(newTask.ProjectTaskID, NotificationType.TASK_CREATED);
                 await reminderService.CreateTaskReminder(newTask.ProjectTaskID);
+
                 await transaction.CommitAsync();
 
                 return newTask;
@@ -130,7 +134,9 @@ public class ProjectTaskService
 
                 await dbContext.SaveChangesAsync();
 
+                await notificationService.CreateTaskNotification(task.ProjectTaskID, NotificationType.TASK_UPDATED);
                 await reminderService.UpdateTaskReminder(task.ProjectTaskID);
+
                 await transaction.CommitAsync();
             }
             catch (Exception)
@@ -152,6 +158,7 @@ public class ProjectTaskService
         {
             try
             {
+                await notificationService.CreateTaskNotification(task.ProjectTaskID, NotificationType.TASK_DELETED);
                 await reminderService.DeleteTaskReminder(task.ProjectTaskID);
 
                 dbContext.Remove(task);

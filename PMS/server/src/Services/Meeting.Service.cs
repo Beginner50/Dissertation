@@ -10,10 +10,12 @@ namespace PMS.Services;
 public class MeetingService
 {
     protected readonly PMSDbContext dbContext;
+    protected readonly NotificationService notificationService;
     protected readonly ReminderService reminderService;
-    public MeetingService(PMSDbContext dbContext, ReminderService reminderService)
+    public MeetingService(PMSDbContext dbContext, NotificationService notificationService, ReminderService reminderService)
     {
         this.dbContext = dbContext;
+        this.notificationService = notificationService;
         this.reminderService = reminderService;
     }
 
@@ -110,6 +112,7 @@ public class MeetingService
 
                 await dbContext.SaveChangesAsync();
 
+                await notificationService.CreateMeetingNotification(newMeeting.MeetingID, NotificationType.MEETING_BOOKED);
                 await reminderService.CreateMeetingReminder(newMeeting.MeetingID);
 
                 await transaction.CommitAsync();
@@ -136,6 +139,8 @@ public class MeetingService
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
         meeting.Description = description;
+
+
         await dbContext.SaveChangesAsync();
     }
 
@@ -152,6 +157,7 @@ public class MeetingService
                     ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
 
+                await notificationService.CreateMeetingNotification(meeting.MeetingID, NotificationType.MEETING_CANCELLED);
                 await reminderService.DeleteMeetingReminder(meeting.MeetingID);
 
                 dbContext.Remove(meeting);
@@ -183,6 +189,7 @@ public class MeetingService
                 meeting.Status = "accepted";
                 await dbContext.SaveChangesAsync();
 
+                await notificationService.CreateMeetingNotification(meeting.MeetingID, NotificationType.MEETING_ACCEPTED);
 
                 await transaction.CommitAsync();
             }
@@ -206,6 +213,7 @@ public class MeetingService
                   .FirstOrDefaultAsync()
                   ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
+                await notificationService.CreateMeetingNotification(meeting.MeetingID, NotificationType.MEETING_REJECTED);
 
                 dbContext.Remove(meeting);
                 await dbContext.SaveChangesAsync();

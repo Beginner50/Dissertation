@@ -21,8 +21,8 @@ export default function SchedulerRoute() {
 
   const [meetingFormData, setMeetingFormData] = useState<MeetingFormData>({
     description: "",
-    start: new Date(),
-    end: new Date(),
+    start: "",
+    end: "",
     attendeeID: 0,
     projectID: 0,
     taskID: 0,
@@ -50,8 +50,6 @@ export default function SchedulerRoute() {
     queryKey: [user.userID, "meetings"],
     queryFn: async (): Promise<Meeting[]> =>
       await authorizedAPI.get(`api/users/${user.userID}/meetings`).json(),
-    select: (data) =>
-      data.map((m) => ({ ...m, start: new Date(m.start), end: new Date(m.end) })),
     retry: 1,
   });
 
@@ -71,8 +69,8 @@ export default function SchedulerRoute() {
 
     setMeetingFormData({
       description: "",
-      start: slot.start,
-      end: slot.end,
+      start: slot.start.toISOString(),
+      end: slot.end.toISOString(),
       attendeeID: 0,
       projectID: 0,
       taskID: 0,
@@ -90,13 +88,18 @@ export default function SchedulerRoute() {
     setMeetingFormData((prev) => ({ ...prev, description: val }));
   };
 
-  const handleTimeChange = (type: "start" | "end", val: string) => {
-    const [hours, minutes] = val.split(":").map(Number);
-    setMeetingFormData((prev) => {
-      const date = new Date(prev[type]);
-      date.setHours(hours, minutes);
-      return { ...prev, [type]: date };
-    });
+  const handleStartChange = (start: string) => {
+    setMeetingFormData((prev) => ({
+      ...prev,
+      start: start,
+    }));
+  };
+
+  const handleEndChange = (end: string) => {
+    setMeetingFormData((prev) => ({
+      ...prev,
+      end: end,
+    }));
   };
 
   const handleProjectChange = (project: Project) => {
@@ -176,6 +179,9 @@ export default function SchedulerRoute() {
   const selectableTasks =
     userProjects?.find((p) => p.projectID === meetingFormData.projectID)?.tasks || [];
 
+  const startTimePart = selectedMeeting?.start.split("T")[1].slice(0, 5);
+  const endTimePart = selectedMeeting?.end.split("T")[1].slice(0, 5);
+
   return (
     <Stack
       direction="row"
@@ -217,7 +223,8 @@ export default function SchedulerRoute() {
             <BookMeetingForm.TimePickers
               start={meetingFormData.start}
               end={meetingFormData.end}
-              onTimeChange={handleTimeChange}
+              onStartChange={handleStartChange}
+              onEndChange={handleEndChange}
             />
 
             <BookMeetingForm.AttendeeDisplay name={attendee?.name} />
@@ -255,13 +262,7 @@ export default function SchedulerRoute() {
               <MeetingDetails.InfoRow
                 icon={<AccessTime fontSize="small" />}
                 label="Time"
-                value={`${selectedMeeting.start.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })} - ${selectedMeeting.end.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}`}
+                value={`${startTimePart} - ${endTimePart}`}
               />
             </Stack>
 

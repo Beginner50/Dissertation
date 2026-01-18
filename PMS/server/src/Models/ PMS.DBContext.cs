@@ -362,48 +362,5 @@ public class PMSDbContext : DbContext
                 TaskID = 4
             }
         );
-
-        modelBuilder.Entity<Notification>().HasData(
-            new Notification
-            {
-                NotificationID = 1,
-                RecipientID = 3,
-                Type = "meeting_accepted",
-                Description = "Dr. Smith accepted your meeting request.",
-                Timestamp = new DateTime(2025, 12, 30, 15, 45, 0, DateTimeKind.Utc),
-                MeetingID = 3,
-                TaskID = null
-            },
-            new Notification
-            {
-                NotificationID = 2,
-                RecipientID = 3,
-                Type = "task_completed",
-                Description = "Literature Review has been marked as completed.",
-                Timestamp = new DateTime(2025, 12, 28, 10, 0, 0, DateTimeKind.Utc),
-                MeetingID = null,
-                TaskID = 1
-            },
-            new Notification
-            {
-                NotificationID = 3,
-                RecipientID = 2,
-                Type = "task_updated",
-                Description = "Hashim updated 'Initial Prototype' details.",
-                Timestamp = new DateTime(2026, 1, 1, 11, 20, 0, DateTimeKind.Utc),
-                MeetingID = null,
-                TaskID = 5
-            },
-            new Notification
-            {
-                NotificationID = 4,
-                RecipientID = 4,
-                Type = "meeting_booked",
-                Description = "Dr. Brown scheduled a new meeting.",
-                Timestamp = new DateTime(2026, 1, 2, 09, 0, 0, DateTimeKind.Utc),
-                MeetingID = 9,
-                TaskID = null
-            }
-        );
     }
 }

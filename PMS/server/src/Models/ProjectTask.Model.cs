@@ -35,9 +35,6 @@ public class ProjectTask
     public List<Reminder> Reminders { get; }
 
     [InverseProperty("Task")]
-    public List<Notification> Notifications { get; }
-
-    [InverseProperty("Task")]
     public List<Meeting> Meetings { get; }
 
     [InverseProperty("Task")]

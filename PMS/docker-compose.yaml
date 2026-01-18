@@ -83,21 +83,5 @@ services:
       timeout: 2s
       retries: 20 # Arbitrary numbers for interval, timeout, retries
 
-  dotnet-server-test:
-    profiles:
-      - test
-    build:
-      context: .
-      dockerfile: ./server.tests/Dockerfile
-    container_name: dotnet_server_test
-    environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=password1234
-      - POSTGRES_DB=pms-test
-      - POSTGRES_HOST=postgres-test
-    depends_on:
-      postgres_pms_test:
-        condition: "service_healthy"
-
 volumes:
   postgres-data-pms:

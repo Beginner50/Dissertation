@@ -48,10 +48,6 @@ namespace PMS.Migrations
                     b.Property<long>("SubmittedByID")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("TableOfContent")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<long>("TaskID")
                         .HasColumnType("bigint");
 
@@ -71,6 +67,10 @@ namespace PMS.Migrations
                         .HasColumnType("bigint");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("FeedbackCriteriaID"));
+
+                    b.Property<string>("ChangeObserved")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<long>("DeliverableID")
                         .HasColumnType("bigint");
@@ -240,13 +240,7 @@ namespace PMS.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<long?>("MeetingID")
-                        .HasColumnType("bigint");
-
                     b.Property<long>("RecipientID")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("TaskID")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("Timestamp")
@@ -258,51 +252,9 @@ namespace PMS.Migrations
 
                     b.HasKey("NotificationID");
 
-                    b.HasIndex("MeetingID");
-
                     b.HasIndex("RecipientID");
 
-                    b.HasIndex("TaskID");
-
                     b.ToTable("Notifications");
-
-                    b.HasData(
-                        new
-                        {
-                            NotificationID = 1L,
-                            Description = "Dr. Smith accepted your meeting request.",
-                            MeetingID = 3L,
-                            RecipientID = 3L,
-                            Timestamp = new DateTime(2025, 12, 30, 15, 45, 0, 0, DateTimeKind.Utc),
-                            Type = "meeting_accepted"
-                        },
-                        new
-                        {
-                            NotificationID = 2L,
-                            Description = "Literature Review has been marked as completed.",
-                            RecipientID = 3L,
-                            TaskID = 1L,
-                            Timestamp = new DateTime(2025, 12, 28, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Type = "task_completed"
-                        },
-                        new
-                        {
-                            NotificationID = 3L,
-                            Description = "Hashim updated 'Initial Prototype' details.",
-                            RecipientID = 2L,
-                            TaskID = 5L,
-                            Timestamp = new DateTime(2026, 1, 1, 11, 20, 0, 0, DateTimeKind.Utc),
-                            Type = "task_updated"
-                        },
-                        new
-                        {
-                            NotificationID = 4L,
-                            Description = "Dr. Brown scheduled a new meeting.",
-                            MeetingID = 9L,
-                            RecipientID = 4L,
-                            Timestamp = new DateTime(2026, 1, 2, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Type = "meeting_booked"
-                        });
                 });
 
             modelBuilder.Entity("PMS.Models.Project", b =>
@@ -730,25 +682,13 @@ namespace PMS.Migrations
 
             modelBuilder.Entity("PMS.Models.Notification", b =>
                 {
-                    b.HasOne("PMS.Models.Meeting", "Meeting")
-                        .WithMany()
-                        .HasForeignKey("MeetingID");
-
                     b.HasOne("PMS.Models.User", "Recipient")
                         .WithMany("Notifications")
                         .HasForeignKey("RecipientID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PMS.Models.ProjectTask", "Task")
-                        .WithMany("Notifications")
-                        .HasForeignKey("TaskID");
-
-                    b.Navigation("Meeting");
-
                     b.Navigation("Recipient");
-
-                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("PMS.Models.Project", b =>
@@ -827,8 +767,6 @@ namespace PMS.Migrations
                     b.Navigation("AllDeliverables");
 
                     b.Navigation("Meetings");
-
-                    b.Navigation("Notifications");
 
                     b.Navigation("Reminders");
                 });
