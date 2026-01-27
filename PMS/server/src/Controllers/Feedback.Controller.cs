@@ -9,11 +9,9 @@ namespace PMS.Controllers;
 [ApiController]
 public class FeedbackController : ControllerBase
 {
-    protected readonly PMSDbContext dbContext;
     protected readonly FeedbackService feedbackService;
-    public FeedbackController(PMSDbContext dbContext, FeedbackService feedbackService)
+    public FeedbackController(FeedbackService feedbackService)
     {
-        this.dbContext = dbContext;
         this.feedbackService = feedbackService;
     }
 
@@ -28,7 +26,7 @@ public class FeedbackController : ControllerBase
     {
         try
         {
-            var feedbackCriteria = await feedbackService.GetFeedback(userID, projectID, taskID);
+            var feedbackCriteria = await feedbackService.GetFeedbackCriteria(userID, projectID, taskID);
             return Ok(feedbackCriteria);
         }
         catch (Exception e)
@@ -44,17 +42,23 @@ public class FeedbackController : ControllerBase
            [FromRoute] long userID,
            [FromRoute] long projectID,
            [FromRoute] long taskID,
-           [FromBody] List<FeedbackDTO> provideFeedbackDTO
+           [FromBody] ProvideFeedbackCriteriaDTO provideFeedbackCriteriaDTO
        )
     {
         try
         {
-            await feedbackService.ProvideFeedback(userID, projectID, taskID, provideFeedbackDTO);
+            await feedbackService.ProvideFeedbackCriteria(userID, projectID, taskID,
+                feedbackCriteriaToCreate: provideFeedbackCriteriaDTO.FeedbackCriteriaToCreate,
+                feedbackCriteriaToUpdate: provideFeedbackCriteriaDTO.FeedbackCriteriaToUpdate,
+                feedbackCriteriaToDelete: provideFeedbackCriteriaDTO.FeedbackCriteriaToDelete
+            );
+
             return NoContent();
         }
         catch (Exception e)
         {
-            return NotFound(e.Message);
+            return BadRequest(e.Message);
+            // return BadRequest("Failed to provide feedback criteria.");
         }
     }
 

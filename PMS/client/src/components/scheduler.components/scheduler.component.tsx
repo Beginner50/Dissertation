@@ -30,6 +30,11 @@ const COLOR_UNRELATED_DARK = "#616161";
   To avoid bloating the Event object, FullCalendar allows users to store custom data about an
   event in the extendedProps property and will only use the other properties (id, title, start,
   end) in displaying the events
+
+  FullCalendar will use the className property to apply CSS classes to the event when rendering.
+    Example:
+        if className is set to ["organizer", "accepted"], then the event html element 
+        can be styled using the CSS selector .organizer.accepted.
 */
 function adaptMeetingData(userID: number, meetingData: Meeting[]): EventSourceInput {
   return meetingData.map((meeting) => {
@@ -45,10 +50,8 @@ function adaptMeetingData(userID: number, meetingData: Meeting[]): EventSourceIn
       title: meeting.task.title,
       start: meeting.start,
       end: meeting.end,
-      extendedProps: {
-        ...meeting,
-      },
-      classNames: [roleClass, meeting.status].filter((c) => c),
+      extendedProps: { ...meeting },
+      classNames: [roleClass, meeting.status],
     };
   });
 }
@@ -82,8 +85,9 @@ export default function Scheduler({
         ".fc-event": {
           cursor: "pointer",
           border: "none",
-          "&:hover": { boxShadow: "0 0 5px rgba(0, 0, 0, 0.3)", opacity: 0.95 },
+          ":hover": { boxShadow: "0 0 5px rgba(0, 0, 0, 0.3)", opacity: 0.95 },
         },
+
         // Attendee
         ".attendee.pending": {
           backgroundColor: COLOR_ATTENDEE,
@@ -97,6 +101,7 @@ export default function Scheduler({
           backgroundColor: COLOR_ATTENDEE_MISSED,
           color: "#5d4037",
         },
+
         // Organizer
         ".organizer.pending": {
           backgroundColor: COLOR_ORGANIZER,
@@ -110,6 +115,7 @@ export default function Scheduler({
           backgroundColor: COLOR_ORGANIZER_MISSED,
           color: "#0d47a1",
         },
+
         // Unrelated
         ".unrelated.pending, .unrelated.missed": {
           backgroundColor: COLOR_UNRELATED,

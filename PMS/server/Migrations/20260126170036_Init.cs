@@ -109,17 +109,17 @@ namespace PMS.Migrations
                 name: "FeedbackCriterias",
                 columns: table => new
                 {
-                    FeedbackCriteriaID = table.Column<long>(type: "bigint", nullable: false)
+                    FeedbackCriterionID = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Description = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<string>(type: "text", nullable: false),
-                    ChangeObserved = table.Column<string>(type: "text", nullable: false),
+                    ChangeObserved = table.Column<string>(type: "text", nullable: true),
                     DeliverableID = table.Column<long>(type: "bigint", nullable: false),
                     ProvidedByID = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_FeedbackCriterias", x => x.FeedbackCriteriaID);
+                    table.PrimaryKey("PK_FeedbackCriterias", x => x.FeedbackCriterionID);
                     table.ForeignKey(
                         name: "FK_FeedbackCriterias_Deliverables_DeliverableID",
                         column: x => x.DeliverableID,
@@ -147,7 +147,8 @@ namespace PMS.Migrations
                     Status = table.Column<string>(type: "text", nullable: false),
                     StagedDeliverableID = table.Column<long>(type: "bigint", nullable: true),
                     SubmittedDeliverableID = table.Column<long>(type: "bigint", nullable: true),
-                    ProjectID = table.Column<long>(type: "bigint", nullable: false)
+                    ProjectID = table.Column<long>(type: "bigint", nullable: false),
+                    AssignedByID = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -167,6 +168,12 @@ namespace PMS.Migrations
                         column: x => x.ProjectID,
                         principalTable: "Projects",
                         principalColumn: "ProjectID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Tasks_Users_AssignedByID",
+                        column: x => x.AssignedByID,
+                        principalTable: "Users",
+                        principalColumn: "UserID",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -247,35 +254,24 @@ namespace PMS.Migrations
                 values: new object[,]
                 {
                     { 1L, "admin@uni.com", false, "Admin", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "admin" },
-                    { 2L, "smith@uni.com", false, "Dr. Smith", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "supervisor" },
-                    { 3L, "hashim@uni.com", false, "Hashim", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "student" },
-                    { 4L, "charlie@uni.com", false, "Charlie Student", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "student" },
-                    { 5L, "brown@uni.com", false, "Dr. Brown", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "supervisor" },
-                    { 6L, "agent@smith.com", false, "Agent Smith", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "student" },
-                    { 7L, "rebellius@uni.com", false, "Rebellius", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "student" }
+                    { 2L, "jatooprashant099@gmail.com", false, "Dr. Smith", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "supervisor" },
+                    { 3L, "prashant_pms@outlook.com", false, "Roland", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "student" },
+                    { 4L, "prashant.jatoo@umail.uom.ac.mu", false, "Rebellius", "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m", "", "student" }
                 });
 
             migrationBuilder.InsertData(
                 table: "Projects",
                 columns: new[] { "ProjectID", "Description", "Status", "StudentID", "SupervisorID", "Title" },
-                values: new object[,]
-                {
-                    { 1L, "Research on AI algorithms", "active", 4L, 2L, "AI Research" },
-                    { 2L, "Research on Optical Character Recognition", "active", 3L, 2L, "OCR Research" },
-                    { 3L, "Development of Blockchain applications", "active", 6L, 5L, "Blockchain Dev" }
-                });
+                values: new object[] { 1L, "Research on AI algorithms", "active", 3L, 2L, "AI Research" });
 
             migrationBuilder.InsertData(
                 table: "Tasks",
-                columns: new[] { "ProjectTaskID", "AssignedDate", "Description", "DueDate", "ProjectID", "StagedDeliverableID", "Status", "SubmittedDeliverableID", "Title" },
+                columns: new[] { "ProjectTaskID", "AssignedByID", "AssignedDate", "Description", "DueDate", "ProjectID", "StagedDeliverableID", "Status", "SubmittedDeliverableID", "Title" },
                 values: new object[,]
                 {
-                    { 1L, new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Review current papers on Transformer models.", new DateTime(2025, 11, 15, 0, 0, 0, 0, DateTimeKind.Utc), 1L, null, "completed", null, "Literature Review" },
-                    { 2L, new DateTime(2025, 11, 16, 0, 0, 0, 0, DateTimeKind.Utc), "Gather and clean the training dataset.", new DateTime(2025, 12, 10, 0, 0, 0, 0, DateTimeKind.Utc), 1L, null, "pending", null, "Dataset Collection" },
-                    { 3L, new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Submit the formal research proposal.", new DateTime(2025, 10, 15, 0, 0, 0, 0, DateTimeKind.Utc), 1L, null, "missing", null, "Proposal Submission" },
-                    { 4L, new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Compare Tesseract vs EasyOCR.", new DateTime(2025, 12, 15, 0, 0, 0, 0, DateTimeKind.Utc), 2L, null, "pending", null, "Algorithm Selection" },
-                    { 5L, new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Develop a basic Python script for image-to-text conversion.", new DateTime(2025, 11, 20, 0, 0, 0, 0, DateTimeKind.Utc), 2L, null, "completed", null, "Initial Prototype" },
-                    { 6L, new DateTime(2025, 12, 5, 0, 0, 0, 0, DateTimeKind.Utc), "Architect the voting system contract in Solidity.", new DateTime(2025, 12, 20, 0, 0, 0, 0, DateTimeKind.Utc), 3L, null, "pending", null, "Smart Contract Design" }
+                    { 1L, 2L, new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Review current papers on Transformer models.", new DateTime(2025, 11, 15, 0, 0, 0, 0, DateTimeKind.Utc), 1L, null, "completed", null, "Literature Review" },
+                    { 2L, 2L, new DateTime(2025, 12, 21, 0, 0, 0, 0, DateTimeKind.Utc), "Gather and clean the training dataset.", new DateTime(2026, 1, 31, 0, 0, 0, 0, DateTimeKind.Utc), 1L, null, "pending", null, "Dataset Collection" },
+                    { 3L, 2L, new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Submit the formal research proposal.", new DateTime(2025, 10, 15, 0, 0, 0, 0, DateTimeKind.Utc), 1L, null, "missing", null, "Proposal Submission" }
                 });
 
             migrationBuilder.InsertData(
@@ -283,26 +279,10 @@ namespace PMS.Migrations
                 columns: new[] { "MeetingID", "AttendeeID", "Description", "End", "OrganizerID", "Start", "Status", "TaskID" },
                 values: new object[,]
                 {
-                    { 1L, 3L, null, new DateTime(2025, 12, 20, 11, 0, 0, 0, DateTimeKind.Utc), 2L, new DateTime(2025, 12, 20, 10, 0, 0, 0, DateTimeKind.Utc), "pending", 1L },
-                    { 2L, 2L, null, new DateTime(2025, 12, 21, 15, 0, 0, 0, DateTimeKind.Utc), 3L, new DateTime(2025, 12, 21, 14, 0, 0, 0, DateTimeKind.Utc), "pending", 2L },
-                    { 3L, 3L, null, new DateTime(2025, 12, 22, 10, 30, 0, 0, DateTimeKind.Utc), 2L, new DateTime(2025, 12, 22, 9, 30, 0, 0, DateTimeKind.Utc), "accepted", 1L },
-                    { 4L, 2L, null, new DateTime(2025, 12, 23, 12, 0, 0, 0, DateTimeKind.Utc), 3L, new DateTime(2025, 12, 23, 11, 0, 0, 0, DateTimeKind.Utc), "pending", 3L },
-                    { 5L, 6L, null, new DateTime(2025, 12, 20, 14, 0, 0, 0, DateTimeKind.Utc), 2L, new DateTime(2025, 12, 20, 13, 0, 0, 0, DateTimeKind.Utc), "accepted", 4L },
-                    { 6L, 2L, null, new DateTime(2025, 12, 21, 11, 0, 0, 0, DateTimeKind.Utc), 6L, new DateTime(2025, 12, 21, 10, 0, 0, 0, DateTimeKind.Utc), "pending", 5L },
-                    { 7L, 6L, null, new DateTime(2025, 12, 22, 16, 0, 0, 0, DateTimeKind.Utc), 2L, new DateTime(2025, 12, 22, 15, 0, 0, 0, DateTimeKind.Utc), "accepted", 4L },
-                    { 8L, 2L, null, new DateTime(2025, 12, 23, 10, 0, 0, 0, DateTimeKind.Utc), 6L, new DateTime(2025, 12, 23, 9, 0, 0, 0, DateTimeKind.Utc), "pending", 5L },
-                    { 9L, 4L, null, new DateTime(2025, 12, 24, 11, 0, 0, 0, DateTimeKind.Utc), 5L, new DateTime(2025, 12, 24, 10, 0, 0, 0, DateTimeKind.Utc), "accepted", 6L }
-                });
-
-            migrationBuilder.InsertData(
-                table: "Reminders",
-                columns: new[] { "ReminderID", "MeetingID", "Message", "RecipientID", "RemindAt", "TaskID", "Type" },
-                values: new object[,]
-                {
-                    { 2L, null, "Finalize Dataset Collection draft", 3L, new DateTime(2026, 1, 4, 14, 0, 0, 0, DateTimeKind.Utc), 2L, "task" },
-                    { 4L, null, "Compare Tesseract vs EasyOCR", 6L, new DateTime(2026, 1, 4, 8, 30, 0, 0, DateTimeKind.Utc), 4L, "task" },
-                    { 1L, 1L, "Prepare for Dissertation Review", 3L, new DateTime(2026, 1, 4, 9, 0, 0, 0, DateTimeKind.Utc), null, "meeting" },
-                    { 3L, 7L, "Review OCR Research with Hashim", 2L, new DateTime(2026, 1, 5, 10, 0, 0, 0, DateTimeKind.Utc), null, "meeting" }
+                    { 1L, 3L, null, new DateTime(2026, 1, 30, 11, 0, 0, 0, DateTimeKind.Utc), 2L, new DateTime(2026, 1, 30, 10, 0, 0, 0, DateTimeKind.Utc), "pending", 1L },
+                    { 2L, 2L, null, new DateTime(2026, 1, 22, 15, 0, 0, 0, DateTimeKind.Utc), 3L, new DateTime(2026, 1, 22, 14, 0, 0, 0, DateTimeKind.Utc), "pending", 2L },
+                    { 3L, 3L, null, new DateTime(2026, 1, 30, 10, 30, 0, 0, DateTimeKind.Utc), 2L, new DateTime(2026, 1, 30, 9, 30, 0, 0, DateTimeKind.Utc), "accepted", 1L },
+                    { 4L, 2L, null, new DateTime(2026, 1, 23, 12, 0, 0, 0, DateTimeKind.Utc), 3L, new DateTime(2026, 1, 23, 11, 0, 0, 0, DateTimeKind.Utc), "rejected", 3L }
                 });
 
             migrationBuilder.CreateIndex(
@@ -369,6 +349,11 @@ namespace PMS.Migrations
                 name: "IX_Reminders_TaskID",
                 table: "Reminders",
                 column: "TaskID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_AssignedByID",
+                table: "Tasks",
+                column: "AssignedByID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_ProjectID",

@@ -12,9 +12,7 @@ import {
   FormControl,
 } from "@mui/material";
 
-export type ModalMode = "create" | "edit" 
-  | "join-project"
-  | "archive";
+export type ModalMode = "create" | "edit" | "archive";
 export type ModalState = {
   mode: ModalMode;
   open: boolean;
@@ -46,7 +44,6 @@ ProjectModal.Header = ({ mode }: { mode: ModalMode }) => {
   const titles = {
     create: "Create New Project",
     edit: "Edit Project Details",
-    "join-project": "Join a Project",
     archive: "Archive Project",
   };
   return <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>;
@@ -138,7 +135,10 @@ ProjectModal.ProjectDescription = ({
 };
 
 ProjectModal.ArchiveWarning = () => (
-  <Alert severity="warning" variant="outlined" sx={{ fontWeight: "medium" }}>
+  <Alert
+    severity="warning"
+    variant="outlined"
+    sx={{ fontWeight: "medium", marginLeft: "1rem", marginRight: "1rem" }}>
     Archiving this project will remove it from the list.
   </Alert>
 );
@@ -146,30 +146,28 @@ ProjectModal.ArchiveWarning = () => (
 ProjectModal.Actions = ({
   mode,
   isValid,
+  isLoading,
   handleCancelClick,
   handleCreateProject,
   handleEditProject,
   handleArchiveProject,
-  handleJoinProject,
 }: {
   mode: ModalMode;
   isValid: boolean;
+  isLoading: boolean;
   handleCancelClick: () => void;
   handleCreateProject: () => void;
   handleEditProject: () => void;
-  handleJoinProject?: () => void;
   handleArchiveProject: () => void;
 }) => {
   const labels = {
     create: "Create",
     edit: "Save",
-    "join-project": "Join",
     archive: "Archive",
   };
   const actions = {
     create: handleCreateProject,
     edit: handleEditProject,
-    "join-project": handleJoinProject,
     archive: handleArchiveProject,
   };
 
@@ -182,6 +180,7 @@ ProjectModal.Actions = ({
         variant="contained"
         onClick={actions[mode]}
         color={mode === "archive" ? "error" : "primary"}
+        loading={isLoading}
         disabled={!isValid}>
         {labels[mode]}
       </Button>

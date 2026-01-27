@@ -13,8 +13,7 @@ export default function Header({ children }: { children: React.ReactNode }) {
       sx={{
         bgcolor: "white",
         borderBottom: `1px solid ${theme.borderSoft}`,
-      }}
-    >
+      }}>
       <Toolbar sx={{ justifyContent: "space-between" }}>{children}</Toolbar>
     </AppBar>
   );
@@ -47,13 +46,10 @@ Header.NavItem = ({ to, label }: { to: string; label: string }) => {
         fontSize: "1rem",
         fontWeight: 500,
         padding: "18px 0",
-        borderBottom: isActive
-          ? `3px solid ${theme.link}`
-          : "3px solid transparent",
+        borderBottom: isActive ? `3px solid ${theme.link}` : "3px solid transparent",
         color: isActive ? theme.linkFocused : theme.textMuted,
         transition: "all 0.2s ease",
-      })}
-    >
+      })}>
       {label}
     </NavLink>
   );
@@ -69,10 +65,8 @@ Header.SignOutButton = () => {
   const user = authState.user as User;
 
   const handleSignOut = async () => {
-    if (user?.userID) {
-      await signOut(user.userID);
-      navigate("/sign-in");
-    }
+    await signOut();
+    navigate("/sign-in");
   };
 
   return (
@@ -80,8 +74,7 @@ Header.SignOutButton = () => {
       variant="contained"
       color="primary"
       onClick={handleSignOut}
-      sx={{ textTransform: "none", fontWeight: 600, borderRadius: "8px" }}
-    >
+      sx={{ textTransform: "none", fontWeight: 600, borderRadius: "8px" }}>
       Sign Out
     </Button>
   );

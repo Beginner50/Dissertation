@@ -5,26 +5,25 @@ using PMS.DTOs;
 using PMS.Models;
 using Type = Google.GenAI.Types.Type;
 
-namespace PMS.Lib;
+namespace PMS.Services;
 
-public class AIFeedbackResponse
+public class AIService
 {
-    public long FeedbackCriteriaID { get; set; }
-    public string Status { get; set; }
-    public string ChangeObserved { get; set; }
-}
+    protected readonly Client client;
+    protected readonly ILogger<AIService> logger;
 
-// More information on: https://googleapis.github.io/dotnet-genai/#full-api-reference
-public class AIUtils
-{
-    public static async Task<IEnumerable<AIFeedbackResponse>> EvaluateCriteria(
-    Client client,
-    ProjectTask task,
-    byte[] previousDeliverable,
-    byte[] newDeliverable,
-    List<FeedbackCriteria> feedbackCriterias,
-    ILogger? logger
-)
+    public AIService(Client client, ILogger<AIService> logger)
+    {
+        this.client = client;
+        this.logger = logger;
+    }
+
+    public async Task<List<UpdateFeedbackCriterionDTO>> EvaluateFeedbackCriteria(
+       ProjectTask task,
+       byte[] previousDeliverable,
+       byte[] newDeliverable,
+       List<FeedbackCriterion> previousCriteria
+   )
     {
         var feedbackCriteriaListSchema = new Schema
         {
@@ -35,7 +34,11 @@ public class AIUtils
                 Properties = new Dictionary<string, Schema> {
                 {"FeedbackCriteriaID", new Schema{Type=Type.NUMBER}},
                 {"Status", new Schema{Type=Type.STRING, Enum=new List<string>{"met", "unmet"}}},
-                {"ChangeObserved", new Schema{Type=Type.STRING, Description="What specific change was made between documents?"}},
+                {"ChangeObserved", new Schema
+                {
+                    Type=Type.STRING,
+                    Description="What specific change was made between documents?"
+                }},
             },
                 Required = new List<string>(["FeedbackCriteriaID", "Status", "ChangeObserved"])
             }
@@ -54,8 +57,8 @@ public class AIUtils
                 Determine if the following 'unmet' criteria have been addressed.
                 
                 CRITERIA:
-                {string.Join("\n", feedbackCriterias
-                       .Select(c => $"ID:{c.FeedbackCriteriaID} | Requirement: {c.Description}"))}
+                {string.Join("\n", previousCriteria
+                       .Select(c => $"ID:{c.FeedbackCriterionID} | Requirement: {c.Description}"))}
 
                 INSTRUCTIONS:
                 1. Identify changes between the previous and new version.
@@ -63,8 +66,10 @@ public class AIUtils
                 3. Describe the what was added/removed in 'ChangeObserved'.
                 """
             },
-            new Part { InlineData = new Blob { MimeType = "application/pdf", Data = previousDeliverable } },
-            new Part { InlineData = new Blob { MimeType = "application/pdf", Data = newDeliverable } }
+            new Part { InlineData = new Blob
+                { MimeType = "application/pdf", Data = previousDeliverable } },
+            new Part { InlineData = new Blob
+                { MimeType = "application/pdf", Data = newDeliverable } }
         }
         };
 
@@ -79,7 +84,17 @@ public class AIUtils
             }
         );
 
-        var jsonText = response.Candidates[0].Content.Parts[0].Text;
-        return JsonSerializer.Deserialize<List<AIFeedbackResponse>>(jsonText) ?? new List<AIFeedbackResponse>();
+        var jsonText = response?.Candidates?[0]?.Content?.Parts?[0].Text ?? "[]";
+        var newCriteria = JsonSerializer.Deserialize<List<UpdateFeedbackCriterionDTO>>(jsonText)
+                    ?? new List<UpdateFeedbackCriterionDTO>();
+
+        if (newCriteria.Count != previousCriteria.Count)
+        {
+            logger.LogWarning("AI returned {NewCount} criteria, expected {ExpectedCount}",
+                newCriteria.Count, previousCriteria.Count);
+            throw new Exception("AI evaluation returned unexpected number of criteria");
+        }
+
+        return newCriteria;
     }
 }

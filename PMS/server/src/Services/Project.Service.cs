@@ -53,11 +53,15 @@ public class ProjectService
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Project Not Found!");
     }
 
-    public async Task<IEnumerable<GetProjectDTO>> GetProjects(long userID)
+    public async Task<(IEnumerable<GetProjectDTO> projects, long count)>
+        GetProjectsWithCount(long userID, long limit = 5, long offset = 0)
     {
-        return await dbContext.Projects
-            .AsSplitQuery()
-            .Where(p => p.SupervisorID == userID || p.StudentID == userID)
+        var projectsQuery = dbContext.Projects
+            .Where(p => p.SupervisorID == userID || p.StudentID == userID);
+
+        var count = await projectsQuery.LongCountAsync();
+
+        var projects = await projectsQuery.AsSplitQuery()
             .Select(p => new GetProjectDTO
             {
                 ProjectID = p.ProjectID,
@@ -84,8 +88,13 @@ public class ProjectService
                         Title = t.Title
                     })
                     .ToList()
-            })
-            .ToListAsync();
+            }
+        )
+        .Skip((int)offset)
+        .Take((int)limit)
+        .ToListAsync();
+
+        return (projects, count);
     }
 
     public async Task<IEnumerable<GetProjectDTO>> GetAllUnsupervisedProjects()
@@ -173,20 +182,6 @@ public class ProjectService
             ?? throw new UnauthorizedAccessException("Not Authorized or Project Not Found!");
 
         project.StudentID = studentID;
-
-        await dbContext.SaveChangesAsync();
-    }
-
-    // A supervisor can only join a project which does not have another supervisor already
-    public async Task JoinProject(long userID, long projectID)
-    {
-        var project = await dbContext.Projects.Where(p =>
-            p.ProjectID == projectID &&
-                p.Supervisor == null)
-            .FirstOrDefaultAsync()
-            ?? throw new UnauthorizedAccessException("Not Authorized or Project Not Found!");
-
-        project.SupervisorID = userID;
 
         await dbContext.SaveChangesAsync();
     }

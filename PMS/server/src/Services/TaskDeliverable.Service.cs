@@ -168,13 +168,25 @@ public class TaskDeliverableService
     /*
         Changes the staged deliverable to submitted deliverable and updates the task
         status to completed
+
+        AsSplitQuery is used to avoid the cartesian explosion problem when including multiple
+        collections. For each included collection, EF Core generates a separate query to load
+        the related data, which helps to reduce the amount of redundant data being retrieved.
+        
+        More info: https://learn.microsoft.com/en-us/ef/core/querying/single-split-queries
     */
     public async Task SubmitStagedDeliverable(long userID, long projectID, long taskID)
     {
-        var task = await dbContext.Tasks.Where(t =>
-                t.ProjectTaskID == taskID &&
-                    t.ProjectID == projectID &&
-                        t.Project.StudentID == userID)
+        var task = await dbContext.Tasks
+                .AsSplitQuery()
+                .Where(t =>
+                    t.ProjectTaskID == taskID &&
+                        t.ProjectID == projectID &&
+                            t.Project.StudentID == userID)
+                .Include(t => t.Project)
+                    .ThenInclude(p => p.Student)
+                .Include(t => t.Project)
+                    .ThenInclude(p => p.Supervisor)
                 .Include(t => t.StagedDeliverable)
                 .Include(t => t.SubmittedDeliverable)
                     .ThenInclude(submittedDeliverable => submittedDeliverable.FeedbackCriterias)
@@ -211,7 +223,7 @@ public class TaskDeliverableService
 
                 await dbContext.SaveChangesAsync();
 
-                await notificationService.CreateTaskNotification(task.ProjectTaskID, NotificationType.DELIVERABLE_SUBMITTED);
+                await notificationService.CreateTaskNotification(task, NotificationType.DELIVERABLE_SUBMITTED);
 
                 await transaction.CommitAsync();
             }

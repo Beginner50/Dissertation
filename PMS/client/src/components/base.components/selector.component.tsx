@@ -59,36 +59,9 @@ Selector.Content = ({ children }: { children: ReactNode }) => (
     sx={{
       maxHeight: "300px",
       overflowY: "auto",
-    }}
-  >
+    }}>
     <List disablePadding>{children}</List>
   </Paper>
-);
-
-Selector.ProjectListEntry = ({
-  project,
-  handleSelectProject,
-  isSelected,
-}: {
-  handleSelectProject: () => void;
-  project: Project;
-  isSelected: boolean;
-}) => (
-  <ListItem disablePadding divider>
-    <ListItemButton
-      selected={isSelected}
-      onClick={handleSelectProject}
-      sx={{ py: 1.5 }}
-    >
-      <ListItemIcon sx={{ minWidth: 40 }}>
-        <AssignmentIcon color={isSelected ? "primary" : "inherit"} />
-      </ListItemIcon>
-      <ListItemText
-        primary={project.title}
-        secondary={`${project.student?.name} (${project.student?.email})`}
-      />
-    </ListItemButton>
-  </ListItem>
 );
 
 Selector.StudentListEntry = ({
@@ -101,11 +74,7 @@ Selector.StudentListEntry = ({
   handleSelectStudent: () => void;
 }) => (
   <ListItem disablePadding divider>
-    <ListItemButton
-      selected={isSelected}
-      onClick={handleSelectStudent}
-      sx={{ py: 1.5 }}
-    >
+    <ListItemButton selected={isSelected} onClick={handleSelectStudent} sx={{ py: 1.5 }}>
       <ListItemIcon sx={{ minWidth: 40 }}>
         <PersonIcon color={isSelected ? "primary" : "inherit"} />
       </ListItemIcon>

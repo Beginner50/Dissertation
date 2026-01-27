@@ -20,7 +20,7 @@ import {
   KeyboardArrowUp,
 } from "@mui/icons-material";
 import { theme } from "../../lib/theme";
-import type { FeedbackCriteria } from "../../lib/types";
+import type { FeedbackCriterion } from "../../lib/types";
 import type { Theme } from "@emotion/react";
 
 export default function FeedbackCriteriaTable({
@@ -30,7 +30,7 @@ export default function FeedbackCriteriaTable({
   onOverrideToggle,
 }: {
   sx?: SxProps<Theme>;
-  criteria: FeedbackCriteria[];
+  criteria: FeedbackCriterion[];
   overrideToggleEnabled: boolean;
   onOverrideToggle?: (id: number) => void;
 }) {
@@ -70,7 +70,7 @@ export default function FeedbackCriteriaTable({
         <TableBody>
           {criteria.map((c) => (
             <FeedbackCriteriaTable.Row
-              key={c.feedbackCriteriaID}
+              key={c.feedbackCriterionID}
               criterion={c}
               overrideToggleEnabled={overrideToggleEnabled}
               onOverrideToggle={onOverrideToggle}
@@ -87,7 +87,7 @@ FeedbackCriteriaTable.Row = ({
   overrideToggleEnabled,
   onOverrideToggle,
 }: {
-  criterion: FeedbackCriteria;
+  criterion: FeedbackCriterion;
   overrideToggleEnabled: boolean;
   onOverrideToggle?: (id: number) => void;
 }) => {
@@ -112,8 +112,8 @@ FeedbackCriteriaTable.Row = ({
               c.status === "met"
                 ? theme.textStrong
                 : c.status === "unmet"
-                ? theme.status.missing
-                : theme.link,
+                  ? theme.status.missing
+                  : theme.link,
           }}>
           {c.description}
         </TableCell>
@@ -132,7 +132,7 @@ FeedbackCriteriaTable.Row = ({
             onOverrideToggle && (
               <FeedbackCriteriaTable.OverrideToggleButton
                 isToggled={c.status === "overridden"}
-                onClick={() => onOverrideToggle(c.feedbackCriteriaID)}
+                onClick={() => onOverrideToggle(c.feedbackCriterionID)}
               />
             )}
         </TableCell>

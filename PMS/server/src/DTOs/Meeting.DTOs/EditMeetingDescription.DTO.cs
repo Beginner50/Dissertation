@@ -2,5 +2,5 @@ namespace PMS.DTOs;
 
 public class EditMeetingDescriptionDTO
 {
-    public string Description { get; set; } = null!;
+    public required string Description { get; set; }
 }

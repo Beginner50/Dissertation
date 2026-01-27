@@ -7,7 +7,7 @@ import DeliverableCard from "../../components/task.components.tsx/deliverable-ca
 import type {
   Deliverable,
   DeliverableFile,
-  FeedbackCriteria,
+  FeedbackCriterion,
   Task,
   User,
 } from "../../lib/types";
@@ -25,8 +25,8 @@ export default function TaskRoute() {
   const [feedbackComplianceLoading, setFeedbackComplianceLoading] =
     useState<boolean>(false);
 
-  const [tableCriteria, setTableCriteria] = useState<FeedbackCriteria[]>([]);
-  const [modalCriteria, setModalCriteria] = useState<Partial<FeedbackCriteria>[]>([]);
+  const [tableCriteria, setTableCriteria] = useState<FeedbackCriterion[]>([]);
+  const [modalCriteria, setModalCriteria] = useState<Partial<FeedbackCriterion>[]>([]);
 
   const { projectID, taskID } = useParams();
 
@@ -48,7 +48,7 @@ export default function TaskRoute() {
       variables.invalidateQueryKeys.forEach((key) =>
         queryClient.invalidateQueries({
           queryKey: key,
-        })
+        }),
       ),
   });
 
@@ -67,7 +67,7 @@ export default function TaskRoute() {
       try {
         return await authorizedAPI
           .get(
-            `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable`
+            `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable`,
           )
           .json();
       } catch (error: any) {
@@ -86,7 +86,7 @@ export default function TaskRoute() {
       try {
         return await authorizedAPI
           .get(
-            `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`
+            `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
           )
           .json();
       } catch (error: any) {
@@ -102,8 +102,8 @@ export default function TaskRoute() {
 
   useEffect(() => {
     const criteria = submittedDeliverable?.feedbackCriterias ?? [];
-    setTableCriteria(criteria);
     setModalCriteria(criteria);
+    setTableCriteria(criteria);
   }, [submittedDeliverable]);
 
   /* ---------------------------------------------------------------------------------- */
@@ -111,37 +111,43 @@ export default function TaskRoute() {
   const handleOverrideToggle = (id: number) => {
     setTableCriteria((prev) =>
       prev.map((criterion) => {
-        if (criterion.feedbackCriteriaID !== id) return criterion;
+        if (criterion.feedbackCriterionID !== id) return criterion;
 
         return {
           ...criterion,
           status: criterion.status === "unmet" ? "overridden" : "unmet",
         };
-      })
+      }),
     );
   };
 
   const handleAddCriterion = () => {
-    setModalCriteria((prev) => [...prev, { description: "", status: "unmet" }]);
+    setModalCriteria((prev) => [
+      ...prev,
+      {
+        feedbackCriterionID: (prev[prev.length - 1]?.feedbackCriterionID ?? 0) + 1,
+        description: "",
+        status: "unmet",
+      },
+    ]);
   };
 
   const handleCriterionDescriptionChange = (
-    updatedCriteria: Partial<FeedbackCriteria>
+    updatedCriterion: Partial<FeedbackCriterion>,
   ) => {
-    const newModalCriteria = [
-      ...modalCriteria.filter(
-        (c) => c.feedbackCriteriaID != updatedCriteria.feedbackCriteriaID
+    setModalCriteria((prev) =>
+      prev.map(
+        (c): Partial<FeedbackCriterion> =>
+          c.feedbackCriterionID == updatedCriterion.feedbackCriterionID
+            ? { ...c, description: updatedCriterion.description }
+            : c,
       ),
-      updatedCriteria,
-    ];
-    setModalCriteria(newModalCriteria);
+    );
   };
 
-  const handleCriterionDelete = (criterionToDelete: Partial<FeedbackCriteria>) => {
-    setModalCriteria(
-      modalCriteria.filter(
-        (criteria) => criteria.feedbackCriteriaID != criterionToDelete.feedbackCriteriaID
-      )
+  const handleCriterionDelete = (deletedCriterion: Partial<FeedbackCriterion>) => {
+    setModalCriteria((prev) =>
+      prev.filter((c) => c.feedbackCriterionID != deletedCriterion.feedbackCriterionID),
     );
   };
 
@@ -158,7 +164,7 @@ export default function TaskRoute() {
     try {
       const blob = await authorizedAPI
         .get(
-          `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`
+          `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`,
         )
         .blob();
 
@@ -173,7 +179,7 @@ export default function TaskRoute() {
     try {
       const blob = await authorizedAPI
         .get(
-          `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable?file=true`
+          `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable?file=true`,
         )
         .blob();
 
@@ -230,19 +236,70 @@ export default function TaskRoute() {
     });
   };
 
+  /*
+    Feedback criteria filtering logic:
+
+      Prev Criteria: [{id: 1, ...}, {id: 2, ...}]
+      New Criteria: [{id: 2, ...}, {id: 3, ...}]
+
+      toCreate = In new but not in prev
+      toUpdate = Both in prev and in new (only those whose description have changed)
+      toDelete = In prev but not in new
+    */
   const handleSubmitFeedback = () => {
-    const filteredCriteria = modalCriteria.filter((c) => c?.description?.trim() !== "");
+    const filteredCriteria = modalCriteria.filter((c) => c.description?.trim() != "");
+
+    console.log("old: ", submittedDeliverable?.feedbackCriterias);
+    console.log("new: ", filteredCriteria);
+    const feedbackCriteriaToCreate = filteredCriteria.filter(
+      (newCriterion) =>
+        !submittedDeliverable?.feedbackCriterias?.some(
+          (prevCriterion) =>
+            prevCriterion.feedbackCriterionID == newCriterion.feedbackCriterionID,
+        ),
+    );
+
+    const feedbackCriteriaToUpdate = filteredCriteria.filter((newCriterion) =>
+      submittedDeliverable?.feedbackCriterias?.some(
+        (prevCriterion) =>
+          prevCriterion.feedbackCriterionID == newCriterion.feedbackCriterionID &&
+          prevCriterion.description != newCriterion.description,
+      ),
+    );
+
+    const feedbackCriteriaToDelete = submittedDeliverable?.feedbackCriterias?.filter(
+      (prevCriterion) =>
+        !filteredCriteria.some(
+          (newCriterion) =>
+            newCriterion.feedbackCriterionID == prevCriterion.feedbackCriterionID,
+        ),
+    );
+
+    console.log(
+      "toCreate: ",
+      feedbackCriteriaToCreate.map((c) => ({
+        description: c.description,
+      })),
+    );
 
     mutation.mutate(
       {
         method: "post",
         url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback`,
-        data: filteredCriteria,
+        data: {
+          feedbackCriteriaToCreate: feedbackCriteriaToCreate.map((c) => ({
+            description: c.description,
+          })),
+          feedbackCriteriaToUpdate,
+          feedbackCriteriaToDelete: feedbackCriteriaToDelete?.map((c) => ({
+            feedbackCriterionID: c.feedbackCriterionID,
+          })),
+        },
         invalidateQueryKeys: [[taskID, "deliverables", "submitted"]],
       },
       {
         onSuccess: () => setFeedbackModalOpen(false),
-      }
+      },
     );
   };
 
@@ -259,7 +316,7 @@ export default function TaskRoute() {
         {
           onSuccess: () => setFeedbackComplianceLoading(false),
           onError: () => setFeedbackComplianceLoading(false),
-        }
+        },
       );
     }
   };

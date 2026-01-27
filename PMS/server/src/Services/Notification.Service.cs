@@ -44,14 +44,8 @@ public class NotificationService
                                 .ToListAsync();
     }
 
-    public async Task CreateMeetingNotification(long meetingID, NotificationType notificationType)
+    public async Task CreateMeetingNotification(Meeting meeting, NotificationType notificationType)
     {
-        var meeting = await dbContext.Meetings.Where(m => m.MeetingID == meetingID)
-                                            .Include(m => m.Organizer)
-                                            .Include(m => m.Attendee)
-                                            .FirstOrDefaultAsync()
-                                            ?? throw new Exception("Meeting Not Found");
-
         Notification notification;
         switch (notificationType)
         {
@@ -98,16 +92,8 @@ public class NotificationService
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task CreateTaskNotification(long taskID, NotificationType notificationType)
+    public async Task CreateTaskNotification(ProjectTask task, NotificationType notificationType)
     {
-        var task = await dbContext.Tasks.Where(t => t.ProjectTaskID == taskID)
-                                        .Include(t => t.Project)
-                                            .ThenInclude(p => p.Supervisor)
-                                        .Include(t => t.Project)
-                                            .ThenInclude(p => p.Student)
-                                        .FirstOrDefaultAsync()
-                                        ?? throw new Exception("Task Not Found!");
-
         Notification notification;
         switch (notificationType)
         {

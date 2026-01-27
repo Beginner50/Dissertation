@@ -26,5 +26,5 @@ public class Deliverable
         A Navigation Property does not actually exist in the database table
     */
     [InverseProperty("Deliverable")]
-    public List<FeedbackCriteria> FeedbackCriterias { get; set; }
+    public List<FeedbackCriterion> FeedbackCriterias { get; set; } = [];
 }

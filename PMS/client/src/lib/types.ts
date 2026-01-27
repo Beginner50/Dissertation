@@ -11,7 +11,7 @@ export type AuthContextType = {
   authState: AuthState;
   authorizedAPI: typeof ky;
   signIn: (userData: Record<string, any>) => Promise<AuthState>;
-  signOut: (userID: number | string | undefined) => Promise<void>;
+  signOut: () => Promise<void>;
 };
 
 export type User = {
@@ -42,6 +42,7 @@ export type Task = {
   status: "pending" | "completed" | "missing";
   assignedDate: string;
   dueDate: string;
+  assignedBy?: User;
 };
 
 export type TaskFormData = Pick<Task, "taskID" | "title" | "description" | "dueDate">;
@@ -52,7 +53,7 @@ export type Deliverable = {
   submissionTimestamp: string;
   taskID: number;
   submittedBy: User;
-  feedbackCriterias?: FeedbackCriteria[];
+  feedbackCriterias?: FeedbackCriterion[];
 };
 
 export type DeliverableFile = {
@@ -61,8 +62,8 @@ export type DeliverableFile = {
   contentType: string;
 };
 
-export type FeedbackCriteria = {
-  feedbackCriteriaID: number;
+export type FeedbackCriterion = {
+  feedbackCriterionID: number;
   description: string;
   status: "met" | "unmet" | "overridden";
   changeObserved: string;

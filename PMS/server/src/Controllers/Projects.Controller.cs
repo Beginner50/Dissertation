@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using PMS.DTOs;
 using PMS.Services;
@@ -33,17 +34,24 @@ public class ProjectsController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/[controller]")]
+    [Route("api/users/{userID}/projects")]
     [HttpGet]
     [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetProjectsByUser(
-        [FromRoute] long userID
+        [FromRoute] long userID,
+        [FromQuery] long limit,
+        [FromQuery] long offset
     )
     {
         try
         {
-            var projects = await projectService.GetProjects(userID);
-            return Ok(projects);
+            var (projects, count) = await projectService.GetProjectsWithCount(userID, limit, offset);
+
+            return Ok(new
+            {
+                Items = projects,
+                TotalCount = count
+            });
         }
         catch (Exception e)
         {
@@ -51,7 +59,7 @@ public class ProjectsController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/[controller]/{projectID}")]
+    [Route("api/users/{userID}/projects/{projectID}")]
     [HttpGet]
     [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetProject(
@@ -124,25 +132,6 @@ public class ProjectsController : ControllerBase
         catch (Exception e)
         {
             return Conflict(e);
-        }
-    }
-
-    [Route("api/users/{userID}/projects/{projectID}/join")]
-    [HttpPut]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
-    public async Task<IActionResult> JoinProject(
-        [FromRoute] long userID,
-        [FromRoute] long projectID
-    )
-    {
-        try
-        {
-            await projectService.JoinProject(userID, projectID); ;
-            return NoContent();
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
         }
     }
 

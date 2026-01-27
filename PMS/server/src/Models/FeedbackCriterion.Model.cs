@@ -2,12 +2,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PMS.Models;
 
-public class FeedbackCriteria
+public class FeedbackCriterion
 {
-    public long FeedbackCriteriaID { get; set; }
+    public long FeedbackCriterionID { get; set; }
     public required string Description { get; set; }
     public required string Status { get; set; }
-    public string ChangeObserved { get; set; }
+    public string? ChangeObserved { get; set; }
 
     public required long DeliverableID { get; set; }
     [ForeignKey("DeliverableID")]

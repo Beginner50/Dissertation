@@ -26,26 +26,28 @@ public class User
         A Navigation Property does not actually exist in the database table
     */
     [InverseProperty("Supervisor")]
-    public List<Project> SupervisedProjects { get; }
+    public List<Project> SupervisedProjects { get; } = [];
 
     [InverseProperty("Student")]
-    public List<Project> ConductedProjects { get; }
+    public List<Project> ConductedProjects { get; } = [];
 
     [InverseProperty("Organizer")]
-    public List<Meeting> OrganizedMeetings { get; }
+    public List<Meeting> OrganizedMeetings { get; } = [];
 
     [InverseProperty("Attendee")]
-    public List<Meeting> AttendedMeetings { get; }
+    public List<Meeting> AttendedMeetings { get; } = [];
 
     [InverseProperty("Recipient")]
-    public List<Reminder> Reminders { get; }
+    public List<Reminder> Reminders { get; } = [];
 
     [InverseProperty("Recipient")]
-    public List<Notification> Notifications { get; }
+    public List<Notification> Notifications { get; } = [];
+
+    [InverseProperty("AssignedBy")]
+    public List<ProjectTask> AssignedTasks { get; } = [];
 
     [InverseProperty("SubmittedBy")]
-    public List<Deliverable> SubmittedDeliverables { get; }
-
+    public List<Deliverable> SubmittedDeliverables { get; } = [];
     [InverseProperty("ProvidedBy")]
-    public List<FeedbackCriteria> ProvidedFeedbackCriterias { get; }
+    public List<FeedbackCriterion> ProvidedFeedbackCriterias { get; } = [];
 }

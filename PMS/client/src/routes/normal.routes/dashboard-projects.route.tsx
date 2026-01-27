@@ -18,12 +18,17 @@ import { NotificationList } from "../../components/notification-reminder.compone
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../providers/auth.provider";
 import { Box } from "@mui/material";
+import Pagination from "../../components/base.components/pagination.component";
 
 export default function DashboardProjectsRoute() {
+  /* ------------------------------- React Hooks --------------------------------------- */
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
 
+  const [projectListLimit, setProjectListLimit] = useState(5);
+  const [projectListOffset, setProjectListOffset] = useState(0);
   const [step, setStep] = useState(0);
+
   const [projectModalState, setProjectModalState] = useState<ProjectModalState>({
     mode: "create",
     open: false,
@@ -33,8 +38,6 @@ export default function DashboardProjectsRoute() {
     title: "",
     description: "",
   });
-  const [projectSearchTerm, setProjectSearchTerm] = useState<string>("");
-  const [selectedProject, setSelectedProject] = useState<Project>();
 
   /* ---------------------------------------------------------------------------------- */
   /*
@@ -82,26 +85,20 @@ export default function DashboardProjectsRoute() {
       variables.invalidateQueryKeys.forEach((key) =>
         queryClient.invalidateQueries({
           queryKey: key,
-        })
+        }),
       ),
   });
 
   const { data: projects, isLoading: projectsLoading } = useQuery({
-    queryKey: [user.userID, "projects"],
-    queryFn: async (): Promise<Project[]> =>
-      await authorizedAPI.get(`api/users/${user.userID}/projects`).json(),
+    queryKey: [user.userID, "projects", projectListLimit, projectListOffset],
+    queryFn: async (): Promise<{ items: Project[]; totalCount: number }> =>
+      await authorizedAPI
+        .get(`api/users/${user.userID}/projects`, {
+          searchParams: { limit: projectListLimit, offset: projectListOffset },
+        })
+        .json(),
     retry: 1,
   });
-
-  const { data: unsupervisedProjects, isLoading: unsupervisedProjectsLoading } = useQuery(
-    {
-      queryKey: [user.userID, "projects", "unsupervised"],
-      queryFn: async (): Promise<Project[]> =>
-        await authorizedAPI.get(`api/projects`).json(),
-      enabled: user.role === "supervisor",
-      retry: 1,
-    }
-  );
 
   const { data: reminders, isLoading: remindersLoading } = useQuery({
     queryKey: [user.userID, "reminders"],
@@ -121,16 +118,8 @@ export default function DashboardProjectsRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const handleSelectProject = (project: Project) => {
-    setSelectedProject(project);
-  };
-
   const handleCreateProjectClick = () => {
     setProjectModalState((ms) => ({ ...ms, mode: "create", open: true }));
-  };
-
-  const handleJoinProjectClick = () => {
-    setProjectModalState((ms) => ({ ...ms, mode: "join-project", open: true }));
   };
 
   const handleEditProjectClick = (projectData: ProjectFormData) => {
@@ -148,6 +137,10 @@ export default function DashboardProjectsRoute() {
     setProjectModalData({ projectID: 0, title: "", description: "" });
   };
 
+  const handlePageChange = (newOffset: number) => {
+    setProjectListOffset(newOffset);
+  };
+
   /* ---------------------------------------------------------------------------------- */
 
   const handleTitleChange = useCallback((title: string) => {
@@ -159,66 +152,64 @@ export default function DashboardProjectsRoute() {
       description: description,
     }));
   }, []);
-  const handleSearchChange = useCallback((searchTerm: string) => {
-    setProjectSearchTerm(searchTerm);
-  }, []);
 
   /* ---------------------------------------------------------------------------------- */
 
   const handleCreateProject = () => {
-    mutation.mutate({
-      method: "post",
-      url: `api/users/${user.userID}/projects`,
-      data: projectModalData,
-      invalidateQueryKeys: [[user.userID, "projects"]],
-    });
-    setProjectModalState((p) => ({ ...p, open: false }));
+    mutation.mutate(
+      {
+        method: "post",
+        url: `api/users/${user.userID}/projects`,
+        data: projectModalData,
+        invalidateQueryKeys: [
+          [user.userID, "projects", projectListLimit, projectListOffset],
+        ],
+      },
+      {
+        onSuccess: () => {
+          setProjectModalState((p) => ({ ...p, open: false }));
+        },
+      },
+    );
   };
 
   const handleEditProject = () => {
-    mutation.mutate({
-      method: "put",
-      url: `api/users/${user.userID}/projects/${projectModalData.projectID}`,
-      data: projectModalData,
-      invalidateQueryKeys: [[user.userID, "projects"]],
-    });
-    setProjectModalState((p) => ({ ...p, open: false }));
+    mutation.mutate(
+      {
+        method: "put",
+        url: `api/users/${user.userID}/projects/${projectModalData.projectID}`,
+        data: projectModalData,
+        invalidateQueryKeys: [
+          [user.userID, "projects", projectListLimit, projectListOffset],
+        ],
+      },
+      {
+        onSuccess: () => {
+          setProjectModalState((p) => ({ ...p, open: false }));
+        },
+      },
+    );
   };
 
   const handleArchiveProject = () => {
-    mutation.mutate({
-      method: "delete",
-      url: `api/users/${user.userID}/projects/${projectModalData.projectID}`,
-      data: {},
-      invalidateQueryKeys: [[user.userID, "projects"]],
-    });
-    setProjectModalState((p) => ({ ...p, open: false }));
-  };
-
-  // TO BE REMOVED
-  const handleJoinProject = () => {
-    mutation.mutate({
-      method: "put",
-      url: `api/users/${user.userID}/projects/${selectedProject?.projectID}/join`,
-      data: {},
-      invalidateQueryKeys: [
-        [user.userID, "projects"],
-        [user.userID, "projects", "unsupervised"],
-      ],
-    });
-    setSelectedProject(undefined);
-    setProjectModalState((p) => ({ ...p, open: false }));
+    mutation.mutate(
+      {
+        method: "delete",
+        url: `api/users/${user.userID}/projects/${projectModalData.projectID}`,
+        data: {},
+        invalidateQueryKeys: [
+          [user.userID, "projects", projectListLimit, projectListOffset],
+        ],
+      },
+      {
+        onSuccess: () => {
+          setProjectModalState((p) => ({ ...p, open: false }));
+        },
+      },
+    );
   };
 
   /* ---------------------------------------------------------------------------------- */
-
-  // TO BE REMOVED
-  const filteredProjects =
-    unsupervisedProjects?.filter(
-      (p) =>
-        p.title.toLowerCase().includes(projectSearchTerm.toLowerCase()) ||
-        p.student?.name.toLowerCase().includes(projectSearchTerm.toLowerCase())
-    ) ?? [];
 
   const formDataIncomplete = (() => {
     switch (projectModalState.mode) {
@@ -228,70 +219,10 @@ export default function DashboardProjectsRoute() {
           if (typeof val == "number") return Number.isNaN(val);
           return val == "";
         });
-      case "join-project":
-        return selectedProject == null;
       case "archive":
         return false;
     }
   })();
-
-  /* ---------------------------------------------------------------------------------- */
-
-  const modalViews = {
-    create: (
-      <ProjectModal.Fields>
-        <ProjectModal.ProjectTitle
-          title={projectModalData?.title ?? ""}
-          handleTitleChange={handleTitleChange}
-        />
-        <ProjectModal.ProjectDescription
-          description={projectModalData?.description ?? ""}
-          handleDescriptionChange={handleDescriptionChange}
-        />
-      </ProjectModal.Fields>
-    ),
-    edit: (
-      <ProjectModal.Fields>
-        <ProjectModal.ProjectID
-          projectID={projectModalData?.projectID ?? 0}
-          visible={true}
-        />
-        <ProjectModal.ProjectTitle
-          title={projectModalData?.title ?? ""}
-          handleTitleChange={handleTitleChange}
-        />
-        <ProjectModal.ProjectDescription
-          description={projectModalData?.description ?? ""}
-          handleDescriptionChange={handleDescriptionChange}
-        />
-      </ProjectModal.Fields>
-    ),
-    // TO BE REMOVED
-    "join-project": (
-      <Selector>
-        <Selector.Search
-          placeholder="Search projects..."
-          searchTerm={projectSearchTerm}
-          handleSearchChange={handleSearchChange}
-        />
-        <Selector.Content>
-          {filteredProjects.length > 0 ? (
-            filteredProjects.map((p) => (
-              <Selector.ProjectListEntry
-                key={p.projectID}
-                project={p}
-                isSelected={p.projectID === selectedProject?.projectID}
-                handleSelectProject={() => handleSelectProject(p)}
-              />
-            ))
-          ) : (
-            <Selector.NotFound placeholder="No projects match" />
-          )}
-        </Selector.Content>
-      </Selector>
-    ),
-    archive: <ProjectModal.ArchiveWarning />,
-  };
 
   return (
     <>
@@ -313,27 +244,28 @@ export default function DashboardProjectsRoute() {
                 handleCreateProjectClick={handleCreateProjectClick}
               />
             )}
-            {/* {user.role == "supervisor" && (
-              <ProjectList.JoinProjectButton
-                handleJoinProjectClick={handleJoinProjectClick}
-              />
-            )} */}
           </ProjectList.Header>
 
           <ProjectList.Content
             isLoading={projectsLoading}
-            projects={projects ?? []}
+            projects={projects?.items ?? []}
             menuEnabled={user.role === "supervisor"}
             handleEditProjectClick={handleEditProjectClick}
             handleArchiveProjectClick={handleArchiveProjectClick}
+          />
+          <Pagination
+            totalCount={projects?.totalCount ?? 0}
+            limit={projectListLimit}
+            offset={projectListOffset}
+            onPageChange={handlePageChange}
           />
         </ProjectList>
 
         {/* Right Section - Sliding Activity (Reminder + Notifications) */}
         <SlidingActivityCard>
           <SlidingActivityCard.Content activeStep={step}>
-            <ReminderList reminders={reminders ?? []} />
             <NotificationList notifications={notifications ?? []} />
+            <ReminderList reminders={reminders ?? []} />
           </SlidingActivityCard.Content>
 
           <SlidingActivityCard.Navigation
@@ -348,16 +280,33 @@ export default function DashboardProjectsRoute() {
       <ProjectModal open={projectModalState.open}>
         <ProjectModal.Header mode={projectModalState.mode} />
 
-        {modalViews[projectModalState.mode]}
+        {projectModalState.mode === "create" || projectModalState.mode === "edit" ? (
+          <ProjectModal.Fields>
+            <ProjectModal.ProjectID
+              projectID={projectModalData?.projectID ?? 0}
+              visible={projectModalState.mode === "edit"}
+            />
+            <ProjectModal.ProjectTitle
+              title={projectModalData?.title ?? ""}
+              handleTitleChange={handleTitleChange}
+            />
+            <ProjectModal.ProjectDescription
+              description={projectModalData?.description ?? ""}
+              handleDescriptionChange={handleDescriptionChange}
+            />
+          </ProjectModal.Fields>
+        ) : (
+          <ProjectModal.ArchiveWarning />
+        )}
 
         <ProjectModal.Actions
           mode={projectModalState.mode}
+          isLoading={mutation.status === "pending"}
           isValid={!formDataIncomplete}
           handleCancelClick={handleCancelClick}
           handleCreateProject={handleCreateProject}
           handleEditProject={handleEditProject}
           handleArchiveProject={handleArchiveProject}
-          // handleJoinProject={handleJoinProject}
         />
       </ProjectModal>
     </>

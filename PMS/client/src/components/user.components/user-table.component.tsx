@@ -26,17 +26,26 @@ export default function UserTable({
   users,
   isLoading,
   totalCount,
-  page,
+  limit,
+  offset,
   onPageChange,
   handleDeleteUserClick,
 }: {
   users: User[];
   isLoading: boolean;
   totalCount: number;
-  page: number;
-  onPageChange: (event: unknown, newPage: number) => void;
+  limit: number;
+  offset: number;
+  onPageChange: (newOffset: number) => void;
   handleDeleteUserClick: (userFormData: UserFormData) => void;
 }) {
+  const page = Math.floor(offset / limit);
+
+  const handleMuiPageChange = (_: unknown, newPage: number) => {
+    const newOffset = newPage * limit;
+    onPageChange(newOffset);
+  };
+
   return (
     <Paper
       variant="outlined"
@@ -49,50 +58,20 @@ export default function UserTable({
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: "0.95rem",
-                  backgroundColor: "#f8f8f8",
-                  borderBottom: `2px solid ${theme.borderSoft}`,
-                  padding: "10px 16px",
-                  color: theme.textStrong,
-                }}>
-                UserID
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: "0.95rem",
-                  backgroundColor: "#f8f8f8",
-                  borderBottom: `2px solid ${theme.borderSoft}`,
-                  padding: "10px 16px",
-                  color: theme.textStrong,
-                }}>
-                Name
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: "0.95rem",
-                  backgroundColor: "#f8f8f8",
-                  borderBottom: `2px solid ${theme.borderSoft}`,
-                  padding: "10px 16px",
-                  color: theme.textStrong,
-                }}>
-                Email
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: "0.95rem",
-                  backgroundColor: "#f8f8f8",
-                  borderBottom: `2px solid ${theme.borderSoft}`,
-                  padding: "10px 16px",
-                  color: theme.textStrong,
-                }}>
-                Role
-              </TableCell>
+              {["UserID", "Name", "Email", "Role"].map((head) => (
+                <TableCell
+                  key={head}
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "0.95rem",
+                    backgroundColor: "#f8f8f8",
+                    borderBottom: `2px solid ${theme.borderSoft}`,
+                    padding: "10px 16px",
+                    color: theme.textStrong,
+                  }}>
+                  {head}
+                </TableCell>
+              ))}
               <TableCell
                 sx={{
                   fontWeight: 600,
@@ -110,13 +89,13 @@ export default function UserTable({
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 5 }}>
+                <TableCell colSpan={5} align="center" sx={{ py: 5 }}>
                   <CircularProgress size={24} sx={{ color: theme.link }} />
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 5 }}>
+                <TableCell colSpan={5} align="center" sx={{ py: 5 }}>
                   <Typography variant="body2" sx={{ color: theme.textStrong }}>
                     No users found.
                   </Typography>
@@ -166,7 +145,7 @@ export default function UserTable({
                         fontWeight: 600,
                         color: theme.textStrong,
                         borderRadius: "4px",
-                        minWidth: "8vw",
+                        minWidth: "80px",
                       }}
                     />
                   </TableCell>
@@ -198,9 +177,9 @@ export default function UserTable({
         component="div"
         count={totalCount}
         page={page}
-        rowsPerPage={10}
+        rowsPerPage={limit}
         rowsPerPageOptions={[]}
-        onPageChange={onPageChange}
+        onPageChange={handleMuiPageChange}
         sx={{
           borderTop: `1px solid ${theme.borderSoft}`,
           backgroundColor: "#f8f8f8",

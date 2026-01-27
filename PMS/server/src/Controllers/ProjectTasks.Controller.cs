@@ -39,13 +39,20 @@ public class TasksController : ControllerBase
     [Authorize(Policy = "OwnershipRBAC")]
     public async Task<IActionResult> GetProjectTasks(
         [FromRoute] long userID,
-        [FromRoute] long projectID
+        [FromRoute] long projectID,
+        [FromQuery] int limit = 5,
+        [FromQuery] int offset = 0
     )
     {
         try
         {
-            var tasks = await projectTaskService.GetProjectTasks(userID, projectID);
-            return Ok(tasks);
+            var (tasks, count) = await projectTaskService.GetProjectTasksWithCount(userID, projectID, limit, offset);
+
+            return Ok(new
+            {
+                Items = tasks,
+                TotalCount = count
+            });
         }
         catch (Exception e)
         {

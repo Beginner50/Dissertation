@@ -103,7 +103,6 @@ var symmetricKey = new SymmetricSecurityKey(
     ?? "SECRET_KEY_HERE_32_CHARACTERS"
     )
 );
-TokenUtils.Initialize(symmetricKey);
 
 /*
 Instructs the web application to extract the JWT from the bearer header of the
@@ -199,7 +198,7 @@ AddScoped:
     when required by a controller that handles the HTTP request.
 
 AddSingleton:
-    AddSingleton creates the instance for every client requests.
+    AddSingleton creates and uses the same instance for all client requests.
     The reason why services utilizing the database context cannot use AddSingleton is
     because they are not thread safe.
 
@@ -208,6 +207,10 @@ AddSingleton:
 */
 builder.Services.AddSingleton<IAuthorizationHandler, OwnershipRBACHandler>();
 builder.Services.AddSingleton<Client>(); // Gemini client
+builder.Services.AddSingleton<TokenService>(new TokenService(symmetricKey));
+builder.Services.AddSingleton<AIService>();
+builder.Services.AddSingleton<MailService>();
+
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ProjectService>();
 builder.Services.AddScoped<ProjectTaskService>();

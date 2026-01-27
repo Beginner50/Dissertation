@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
-import type { FeedbackCriteria } from "../../lib/types";
+import type { FeedbackCriterion } from "../../lib/types";
 
 export default function FeedbackModal({
   open,
@@ -57,23 +57,28 @@ FeedbackModal.CriteriaList = ({
   onCriterionDescriptionChange,
   onCriterionDelete,
 }: {
-  criteria: Partial<FeedbackCriteria>[];
-  onCriterionDescriptionChange: (updated: Partial<FeedbackCriteria>) => void;
-  onCriterionDelete: (criterionToDelete: Partial<FeedbackCriteria>) => void;
+  criteria: Partial<FeedbackCriterion>[];
+  onCriterionDescriptionChange: (updatedCriterion: Partial<FeedbackCriterion>) => void;
+  onCriterionDelete: (deletedCriterion: Partial<FeedbackCriterion>) => void;
 }) => {
+  const handleDescriptionChange =
+    (criterion: Partial<FeedbackCriterion>) => (updatedDescription: string) => {
+      onCriterionDescriptionChange({ ...criterion, description: updatedDescription });
+    };
+
   return (
     <Stack spacing={2}>
       <Typography variant="subtitle2" color="textSecondary">
         Required Changes / Criteria
       </Typography>
 
-      {criteria.map((item, index) => (
+      {criteria.map((criterion, index) => (
         <FeedbackModal.CriterionInput
-          key={index}
+          key={criterion.feedbackCriterionID ?? index}
           index={index}
-          item={item}
-          onDescriptionChange={onCriterionDescriptionChange}
-          onDelete={onCriterionDelete}
+          description={criterion.description ?? ""}
+          onDescriptionChange={handleDescriptionChange(criterion)}
+          onDelete={() => onCriterionDelete(criterion)}
         />
       ))}
 
@@ -90,16 +95,19 @@ FeedbackModal.CriteriaList = ({
 
 FeedbackModal.CriterionInput = ({
   index,
-  item,
+  description,
   onDescriptionChange,
   onDelete,
 }: {
   index: number;
-  item: Partial<FeedbackCriteria>;
-  onDescriptionChange: (updated: Partial<FeedbackCriteria>) => void;
-  onDelete: (item: Partial<FeedbackCriteria>) => void;
+  description: string;
+  onDescriptionChange: (updatedDescription: string) => void;
+  onDelete: () => void;
 }) => {
-  const [localText, setLocalText] = useState(item.description ?? "");
+  const [localText, setLocalText] = useState(description ?? "");
+  useEffect(() => {
+    setLocalText(description);
+  }, [description]);
 
   return (
     <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
@@ -116,16 +124,14 @@ FeedbackModal.CriterionInput = ({
           value={localText}
           onChange={(e) => setLocalText(e.target.value)}
           onBlur={() => {
-            if (localText !== item.description) {
-              onDescriptionChange({ ...item, description: localText });
-            }
+            if (localText !== description) onDescriptionChange(localText);
           }}
         />
       </FormControl>
 
       <IconButton
         color="error"
-        onClick={() => onDelete(item)}
+        onClick={onDelete}
         sx={{ mt: 0.5 }}
         title="Delete criterion">
         <DeleteOutlineIcon fontSize="small" />

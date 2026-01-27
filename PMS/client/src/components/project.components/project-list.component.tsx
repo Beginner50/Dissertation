@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { Add, AddCircleOutline, GroupAdd } from "@mui/icons-material";
 import { type ReactNode } from "react";
+import { Pagination as MuiPagination } from "@mui/material";
 import type { Project, User } from "../../lib/types";
 import ProjectListEntry from "./project-list-entry.component";
 
@@ -31,8 +32,7 @@ export function ProjectList({
         overflowY: "auto",
         flexDirection: "column",
         ...sx,
-      }}
-    >
+      }}>
       {children}
     </Paper>
   );
@@ -46,8 +46,7 @@ ProjectList.Header = ({ children }: { children?: ReactNode }) => {
         alignItems="center"
         justifyContent="space-between"
         spacing={2}
-        sx={{ mb: 1.5 }}
-      >
+        sx={{ mb: 1.5 }}>
         <Typography variant="h6" component="h2" sx={{ fontWeight: "bold" }}>
           My Projects
         </Typography>
@@ -72,8 +71,7 @@ ProjectList.CreateProjectButton = ({
       color="primary"
       disableElevation
       startIcon={<Add />}
-      onClick={handleCreateProjectClick}
-    >
+      onClick={handleCreateProjectClick}>
       Create Project
     </Button>
   );
@@ -90,8 +88,7 @@ ProjectList.JoinProjectButton = ({
       color="secondary"
       disableElevation
       startIcon={<GroupAdd />}
-      onClick={handleJoinProjectClick}
-    >
+      onClick={handleJoinProjectClick}>
       Join Project
     </Button>
   );

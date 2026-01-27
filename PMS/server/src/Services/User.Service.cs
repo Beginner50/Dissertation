@@ -3,17 +3,18 @@ using System.Security.Authentication;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
 using PMS.DTOs;
-using PMS.Lib;
 
 namespace PMS.Services;
 
 public class UserService
 {
     protected readonly PMSDbContext dbContext;
+    protected readonly TokenService tokenService;
     protected readonly ILogger<UserService> logger;
-    public UserService(PMSDbContext dbContext, ILogger<UserService> logger)
+    public UserService(PMSDbContext dbContext, TokenService tokenService, ILogger<UserService> logger)
     {
         this.dbContext = dbContext;
+        this.tokenService = tokenService;
         this.logger = logger;
     }
 
@@ -56,8 +57,8 @@ public class UserService
         if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
             throw new AuthenticationException("Invalid Credentials!");
 
-        var accessToken = TokenUtils.CreateAccessToken(user.UserID, user.Role);
-        var refreshToken = TokenUtils.CreateRefreshToken(user.UserID, user.Role);
+        var accessToken = tokenService.CreateAccessToken(user.UserID, user.Role);
+        var refreshToken = tokenService.CreateRefreshToken(user.UserID, user.Role);
 
         user.RefreshToken = refreshToken;
         await dbContext.SaveChangesAsync();
@@ -96,7 +97,7 @@ public class UserService
             if (user.RefreshToken != refreshToken)
                 throw new Exception("Invalid or revoked session");
 
-            return TokenUtils.CreateAccessToken(user.UserID, user.Role);
+            return tokenService.CreateAccessToken(user.UserID, user.Role);
         }
         catch (Exception)
         {
@@ -112,7 +113,7 @@ public class UserService
             user.RefreshToken = null;
             await dbContext.SaveChangesAsync();
 
-            logger.LogDebug("User {userID} logged in successfully!", user.UserID);
+            logger.LogDebug("User {userID} logged out successfully!", user.UserID);
         }
     }
 }

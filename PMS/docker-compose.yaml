@@ -19,7 +19,7 @@ services:
   dotnet-server:
     build:
       context: ./server
-      target: production
+      target: development
     container_name: dotnet_server
     environment:
       - POSTGRES_USER=root
@@ -32,28 +32,28 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # develop:
-    #   watch:
-    #     - action: sync
-    #       path: ./server/src
-    #       target: /app/src
-    #       initial_sync: true
+    develop:
+      watch:
+        - action: sync
+          path: ./server/src
+          target: /app/src
+          initial_sync: true
     ports:
       - "5081:5081"
     
   react:
     build:
       context: ./client
-      target: production
+      target: development
     container_name: react_pms
     depends_on:
       - dotnet-server
-    # develop:
-    #   watch:
-    #     - action: sync
-    #       path: ./client/src
-    #       target: /app/src
-    #       initial_sync: true
+    develop:
+      watch:
+        - action: sync
+          path: ./client/src
+          target: /app/src
+          initial_sync: true
     ports:
       - "3000:3000"
 

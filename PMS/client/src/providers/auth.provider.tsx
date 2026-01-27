@@ -5,13 +5,7 @@ It provides all the functionalities that deal with authentication like sign-in, 
 and making authorized API requests.
 */
 import type { AuthContextType, AuthState } from "../lib/types";
-import {
-  useContext,
-  createContext,
-  useState,
-  useCallback,
-  useMemo,
-} from "react";
+import { useContext, createContext, useState, useCallback, useMemo } from "react";
 import ky from "ky";
 import { baseURL } from "../lib/config";
 
@@ -24,16 +18,21 @@ Refresh Token Request De-duplication:
   server flagging this suspicious behavior as a security breach and invalidate the refresh
   token (stored as an HTTP-only cookie)
 
-  As such, to prevent such race condition, using refreshPromise here ensure that only one
+  To prevent this behavior, using refreshPromise here ensure that only one
   request ends up trying to refresh the token, and lead to the other requests waiting for
   the result of the iniitial refresh token request instead.
+
+  The catch block is necessary to reset refreshPromise to null in case the refresh request
+  fails, so that subsequent requests can try to refresh the token again.
 */
 let refreshPromise: Promise<any> | null = null;
 const performRefresh = async (): Promise<any> => {
   if (!refreshPromise) {
-    refreshPromise = ky.post(`${baseURL}/api/token/refresh`, {
-      credentials: "include"
-    }).json();
+    refreshPromise = ky
+      .post(`${baseURL}/api/users/token/refresh`, {
+        credentials: "include",
+      })
+      .json();
   }
 
   try {
@@ -48,29 +47,16 @@ const performRefresh = async (): Promise<any> => {
 
 /* ---------------------------------------------------------------------------------------- */
 
+const initialAuthState: AuthState = {
+  isAuthenticated: false,
+  token: null,
+  tokenExpiry: null,
+  user: null,
+};
+
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  let initialAuthState = JSON.parse(localStorage.getItem("auth") ?? "null") as AuthState | null;
-
-  if (!initialAuthState) {
-    initialAuthState = {
-      isAuthenticated: false,
-      token: null,
-      tokenExpiry: null,
-      user: null,
-    };
-
-    localStorage.setItem("auth", JSON.stringify(initialAuthState));
-  }
-
-  /*
-    Every component in React is functional in nature, meaning that they are stateless
-    and are re-initialized on every render. To maintain state across renders, we use hooks 
-    like useState, useMemo or useCallback.
-
-    useMemo and useCallback will be relevant in the sections below
-  */
   const [authState, setAuthState] = useState<AuthState>(initialAuthState);
 
   /*    
@@ -99,16 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hooks: {
           beforeRequest: [
             (request) => {
-              const authState: AuthState = JSON.parse(
-                localStorage.getItem("auth") ?? "null"
-              );
-
-              if (authState.token) {
-                request.headers.set(
-                  "Authorization",
-                  `Bearer ${authState.token}`
-                );
-              }
+              if (authState.token)
+                request.headers.set("Authorization", `Bearer ${authState.token}`);
             },
           ],
           beforeError: [
@@ -117,32 +95,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 try {
                   const data = await performRefresh();
 
-                  const newAuth = { isAuthenticated: true, ...data };
-                  setAuthState(newAuth);
-                  localStorage.setItem("auth", JSON.stringify(newAuth));
-                } catch (e) {
-                  console.log("Token Refresh Failed! Logging User Out");
-                  console.error(e);
-
                   const newAuth = {
-                    isAuthenticated: false,
-                    token: null,
-                    tokenExpiry: null,
-                    user: null,
+                    user: authState.user,
+                    isAuthenticated: true,
+                    ...data,
                   };
                   setAuthState(newAuth);
-                  localStorage.setItem("auth", JSON.stringify(newAuth));
+                } catch (e) {
+                  await signOut();
                 }
               }
               return error;
             },
           ],
         },
-        retry: {
-          limit: 1,
-        },
+        retry: { limit: 1 },
       }),
-    []
+    [authState],
   );
 
   const signIn = useCallback(
@@ -156,22 +125,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const newAuthState: AuthState = { isAuthenticated: true, ...response };
       setAuthState(newAuthState);
-      localStorage.setItem("auth", JSON.stringify(newAuthState));
 
       return newAuthState;
     },
-    [setAuthState]
+    [],
   );
 
-  const signOut = useCallback(
-    async (userID: number | string | undefined): Promise<void> => {
-      await authorizedAPI.post(`api/users/${userID}/logout`);
-
+  const signOut = useCallback(async (): Promise<void> => {
+    try {
+      await ky.post(`${baseURL}/api/users/token/logout`, { credentials: "include" });
+    } catch {
       setAuthState(initialAuthState);
-      localStorage.setItem("auth", JSON.stringify(initialAuthState));
-    },
-    [setAuthState]
-  );
+    }
+  }, []);
 
   return (
     <AuthContext.Provider value={{ authState, authorizedAPI, signIn, signOut }}>

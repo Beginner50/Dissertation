@@ -12,6 +12,7 @@ public class ProjectTask
     public DateTime AssignedDate { get; set; } = DateTime.UtcNow;
     public required DateTime DueDate { get; set; }
     public required string Status { get; set; }
+    public required bool IsLocked { get; set; }
 
     public long? StagedDeliverableID { get; set; }
     [ForeignKey("StagedDeliverableID")]
@@ -25,6 +26,10 @@ public class ProjectTask
     [ForeignKey("ProjectID")]
     public Project Project { get; init; }
 
+    public required long AssignedByID { get; set; }
+    [ForeignKey("AssignedByID")]
+    public User AssignedBy { get; init; }
+
     /*
            The InverseProperty is explictly used to connect a Navigation property to its
            inverse in another entity referencing User.
@@ -32,11 +37,11 @@ public class ProjectTask
            A Navigation Property does not actually exist in the database table
     */
     [InverseProperty("Task")]
-    public List<Reminder> Reminders { get; }
+    public List<Reminder> Reminders { get; } = [];
 
     [InverseProperty("Task")]
-    public List<Meeting> Meetings { get; }
+    public List<Meeting> Meetings { get; } = [];
 
     [InverseProperty("Task")]
-    public List<Deliverable> AllDeliverables { get; }
+    public List<Deliverable> AllDeliverables { get; } = [];
 }

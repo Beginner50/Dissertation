@@ -10,6 +10,7 @@ import {
   TextField,
   FormControl,
   FormGroup,
+  CircularProgress,
 } from "@mui/material";
 
 export type ModalMode = "create" | "edit" | "add-student" | "delete";
@@ -34,8 +35,7 @@ export default function TaskModal({
           sx: { maxWidth: "45vw", mx: "auto" },
         },
       }}
-      keepMounted
-    >
+      keepMounted>
       {children}
     </Dialog>
   );
@@ -48,9 +48,7 @@ TaskModal.Header = ({ mode }: { mode: ModalMode }) => {
     delete: "Delete Task",
     "add-student": "Add Student",
   };
-  return (
-    <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>
-  );
+  return <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>;
 };
 
 TaskModal.Fields = ({ children }: { children: ReactNode }) => (
@@ -144,9 +142,7 @@ TaskModal.DueDate = ({
           label="Due Date"
           type="date"
           value={datePart}
-          onChange={(e) =>
-            handleDueDateChange(`${e.target.value}T${timePart}Z`)
-          }
+          onChange={(e) => handleDueDateChange(`${e.target.value}T${timePart}Z`)}
           size="small"
           slotProps={{
             inputLabel: { shrink: true },
@@ -160,9 +156,7 @@ TaskModal.DueDate = ({
           label="Due Time"
           type="time"
           value={timePart}
-          onChange={(e) =>
-            handleDueDateChange(`${datePart}T${e.target.value}Z`)
-          }
+          onChange={(e) => handleDueDateChange(`${datePart}T${e.target.value}Z`)}
           size="small"
           slotProps={{ inputLabel: { shrink: true } }}
         />
@@ -172,13 +166,17 @@ TaskModal.DueDate = ({
 };
 
 TaskModal.DeleteWarning = () => (
-  <Alert severity="warning" variant="outlined" sx={{ fontWeight: "medium" }}>
+  <Alert
+    severity="warning"
+    variant="outlined"
+    sx={{ fontWeight: "medium", marginLeft: "1rem", marginRight: "1rem" }}>
     <strong>Warning:</strong> This task will be permanently deleted.
   </Alert>
 );
 
 TaskModal.Actions = ({
   mode,
+  loading,
   disabled,
   handleCancelClick,
   handleCreateTask,
@@ -187,6 +185,7 @@ TaskModal.Actions = ({
   handleAddStudent,
 }: {
   mode: ModalMode;
+  loading: boolean;
   disabled: boolean;
   handleCancelClick: () => void;
   handleCreateTask: () => void;
@@ -216,8 +215,8 @@ TaskModal.Actions = ({
         variant="contained"
         onClick={actions[mode]}
         color={mode === "delete" ? "error" : "primary"}
-        disabled={disabled}
-      >
+        loading={loading}
+        disabled={disabled}>
         {labels[mode]}
       </Button>
     </DialogActions>

@@ -60,16 +60,15 @@ namespace PMS.Migrations
                     b.ToTable("Deliverables");
                 });
 
-            modelBuilder.Entity("PMS.Models.FeedbackCriteria", b =>
+            modelBuilder.Entity("PMS.Models.FeedbackCriterion", b =>
                 {
-                    b.Property<long>("FeedbackCriteriaID")
+                    b.Property<long>("FeedbackCriterionID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("FeedbackCriteriaID"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("FeedbackCriterionID"));
 
                     b.Property<string>("ChangeObserved")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<long>("DeliverableID")
@@ -86,7 +85,7 @@ namespace PMS.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("FeedbackCriteriaID");
+                    b.HasKey("FeedbackCriterionID");
 
                     b.HasIndex("DeliverableID");
 
@@ -140,9 +139,9 @@ namespace PMS.Migrations
                         {
                             MeetingID = 1L,
                             AttendeeID = 3L,
-                            End = new DateTime(2025, 12, 20, 11, 0, 0, 0, DateTimeKind.Utc),
+                            End = new DateTime(2026, 1, 30, 11, 0, 0, 0, DateTimeKind.Utc),
                             OrganizerID = 2L,
-                            Start = new DateTime(2025, 12, 20, 10, 0, 0, 0, DateTimeKind.Utc),
+                            Start = new DateTime(2026, 1, 30, 10, 0, 0, 0, DateTimeKind.Utc),
                             Status = "pending",
                             TaskID = 1L
                         },
@@ -150,9 +149,9 @@ namespace PMS.Migrations
                         {
                             MeetingID = 2L,
                             AttendeeID = 2L,
-                            End = new DateTime(2025, 12, 21, 15, 0, 0, 0, DateTimeKind.Utc),
+                            End = new DateTime(2026, 1, 22, 15, 0, 0, 0, DateTimeKind.Utc),
                             OrganizerID = 3L,
-                            Start = new DateTime(2025, 12, 21, 14, 0, 0, 0, DateTimeKind.Utc),
+                            Start = new DateTime(2026, 1, 22, 14, 0, 0, 0, DateTimeKind.Utc),
                             Status = "pending",
                             TaskID = 2L
                         },
@@ -160,9 +159,9 @@ namespace PMS.Migrations
                         {
                             MeetingID = 3L,
                             AttendeeID = 3L,
-                            End = new DateTime(2025, 12, 22, 10, 30, 0, 0, DateTimeKind.Utc),
+                            End = new DateTime(2026, 1, 30, 10, 30, 0, 0, DateTimeKind.Utc),
                             OrganizerID = 2L,
-                            Start = new DateTime(2025, 12, 22, 9, 30, 0, 0, DateTimeKind.Utc),
+                            Start = new DateTime(2026, 1, 30, 9, 30, 0, 0, DateTimeKind.Utc),
                             Status = "accepted",
                             TaskID = 1L
                         },
@@ -170,61 +169,11 @@ namespace PMS.Migrations
                         {
                             MeetingID = 4L,
                             AttendeeID = 2L,
-                            End = new DateTime(2025, 12, 23, 12, 0, 0, 0, DateTimeKind.Utc),
+                            End = new DateTime(2026, 1, 23, 12, 0, 0, 0, DateTimeKind.Utc),
                             OrganizerID = 3L,
-                            Start = new DateTime(2025, 12, 23, 11, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "pending",
+                            Start = new DateTime(2026, 1, 23, 11, 0, 0, 0, DateTimeKind.Utc),
+                            Status = "rejected",
                             TaskID = 3L
-                        },
-                        new
-                        {
-                            MeetingID = 5L,
-                            AttendeeID = 6L,
-                            End = new DateTime(2025, 12, 20, 14, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 2L,
-                            Start = new DateTime(2025, 12, 20, 13, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "accepted",
-                            TaskID = 4L
-                        },
-                        new
-                        {
-                            MeetingID = 6L,
-                            AttendeeID = 2L,
-                            End = new DateTime(2025, 12, 21, 11, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 6L,
-                            Start = new DateTime(2025, 12, 21, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "pending",
-                            TaskID = 5L
-                        },
-                        new
-                        {
-                            MeetingID = 7L,
-                            AttendeeID = 6L,
-                            End = new DateTime(2025, 12, 22, 16, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 2L,
-                            Start = new DateTime(2025, 12, 22, 15, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "accepted",
-                            TaskID = 4L
-                        },
-                        new
-                        {
-                            MeetingID = 8L,
-                            AttendeeID = 2L,
-                            End = new DateTime(2025, 12, 23, 10, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 6L,
-                            Start = new DateTime(2025, 12, 23, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "pending",
-                            TaskID = 5L
-                        },
-                        new
-                        {
-                            MeetingID = 9L,
-                            AttendeeID = 4L,
-                            End = new DateTime(2025, 12, 24, 11, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 5L,
-                            Start = new DateTime(2025, 12, 24, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "accepted",
-                            TaskID = 6L
                         });
                 });
 
@@ -297,27 +246,9 @@ namespace PMS.Migrations
                             ProjectID = 1L,
                             Description = "Research on AI algorithms",
                             Status = "active",
-                            StudentID = 4L,
-                            SupervisorID = 2L,
-                            Title = "AI Research"
-                        },
-                        new
-                        {
-                            ProjectID = 2L,
-                            Description = "Research on Optical Character Recognition",
-                            Status = "active",
                             StudentID = 3L,
                             SupervisorID = 2L,
-                            Title = "OCR Research"
-                        },
-                        new
-                        {
-                            ProjectID = 3L,
-                            Description = "Development of Blockchain applications",
-                            Status = "active",
-                            StudentID = 6L,
-                            SupervisorID = 5L,
-                            Title = "Blockchain Dev"
+                            Title = "AI Research"
                         });
                 });
 
@@ -328,6 +259,9 @@ namespace PMS.Migrations
                         .HasColumnType("bigint");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("ProjectTaskID"));
+
+                    b.Property<long>("AssignedByID")
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("AssignedDate")
                         .HasColumnType("timestamp with time zone");
@@ -358,6 +292,8 @@ namespace PMS.Migrations
 
                     b.HasKey("ProjectTaskID");
 
+                    b.HasIndex("AssignedByID");
+
                     b.HasIndex("ProjectID");
 
                     b.HasIndex("StagedDeliverableID");
@@ -370,6 +306,7 @@ namespace PMS.Migrations
                         new
                         {
                             ProjectTaskID = 1L,
+                            AssignedByID = 2L,
                             AssignedDate = new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Review current papers on Transformer models.",
                             DueDate = new DateTime(2025, 11, 15, 0, 0, 0, 0, DateTimeKind.Utc),
@@ -380,9 +317,10 @@ namespace PMS.Migrations
                         new
                         {
                             ProjectTaskID = 2L,
-                            AssignedDate = new DateTime(2025, 11, 16, 0, 0, 0, 0, DateTimeKind.Utc),
+                            AssignedByID = 2L,
+                            AssignedDate = new DateTime(2025, 12, 21, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Gather and clean the training dataset.",
-                            DueDate = new DateTime(2025, 12, 10, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DueDate = new DateTime(2026, 1, 31, 0, 0, 0, 0, DateTimeKind.Utc),
                             ProjectID = 1L,
                             Status = "pending",
                             Title = "Dataset Collection"
@@ -390,42 +328,13 @@ namespace PMS.Migrations
                         new
                         {
                             ProjectTaskID = 3L,
+                            AssignedByID = 2L,
                             AssignedDate = new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Submit the formal research proposal.",
                             DueDate = new DateTime(2025, 10, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             ProjectID = 1L,
                             Status = "missing",
                             Title = "Proposal Submission"
-                        },
-                        new
-                        {
-                            ProjectTaskID = 4L,
-                            AssignedDate = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Compare Tesseract vs EasyOCR.",
-                            DueDate = new DateTime(2025, 12, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ProjectID = 2L,
-                            Status = "pending",
-                            Title = "Algorithm Selection"
-                        },
-                        new
-                        {
-                            ProjectTaskID = 5L,
-                            AssignedDate = new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Develop a basic Python script for image-to-text conversion.",
-                            DueDate = new DateTime(2025, 11, 20, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ProjectID = 2L,
-                            Status = "completed",
-                            Title = "Initial Prototype"
-                        },
-                        new
-                        {
-                            ProjectTaskID = 6L,
-                            AssignedDate = new DateTime(2025, 12, 5, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Architect the voting system contract in Solidity.",
-                            DueDate = new DateTime(2025, 12, 20, 0, 0, 0, 0, DateTimeKind.Utc),
-                            ProjectID = 3L,
-                            Status = "pending",
-                            Title = "Smart Contract Design"
                         });
                 });
 
@@ -466,44 +375,6 @@ namespace PMS.Migrations
                     b.HasIndex("TaskID");
 
                     b.ToTable("Reminders");
-
-                    b.HasData(
-                        new
-                        {
-                            ReminderID = 1L,
-                            MeetingID = 1L,
-                            Message = "Prepare for Dissertation Review",
-                            RecipientID = 3L,
-                            RemindAt = new DateTime(2026, 1, 4, 9, 0, 0, 0, DateTimeKind.Utc),
-                            Type = "meeting"
-                        },
-                        new
-                        {
-                            ReminderID = 2L,
-                            Message = "Finalize Dataset Collection draft",
-                            RecipientID = 3L,
-                            RemindAt = new DateTime(2026, 1, 4, 14, 0, 0, 0, DateTimeKind.Utc),
-                            TaskID = 2L,
-                            Type = "task"
-                        },
-                        new
-                        {
-                            ReminderID = 3L,
-                            MeetingID = 7L,
-                            Message = "Review OCR Research with Hashim",
-                            RecipientID = 2L,
-                            RemindAt = new DateTime(2026, 1, 5, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Type = "meeting"
-                        },
-                        new
-                        {
-                            ReminderID = 4L,
-                            Message = "Compare Tesseract vs EasyOCR",
-                            RecipientID = 6L,
-                            RemindAt = new DateTime(2026, 1, 4, 8, 30, 0, 0, DateTimeKind.Utc),
-                            TaskID = 4L,
-                            Type = "task"
-                        });
                 });
 
             modelBuilder.Entity("PMS.Models.User", b =>
@@ -556,7 +427,7 @@ namespace PMS.Migrations
                         new
                         {
                             UserID = 2L,
-                            Email = "smith@uni.com",
+                            Email = "jatooprashant099@gmail.com",
                             IsDeleted = false,
                             Name = "Dr. Smith",
                             Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
@@ -566,9 +437,9 @@ namespace PMS.Migrations
                         new
                         {
                             UserID = 3L,
-                            Email = "hashim@uni.com",
+                            Email = "prashant_pms@outlook.com",
                             IsDeleted = false,
-                            Name = "Hashim",
+                            Name = "Roland",
                             Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
                             RefreshToken = "",
                             Role = "student"
@@ -576,37 +447,7 @@ namespace PMS.Migrations
                         new
                         {
                             UserID = 4L,
-                            Email = "charlie@uni.com",
-                            IsDeleted = false,
-                            Name = "Charlie Student",
-                            Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
-                            RefreshToken = "",
-                            Role = "student"
-                        },
-                        new
-                        {
-                            UserID = 5L,
-                            Email = "brown@uni.com",
-                            IsDeleted = false,
-                            Name = "Dr. Brown",
-                            Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
-                            RefreshToken = "",
-                            Role = "supervisor"
-                        },
-                        new
-                        {
-                            UserID = 6L,
-                            Email = "agent@smith.com",
-                            IsDeleted = false,
-                            Name = "Agent Smith",
-                            Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
-                            RefreshToken = "",
-                            Role = "student"
-                        },
-                        new
-                        {
-                            UserID = 7L,
-                            Email = "rebellius@uni.com",
+                            Email = "prashant.jatoo@umail.uom.ac.mu",
                             IsDeleted = false,
                             Name = "Rebellius",
                             Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
@@ -634,7 +475,7 @@ namespace PMS.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("PMS.Models.FeedbackCriteria", b =>
+            modelBuilder.Entity("PMS.Models.FeedbackCriterion", b =>
                 {
                     b.HasOne("PMS.Models.Deliverable", "Deliverable")
                         .WithMany("FeedbackCriterias")
@@ -708,6 +549,12 @@ namespace PMS.Migrations
 
             modelBuilder.Entity("PMS.Models.ProjectTask", b =>
                 {
+                    b.HasOne("PMS.Models.User", "AssignedBy")
+                        .WithMany("AssignedTasks")
+                        .HasForeignKey("AssignedByID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("PMS.Models.Project", "Project")
                         .WithMany("Tasks")
                         .HasForeignKey("ProjectID")
@@ -721,6 +568,8 @@ namespace PMS.Migrations
                     b.HasOne("PMS.Models.Deliverable", "SubmittedDeliverable")
                         .WithMany()
                         .HasForeignKey("SubmittedDeliverableID");
+
+                    b.Navigation("AssignedBy");
 
                     b.Navigation("Project");
 
@@ -773,6 +622,8 @@ namespace PMS.Migrations
 
             modelBuilder.Entity("PMS.Models.User", b =>
                 {
+                    b.Navigation("AssignedTasks");
+
                     b.Navigation("AttendedMeetings");
 
                     b.Navigation("ConductedProjects");

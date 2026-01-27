@@ -5,11 +5,10 @@ namespace PMS.DTOs;
 public class GetTaskDeliverablesDTO
 {
     public long DeliverableID { get; set; }
-    public string Filename { get; set; }
-    public string TableOfContent { get; set; }
+    public required string Filename { get; set; }
     public DateTime SubmissionTimestamp { get; set; }
     public long TaskID { get; set; }
-    public UserLookupDTO SubmittedBy { get; set; }
+    public UserLookupDTO? SubmittedBy { get; set; }
 
-    public List<FeedbackCriteria> FeedbackCriterias { get; set; }
+    public List<FeedbackCriterion> FeedbackCriterias { get; set; } = [];
 }

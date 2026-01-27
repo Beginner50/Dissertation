@@ -24,5 +24,5 @@ public class Project
         A Navigation Property does not actually exist in the database table
     */
     [InverseProperty("Project")]
-    public List<ProjectTask> Tasks { get; set; }
+    public List<ProjectTask> Tasks { get; set; } = [];
 }

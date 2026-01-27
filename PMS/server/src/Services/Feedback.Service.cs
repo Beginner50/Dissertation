@@ -14,33 +14,27 @@ namespace PMS.Services;
 public class FeedbackService
 {
     protected readonly PMSDbContext dbContext;
-    protected readonly Client llmClient;
-    protected readonly ProjectTaskService projectTaskService;
-    protected readonly TaskDeliverableService taskDeliverableService;
     protected readonly NotificationService notificationService;
     protected readonly ReminderService reminderService;
+    protected readonly AIService AIService;
     protected readonly ILogger<FeedbackService> logger;
 
     public FeedbackService(
         PMSDbContext dbContext,
-        Client llmClient,
-        ProjectTaskService projectTaskService,
-        TaskDeliverableService taskDeliverableService,
+        AIService aiService,
         NotificationService notificationService,
         ReminderService reminderService,
         ILogger<FeedbackService> logger
     )
     {
         this.dbContext = dbContext;
-        this.llmClient = llmClient;
         this.logger = logger;
-        this.projectTaskService = projectTaskService;
-        this.taskDeliverableService = taskDeliverableService;
         this.notificationService = notificationService;
         this.reminderService = reminderService;
+        this.AIService = aiService;
     }
 
-    public async Task<IEnumerable<FeedbackCriteria>> GetFeedback(
+    public async Task<IEnumerable<FeedbackCriterion>> GetFeedbackCriteria(
         long userID, long projectID, long taskID
     )
     {
@@ -53,76 +47,98 @@ public class FeedbackService
                     .ToListAsync();
     }
 
-    public async Task ProvideFeedback(
-        long userID, long projectID, long taskID, IEnumerable<FeedbackDTO> feedbackList
+    public async Task CreateFeedbackCriteria(
+        Deliverable submittedDeliverable,
+        List<CreateFeedbackCriterionDTO> feedbackCriteriaToCreate
     )
     {
-        var submittedDeliverable = await taskDeliverableService.GetSubmittedDeliverable(
-            userID,
-            projectID,
-            taskID
-        );
+        var newFeedbackCriteria = feedbackCriteriaToCreate.Select(c => new FeedbackCriterion
+        {
+            Description = c.Description,
+            Status = "unmet",
+            ChangeObserved = "",
+            DeliverableID = submittedDeliverable.DeliverableID,
+            ProvidedByID = submittedDeliverable.Task.AssignedByID
+        });
+
+        await dbContext.FeedbackCriterias.AddRangeAsync(newFeedbackCriteria);
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task UpdateFeedbackCriteria(
+        Deliverable submittedDeliverable,
+        List<UpdateFeedbackCriterionDTO> feedbackCriteriaToUpdate
+    )
+    {
+        var feedbackCriterionIDs = feedbackCriteriaToUpdate.Select(c => c.FeedbackCriterionID);
+
+        var prevFeedbackCriteria = submittedDeliverable.FeedbackCriterias.Where(c =>
+                         feedbackCriterionIDs.Contains(c.FeedbackCriterionID))
+                        .OrderBy(c => c.FeedbackCriterionID).ToList();
+        var newCriteriaValues = feedbackCriteriaToUpdate.OrderBy(c => c.FeedbackCriterionID).ToList();
+
+        if (prevFeedbackCriteria.Count != newCriteriaValues.Count)
+            throw new Exception("Not all Criteria to update exists");
+
+        for (int i = 0; i < prevFeedbackCriteria.Count; i++)
+        {
+            prevFeedbackCriteria[i].Description = newCriteriaValues[i].Description
+                                ?? prevFeedbackCriteria[i].Description;
+            prevFeedbackCriteria[i].Status = newCriteriaValues[i].Status
+                                ?? prevFeedbackCriteria[i].Status;
+            prevFeedbackCriteria[i].ChangeObserved = newCriteriaValues[i].ChangeObserved
+                                ?? prevFeedbackCriteria[i].ChangeObserved;
+        }
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task DeleteFeedbackCriteria(
+        Deliverable submittedDeliverable,
+        List<DeleteFeedbackCriterionDTO> feedbackCriteriaToDelete
+    )
+    {
+        var feedbackCriterionIDs = feedbackCriteriaToDelete.Select(c => c.FeedbackCriterionID);
+
+        var criteriaToDelete = submittedDeliverable.FeedbackCriterias.Where(c =>
+                         feedbackCriterionIDs.Contains(c.FeedbackCriterionID)).ToList();
+
+        dbContext.FeedbackCriterias.RemoveRange(criteriaToDelete);
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task ProvideFeedbackCriteria(
+        long userID, long projectID, long taskID,
+        List<CreateFeedbackCriterionDTO> feedbackCriteriaToCreate,
+        List<UpdateFeedbackCriterionDTO> feedbackCriteriaToUpdate,
+        List<DeleteFeedbackCriterionDTO> feedbackCriteriaToDelete
+    )
+    {
+        var submittedDeliverable = await dbContext.Deliverables
+            .Where(d => d.TaskID == taskID
+                        && d.Task.SubmittedDeliverableID == d.DeliverableID
+                        && d.Task.ProjectID == projectID
+                        && (d.Task.Project.StudentID == userID || d.Task.Project.SupervisorID == userID)
+            )
+            .Include(d => d.FeedbackCriterias)
+            .Include(d => d.Task)
+            .FirstOrDefaultAsync()
+            ?? throw new UnauthorizedAccessException("Submitted Deliverable Not Found");
 
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
-
             try
             {
-                /*----------------------------- Update Criteria ------------------------------*/
-                var criteriaToUpdateIDs = feedbackList.Where(c => c.FeedbackCriteriaID > 0)
-                                          .Select(c => c.FeedbackCriteriaID)
-                                          .ToHashSet();
-                var oldCriteriaValues = submittedDeliverable.FeedbackCriterias.Where(c =>
-                                 criteriaToUpdateIDs.Contains(c.FeedbackCriteriaID))
-                                .OrderBy(c => c.FeedbackCriteriaID).ToList();
-                var newCriteriaValues = feedbackList.Where(c =>
-                                 criteriaToUpdateIDs.Contains(c.FeedbackCriteriaID))
-                                 .OrderBy(c => c.FeedbackCriteriaID).ToList();
-
-                if (oldCriteriaValues.Count != newCriteriaValues.Count)
-                    throw new Exception("Invalid Feedback Criteria Detected During Update!");
-
-                for (int i = 0; i < oldCriteriaValues.Count; i++)
-                {
-                    oldCriteriaValues[i].Description = newCriteriaValues[i].Description;
-                    oldCriteriaValues[i].Status = newCriteriaValues[i].Status;
-                }
-
-                /*----------------------------- Delete Criteria ------------------------------*/
-                var criteriaToDelete = submittedDeliverable.FeedbackCriterias.Where(c =>
-                                 !newCriteriaValues.Select(u => u.FeedbackCriteriaID)
-                                 .Contains(c.FeedbackCriteriaID)).ToList();
-                if (criteriaToDelete.Count > 0)
-                    dbContext.FeedbackCriterias.RemoveRange(criteriaToDelete);
-
-
-                /*----------------------------- Create Criteria ------------------------------*/
-                var criteriaToCreate = feedbackList.Where(x => x.FeedbackCriteriaID == 0).ToList();
-                if (criteriaToCreate.Count > 0)
-                {
-                    var newCriteria = criteriaToCreate.Select(dto => new FeedbackCriteria
-                    {
-                        Description = dto.Description,
-                        Status = "unmet",
-                        ChangeObserved = "",
-                        DeliverableID = submittedDeliverable.DeliverableID,
-                        ProvidedByID = userID
-                    });
-
-                    await dbContext.FeedbackCriterias.AddRangeAsync(newCriteria);
-                }
-                await dbContext.SaveChangesAsync();
-
-                if (criteriaToDelete.Count > 0 || criteriaToUpdateIDs.Count > 0)
-                    await notificationService.CreateTaskNotification(taskID, NotificationType.FEEDBACK_UPDATED);
-                else
-                    await notificationService.CreateTaskNotification(taskID, NotificationType.FEEDBACK_PROVIDED);
+                await CreateFeedbackCriteria(submittedDeliverable, feedbackCriteriaToCreate);
+                await UpdateFeedbackCriteria(submittedDeliverable, feedbackCriteriaToUpdate);
+                await DeleteFeedbackCriteria(submittedDeliverable, feedbackCriteriaToDelete);
 
                 await transaction.CommitAsync();
             }
             catch (Exception)
             {
                 await transaction.RollbackAsync();
+                throw;
             }
         }
     }
@@ -135,47 +151,29 @@ public class FeedbackService
         var task = await dbContext.Tasks.Where(
                     t => t.ProjectTaskID == taskID
                         && t.ProjectID == projectID
-                            && t.Project.StudentID == userID || t.Project.SupervisorID == userID
+                            && (t.Project.StudentID == userID || t.Project.SupervisorID == userID)
                     )
                     .Include(t => t.SubmittedDeliverable)
                         .ThenInclude(sd => sd.FeedbackCriterias)
                     .Include(t => t.StagedDeliverable)
+                    .AsSplitQuery()
                     .FirstOrDefaultAsync()
                     ?? throw new UnauthorizedAccessException("Task Not Found");
 
         if (task.StagedDeliverable == null || task.SubmittedDeliverable == null)
             throw new Exception("Task must have both a Staged and Submitted Deliverable");
 
-        if (task.SubmittedDeliverable.FeedbackCriterias == null
-            || task.SubmittedDeliverable.FeedbackCriterias.Count == 0)
+        if (task.SubmittedDeliverable.FeedbackCriterias.Count == 0)
             throw new Exception("No Feedback Found for Submitted Deliverable");
 
-        var oldCriteriaValues = task.SubmittedDeliverable.FeedbackCriterias
-                                        .Where(c => c.Status == "unmet")
-                                        .OrderBy(c => c.FeedbackCriteriaID)
-                                        .ToList();
-
-        var newCriteriaValues = (
-            await AIUtils.EvaluateCriteria(
-                    llmClient,
+        var newFeedbackCriteria = await AIService.EvaluateFeedbackCriteria(
                     task,
                     previousDeliverable: task.SubmittedDeliverable.File,
                     newDeliverable: task.StagedDeliverable.File,
-                    feedbackCriterias: oldCriteriaValues,
-                    logger
-            )
-        ).OrderBy(c => c.FeedbackCriteriaID).ToList();
+                    previousCriteria: task.SubmittedDeliverable.FeedbackCriterias
+                                          .Where(c => c.Status == "unmet").ToList()
+            );
 
-
-        if (oldCriteriaValues.Count != newCriteriaValues.Count)
-            throw new Exception("Invalid Feedback Criteria Generated During LLM Ouput!");
-
-        for (int i = 0; i < oldCriteriaValues.Count; i++)
-        {
-            oldCriteriaValues[i].Status = newCriteriaValues[i].Status;
-            oldCriteriaValues[i].ChangeObserved = newCriteriaValues[i].ChangeObserved;
-        }
-
-        await dbContext.SaveChangesAsync();
+        await UpdateFeedbackCriteria(task.SubmittedDeliverable, newFeedbackCriteria);
     }
 }

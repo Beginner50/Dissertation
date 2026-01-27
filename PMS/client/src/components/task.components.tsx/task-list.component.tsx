@@ -11,6 +11,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import { type ReactNode } from "react";
 import type { Task, TaskFormData } from "../../lib/types";
+import { Pagination as MuiPagination } from "@mui/material";
 import TaskListEntry from "./task-list-entry.component";
 
 export function TaskList({
@@ -31,8 +32,7 @@ export function TaskList({
         overflowY: "auto",
         flexDirection: "column",
         ...sx,
-      }}
-    >
+      }}>
       {children}
     </Paper>
   );
@@ -45,8 +45,7 @@ TaskList.Header = ({ children }: { children?: ReactNode }) => (
       alignItems="center"
       justifyContent="space-between"
       spacing={2}
-      sx={{ mb: 1 }}
-    >
+      sx={{ mb: 1 }}>
       <Typography variant="h6" component="h2" sx={{ fontWeight: "bold" }}>
         Project Tasks
       </Typography>
@@ -108,12 +107,7 @@ TaskList.Content = ({
 );
 
 TaskList.CreateTaskButton = ({ onClick }: { onClick: () => void }) => (
-  <Button
-    variant="contained"
-    startIcon={<AddIcon />}
-    onClick={onClick}
-    disableElevation
-  >
+  <Button variant="contained" startIcon={<AddIcon />} onClick={onClick} disableElevation>
     Create Task
   </Button>
 );

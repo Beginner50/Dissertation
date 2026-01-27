@@ -10,10 +10,14 @@ import { Selector } from "../../components/base.components/selector.component";
 import { useAuth } from "../../providers/auth.provider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box } from "@mui/material";
+import Pagination from "../../components/base.components/pagination.component";
 
 export default function DashboardTasksRoute() {
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
+
+  const [taskListLimit, setTaskListLimit] = useState(5);
+  const [taskListOffset, setTaskListOffset] = useState(0);
 
   const [taskModalState, setTaskModalState] = useState<ModalState>({
     mode: "create",
@@ -49,7 +53,7 @@ export default function DashboardTasksRoute() {
       variables.invalidateQueryKeys.forEach((key) =>
         queryClient.invalidateQueries({
           queryKey: key,
-        })
+        }),
       ),
   });
 
@@ -61,10 +65,15 @@ export default function DashboardTasksRoute() {
   });
 
   const { data: tasks, isLoading: tasksLoading } = useQuery({
-    queryKey: [projectID, "tasks"],
-    queryFn: async (): Promise<Task[]> =>
+    queryKey: [projectID, "tasks", taskListOffset, taskListLimit],
+    queryFn: async (): Promise<{ items: Task[]; totalCount: number }> =>
       await authorizedAPI
-        .get(`api/users/${user.userID}/projects/${projectID}/tasks`)
+        .get(`api/users/${user.userID}/projects/${projectID}/tasks`, {
+          searchParams: {
+            limit: taskListLimit,
+            offset: taskListOffset,
+          },
+        })
         .json(),
     retry: 1,
   });
@@ -75,14 +84,13 @@ export default function DashboardTasksRoute() {
       queryFn: async (): Promise<User[]> =>
         await authorizedAPI.get(`api/users/unsupervised`).json(),
       retry: 1,
-    }
+    },
   );
 
   /* ---------------------------------------------------------------------------------- */
 
   const handleSelectStudent = (student: User) => {
     setSelectedStudent(student);
-    console.log(selectedStudent);
   };
 
   const handleCancelClick = () => {
@@ -97,6 +105,12 @@ export default function DashboardTasksRoute() {
   };
 
   const handleCreateTaskClick = () => {
+    setTaskModalData({
+      taskID: 0,
+      title: "",
+      description: "",
+      dueDate: "",
+    });
     setTaskModalState((t) => ({ ...t, mode: "create", open: true }));
   };
 
@@ -112,6 +126,10 @@ export default function DashboardTasksRoute() {
 
   const handleAddStudentClick = () => {
     setTaskModalState((t) => ({ ...t, mode: "add-student", open: true }));
+  };
+
+  const handlePageChange = (newOffset: number) => {
+    setTaskListOffset(newOffset);
   };
 
   /* ---------------------------------------------------------------------------------- */
@@ -132,46 +150,71 @@ export default function DashboardTasksRoute() {
   /* ---------------------------------------------------------------------------------- */
 
   const handleCreateTask = () => {
-    mutation.mutate({
-      method: "post",
-      url: `api/users/${user.userID}/projects/${projectID}/tasks`,
-      data: taskModalData,
-      invalidateQueryKeys: [[projectID, "tasks"]],
-    });
-    setTaskModalState((t) => ({ ...t, open: false }));
+    mutation.mutate(
+      {
+        method: "post",
+        url: `api/users/${user.userID}/projects/${projectID}/tasks`,
+        data: taskModalData,
+        invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
+      },
+      {
+        onSuccess: () => {
+          setTaskModalState((t) => ({ ...t, open: false }));
+        },
+      },
+    );
   };
 
   const handleEditTask = () => {
-    mutation.mutate({
-      method: "put",
-      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
-      data: taskModalData,
-      invalidateQueryKeys: [[projectID, "tasks"]],
-    });
-    setTaskModalState((t) => ({ ...t, open: false }));
+    mutation.mutate(
+      {
+        method: "put",
+        url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
+        data: taskModalData,
+        invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
+      },
+      {
+        onSuccess: () => {
+          setTaskModalState((t) => ({ ...t, open: false }));
+        },
+      },
+    );
   };
 
   const handleDeleteTask = () => {
-    mutation.mutate({
-      method: "delete",
-      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
-      data: taskModalData,
-      invalidateQueryKeys: [[projectID, "tasks"]],
-    });
-    setTaskModalState((t) => ({ ...t, open: false }));
+    mutation.mutate(
+      {
+        method: "delete",
+        url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
+        data: taskModalData,
+        invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
+      },
+      {
+        onSuccess: () => {
+          setTaskModalState((t) => ({ ...t, open: false }));
+        },
+      },
+    );
   };
 
   const handleAddStudent = () => {
-    mutation.mutate({
-      method: "put",
-      url: `api/users/${user.userID}/projects/${projectID}/add-student/${selectedStudent?.userID}`,
-      data: {},
-      invalidateQueryKeys: [
-        ["projects", projectID],
-        [user.userID.toString(), "users", "unsupervised"],
-      ],
-    });
-    setTaskModalState((t) => ({ ...t, open: false }));
+    mutation.mutate(
+      {
+        method: "put",
+        url: `api/users/${user.userID}/projects/${projectID}/add-student/${selectedStudent?.userID}`,
+        data: {},
+        invalidateQueryKeys: [
+          ["projects", projectID],
+          [user.userID.toString(), "users", "unsupervised"],
+        ],
+      },
+      {
+        onSuccess: () => {
+          setSelectedStudent(undefined);
+          setTaskModalState((t) => ({ ...t, open: false }));
+        },
+      },
+    );
   };
 
   /*
@@ -208,7 +251,7 @@ export default function DashboardTasksRoute() {
   const filteredStudents = unsupervisedStudents?.filter(
     (s) =>
       s.name.toLowerCase().includes(studentSearchTerm.toLowerCase()) ||
-      s.userID.toString().toLowerCase().includes(studentSearchTerm.toLowerCase())
+      s.userID.toString().toLowerCase().includes(studentSearchTerm.toLowerCase()),
   );
 
   const formDataIncomplete = (() => {
@@ -233,7 +276,7 @@ export default function DashboardTasksRoute() {
     create: (
       <TaskModal.Fields>
         <TaskModal.TaskTitle
-          title={taskModalData.title}
+          title={taskModalData.title ?? ""}
           handleTitleChange={handleTitleChange}
         />
         <TaskModal.TaskDescription
@@ -250,7 +293,7 @@ export default function DashboardTasksRoute() {
       <TaskModal.Fields>
         <TaskModal.TaskID taskID={taskModalData.taskID} />
         <TaskModal.TaskTitle
-          title={taskModalData.title}
+          title={taskModalData.title ?? ""}
           handleTitleChange={handleTitleChange}
         />
         <TaskModal.TaskDescription
@@ -311,10 +354,16 @@ export default function DashboardTasksRoute() {
           <TaskList.Content
             isLoading={tasksLoading}
             projectID={projectID}
-            tasks={tasks ?? []}
+            tasks={tasks?.items ?? []}
             menuEnabled={user.role === "supervisor"}
             handleEditTaskClick={handleEditTaskClick}
             handleDeleteTaskClick={handleDeleteTaskClick}
+          />
+          <Pagination
+            totalCount={tasks?.totalCount ?? 5}
+            limit={taskListLimit}
+            offset={taskListOffset}
+            onPageChange={handlePageChange}
           />
         </TaskList>
 
@@ -350,7 +399,8 @@ export default function DashboardTasksRoute() {
 
         <TaskModal.Actions
           mode={taskModalState.mode}
-          disabled={formDataIncomplete}
+          loading={mutation.status === "pending"}
+          disabled={formDataIncomplete || mutation.isPending}
           handleCancelClick={handleCancelClick}
           handleCreateTask={handleCreateTask}
           handleEditTask={handleEditTask}

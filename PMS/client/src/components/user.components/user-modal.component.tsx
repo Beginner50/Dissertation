@@ -132,7 +132,7 @@ UserModal.Role = ({
       onChange={(e) => handleRoleChange(e.target.value)}
       size="small">
       {/* <MenuItem value="admin">Admin</MenuItem> */}
-      <MenuItem value="instructor">Instructor</MenuItem>
+      <MenuItem value="supervisor">Supervisor</MenuItem>
       <MenuItem value="student">Student</MenuItem>
     </TextField>
   </FormControl>

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
+using MimeKit;
 using PMS.DatabaseContext;
 using PMS.DTOs;
 using PMS.Models;
@@ -10,11 +11,13 @@ namespace PMS.Services;
 public class MeetingService
 {
     protected readonly PMSDbContext dbContext;
+    protected readonly MailService mailService;
     protected readonly NotificationService notificationService;
     protected readonly ReminderService reminderService;
-    public MeetingService(PMSDbContext dbContext, NotificationService notificationService, ReminderService reminderService)
+    public MeetingService(PMSDbContext dbContext, MailService mailService, NotificationService notificationService, ReminderService reminderService)
     {
         this.dbContext = dbContext;
+        this.mailService = mailService;
         this.notificationService = notificationService;
         this.reminderService = reminderService;
     }
@@ -94,30 +97,39 @@ public class MeetingService
         string? description, DateTime start, DateTime end
     )
     {
+        var organizer = await dbContext.Users.FindAsync(organizerID)
+                            ?? throw new Exception("Organizer Not Found!");
+        var attendee = await dbContext.Users.FindAsync(attendeeID)
+                            ?? throw new Exception("Attendee Not Found!");
+
+        Meeting newMeeting;
+        MimeMessage? mail;
+
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
             try
             {
-                var newMeeting = new Meeting
+                newMeeting = new Meeting
                 {
                     TaskID = taskID,
                     OrganizerID = organizerID,
+                    Organizer = organizer,
                     AttendeeID = attendeeID,
+                    Attendee = attendee,
                     Description = description,
                     Start = start,
                     End = end,
                     Status = "pending"
                 };
-                dbContext.Meetings.Add(entity: newMeeting);
+                dbContext.Meetings.Add(newMeeting);
 
                 await dbContext.SaveChangesAsync();
 
-                await notificationService.CreateMeetingNotification(newMeeting.MeetingID, NotificationType.MEETING_BOOKED);
-                await reminderService.CreateMeetingReminder(newMeeting.MeetingID);
+                await notificationService.CreateMeetingNotification(newMeeting, NotificationType.MEETING_BOOKED);
+                await reminderService.CreateMeetingReminder(newMeeting);
+                mail = mailService.CreateMeetingMail(newMeeting, MailType.MEETING_SCHEDULED);
 
                 await transaction.CommitAsync();
-
-                return newMeeting;
             }
             catch (Exception)
             {
@@ -125,6 +137,9 @@ public class MeetingService
                 throw;
             }
         }
+
+        await mailService.SendMail(mail);
+        return newMeeting;
     }
 
     public async Task EditMeetingDescription(
@@ -140,12 +155,13 @@ public class MeetingService
 
         meeting.Description = description;
 
-
         await dbContext.SaveChangesAsync();
     }
 
     public async Task CancelMeeting(long organizerID, long meetingID)
     {
+        MimeMessage? mail;
+
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
             try
@@ -153,15 +169,19 @@ public class MeetingService
                 var meeting = await dbContext.Meetings.Where(m =>
                     m.MeetingID == meetingID &&
                         m.OrganizerID == organizerID)
+                    .Include(m => m.Organizer)
+                    .Include(m => m.Attendee)
                     .FirstOrDefaultAsync()
                     ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
 
-                await notificationService.CreateMeetingNotification(meeting.MeetingID, NotificationType.MEETING_CANCELLED);
-                await reminderService.DeleteMeetingReminder(meeting.MeetingID);
+                await notificationService.CreateMeetingNotification(meeting, NotificationType.MEETING_CANCELLED);
+                await reminderService.DeleteMeetingReminder(meeting);
+                mail = mailService.CreateMeetingMail(meeting, MailType.MEETING_CANCELLED);
 
                 dbContext.Remove(meeting);
                 await dbContext.SaveChangesAsync();
+
 
                 await transaction.CommitAsync();
             }
@@ -171,6 +191,8 @@ public class MeetingService
                 throw;
             }
         }
+
+        await mailService.SendMail(mail);
     }
 
     public async Task AcceptMeeting(long attendeeID, long meetingID)
@@ -182,6 +204,8 @@ public class MeetingService
                 var meeting = await dbContext.Meetings.Where(m =>
                     m.MeetingID == meetingID &&
                         m.AttendeeID == attendeeID)
+                        .Include(m => m.Organizer)
+                        .Include(m => m.Attendee)
                     .FirstOrDefaultAsync()
                     ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
@@ -189,7 +213,7 @@ public class MeetingService
                 meeting.Status = "accepted";
                 await dbContext.SaveChangesAsync();
 
-                await notificationService.CreateMeetingNotification(meeting.MeetingID, NotificationType.MEETING_ACCEPTED);
+                await notificationService.CreateMeetingNotification(meeting, NotificationType.MEETING_ACCEPTED);
 
                 await transaction.CommitAsync();
             }
@@ -203,6 +227,8 @@ public class MeetingService
 
     public async Task RejectMeeting(long attendeeID, long meetingID)
     {
+        MimeMessage? mail;
+
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
             try
@@ -210,15 +236,17 @@ public class MeetingService
                 var meeting = await dbContext.Meetings.Where(m =>
                   m.MeetingID == meetingID &&
                       m.AttendeeID == attendeeID)
+                    .Include(m => m.Organizer)
+                    .Include(m => m.Attendee)
                   .FirstOrDefaultAsync()
                   ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
-                await notificationService.CreateMeetingNotification(meeting.MeetingID, NotificationType.MEETING_REJECTED);
+                await notificationService.CreateMeetingNotification(meeting, NotificationType.MEETING_REJECTED);
+                await reminderService.DeleteMeetingReminder(meeting);
+                mail = mailService.CreateMeetingMail(meeting, MailType.MEETING_REJECTED);
 
                 dbContext.Remove(meeting);
                 await dbContext.SaveChangesAsync();
-
-                await reminderService.DeleteMeetingReminder(meeting.MeetingID);
 
                 await transaction.CommitAsync();
             }
@@ -228,5 +256,7 @@ public class MeetingService
                 throw;
             }
         }
+
+        await mailService.SendMail(mail);
     }
 }

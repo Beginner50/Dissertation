@@ -8,10 +8,12 @@ namespace PMS.Controllers;
 [ApiController]
 public class UsersController : ControllerBase
 {
+    protected readonly TokenService tokenService;
     protected readonly UserService userService;
     private readonly IWebHostEnvironment environment;
-    public UsersController(UserService userService, IWebHostEnvironment environment)
+    public UsersController(UserService userService, TokenService tokenService, IWebHostEnvironment environment)
     {
+        this.tokenService = tokenService;
         this.userService = userService;
         this.environment = environment;
     }
@@ -65,10 +67,10 @@ public class UsersController : ControllerBase
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = environment.IsDevelopment(),
+                Secure = !environment.IsDevelopment(),
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddDays(14),
-                Path = "/api/token/refresh"
+                Path = "/api/users/token"
             };
 
             Response.Cookies.Append("refreshToken", userAuth.RefreshToken, cookieOptions);
@@ -85,7 +87,7 @@ public class UsersController : ControllerBase
         }
     }
 
-    [Route("api/token/refresh")]
+    [Route("api/users/token/refresh")]
     [HttpPost]
     public async Task<IActionResult> RefreshAccessToken()
     {
@@ -99,7 +101,7 @@ public class UsersController : ControllerBase
             return Ok(new
             {
                 Token = newAccessToken,
-                TokenExpiry = DateTime.UtcNow.AddMinutes(1)
+                TokenExpiry = DateTime.UtcNow.AddMinutes(5)
             });
         }
         catch (Exception e)
@@ -108,19 +110,24 @@ public class UsersController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/logout")]
+    /*
+        When logging out, the server will delete the refresh token cookie 
+        and invalidate the refresh token on the server side.
+    */
+    [Route("api/users/token/logout")]
     [HttpPost]
-    [Authorize(Policy = "OwnershipRBAC")]
-    public async Task<IActionResult> Logout(
-        [FromRoute] long userID
-    )
+    public async Task<IActionResult> Logout()
     {
+        if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
+            return NoContent();
+
+        var token = tokenService.ExtractClaims(refreshToken);
         try
         {
-            await userService.Logout(userID);
+            await userService.Logout(long.Parse(token.Subject));
             Response.Cookies.Delete("refreshToken", new CookieOptions
             {
-                Path = "/api/token/refresh"
+                Path = "/api/users/token"
             });
             return NoContent();
         }

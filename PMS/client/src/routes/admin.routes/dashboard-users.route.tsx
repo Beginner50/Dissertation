@@ -11,6 +11,9 @@ import type { ModalState as UserModalState } from "../../components/user.compone
 export default function DashboardUsersRoute() {
   const { authorizedAPI } = useAuth();
 
+  const [userLimit, setUserLimit] = useState(10);
+  const [userOffset, setUserOffset] = useState(0);
+
   const [userModalState, setUserModalState] = useState<UserModalState>({
     mode: "create",
     open: false,
@@ -21,8 +24,6 @@ export default function DashboardUsersRoute() {
     email: "",
     role: "",
   });
-
-  const [page, setPage] = useState(0);
 
   /* ---------------------------------------------------------------------------------- */
 
@@ -40,7 +41,7 @@ export default function DashboardUsersRoute() {
     }) => await authorizedAPI(url, { method, json: data }),
     onSuccess: (_data, variables) =>
       variables.invalidateQueryKeys.forEach((key) =>
-        queryClient.invalidateQueries({ queryKey: key })
+        queryClient.invalidateQueries({ queryKey: key }),
       ),
   });
 
@@ -52,8 +53,8 @@ export default function DashboardUsersRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const handlePageChange = (_: unknown, newPage: number) => {
-    setPage(newPage);
+  const handlePageChange = (newOffset: number) => {
+    setUserOffset(newOffset);
   };
 
   const handleAddUserClick = () => {
@@ -96,10 +97,6 @@ export default function DashboardUsersRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const offset = page * 10;
-  const limit = 10;
-  const displayedUsers = users?.slice(offset, offset + limit);
-
   return (
     <>
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -121,10 +118,11 @@ export default function DashboardUsersRoute() {
 
           {/* Users */}
           <UserTable
-            users={displayedUsers ?? []}
+            users={users ?? []}
             isLoading={usersLoading}
             totalCount={users?.length ?? 0}
-            page={page}
+            limit={userLimit}
+            offset={userOffset}
             onPageChange={handlePageChange}
             handleDeleteUserClick={handleDeleteUserClick}
           />
