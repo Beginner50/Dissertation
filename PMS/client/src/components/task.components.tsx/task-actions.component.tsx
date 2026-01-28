@@ -13,7 +13,7 @@ import CommentIcon from "@mui/icons-material/Comment";
 import PolicyIcon from "@mui/icons-material/Policy";
 import SendIcon from "@mui/icons-material/Send";
 import { useRef, type ReactNode } from "react";
-import type { DeliverableFile } from "../../lib/types";
+import { CloudUpload, Lock, LockOpen, LockOutlined } from "@mui/icons-material";
 
 export default function TaskActions({
   sx,
@@ -35,8 +35,7 @@ export default function TaskActions({
         flexDirection: "column",
         gap: "1rem",
         ...sx,
-      }}
-    >
+      }}>
       {children}
     </Box>
   );
@@ -52,8 +51,7 @@ TaskActions.Header = ({ title }: { title: string }) => {
           justifyContent: "space-between",
           gap: "12px",
           paddingBottom: "0.5rem",
-        }}
-      >
+        }}>
         <Typography
           variant="h2"
           sx={{
@@ -64,8 +62,7 @@ TaskActions.Header = ({ title }: { title: string }) => {
             margin: 0,
             padding: "2px",
             alignSelf: "end",
-          }}
-        >
+          }}>
           {title}
         </Typography>
       </Box>
@@ -80,8 +77,10 @@ TaskActions.Header = ({ title }: { title: string }) => {
 
 TaskActions.DeliverableUpload = ({
   handleFileUpload,
+  taskLocked,
 }: {
   handleFileUpload: (file: File) => void;
+  taskLocked: boolean;
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -90,41 +89,57 @@ TaskActions.DeliverableUpload = ({
       sx={{
         borderWidth: "2px",
         borderStyle: "dashed",
-        borderColor: theme.link,
+        borderColor: taskLocked ? "divider" : theme.link,
         borderRadius: "8px",
         padding: "16px",
         textAlign: "center",
-        cursor: "pointer",
-        backgroundColor: "#f8fbfc",
+        cursor: taskLocked ? "not-allowed" : "pointer",
+        backgroundColor: taskLocked ? "#f5f5f5" : "#f8fbfc",
+        opacity: taskLocked ? 0.8 : 1,
         transition: "all 0.2s",
-        ":hover": {
-          borderColor: theme.linkFocused,
-          backgroundColor: "#f0f4f9",
-        },
+        ":hover": !taskLocked
+          ? {
+              borderColor: theme.linkFocused,
+              backgroundColor: "#f0f4f9",
+            }
+          : {},
       }}
-      onClick={() => fileInputRef.current?.click()}
-    >
-      <CloudUploadIcon sx={{ color: theme.link, fontSize: "2rem" }} />
+      onClick={() => !taskLocked && fileInputRef.current?.click()}>
+      {taskLocked ? (
+        <LockOutlined sx={{ color: "text.disabled", fontSize: "2rem" }} />
+      ) : (
+        <CloudUpload sx={{ color: theme.link, fontSize: "2rem" }} />
+      )}
+
       <Typography
         variant="body2"
-        sx={{ color: theme.textNormal, fontWeight: 500, marginTop: "4px" }}
-      >
-        Click to Upload Deliverable
+        sx={{
+          color: taskLocked ? "text.disabled" : theme.textNormal,
+          fontWeight: 500,
+          marginTop: "4px",
+        }}>
+        {taskLocked ? "Task is Locked" : "Click to Upload Deliverable"}
       </Typography>
+
       <Typography variant="caption" sx={{ color: theme.textMuted }}>
-        File Type: .pdf
+        {taskLocked
+          ? "Deliverable Uploads and Submissions are disabled by the supervisor."
+          : "File Type: .pdf"}
       </Typography>
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={(e) => {
-          const file = e.currentTarget.files?.[0];
-          if (file) handleFileUpload(file);
-          e.target.value = "";
-        }}
-        hidden
-        accept=".pdf"
-      />
+
+      {!taskLocked && (
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={(e) => {
+            const file = e.currentTarget.files?.[0];
+            if (file) handleFileUpload(file);
+            e.target.value = "";
+          }}
+          hidden
+          accept=".pdf"
+        />
+      )}
     </Box>
   );
 };
@@ -136,8 +151,7 @@ TaskActions.Actions = ({ children }: { children: ReactNode }) => {
         display: "flex",
         flexDirection: "column",
         gap: "8px",
-      }}
-    >
+      }}>
       {children}
     </Box>
   );
@@ -158,9 +172,28 @@ TaskActions.ProvideFeedbackButton = ({
       disabled={disabled}
       fullWidth
       startIcon={<CommentIcon />}
-      onClick={onClick}
-    >
+      onClick={onClick}>
       Provide Feedback
+    </Button>
+  );
+};
+
+TaskActions.LockTaskButton = ({
+  onLockTaskClick,
+  isLocked,
+}: {
+  onLockTaskClick: () => void;
+  isLocked: boolean;
+}) => {
+  return (
+    <Button
+      variant="outlined"
+      color="secondary"
+      size="medium"
+      fullWidth
+      onClick={onLockTaskClick}
+      startIcon={!isLocked ? <Lock /> : <LockOpen />}>
+      {!isLocked ? "Lock Task" : "Unlock Task"}
     </Button>
   );
 };
@@ -182,11 +215,8 @@ TaskActions.CheckComplianceButton = ({
       disabled={disabled}
       fullWidth
       startIcon={<PolicyIcon />}
-      endIcon={
-        isLoading ? <CircularProgress color="inherit" size="20px" /> : <></>
-      }
-      onClick={onClick}
-    >
+      endIcon={isLoading ? <CircularProgress color="inherit" size="20px" /> : <></>}
+      onClick={onClick}>
       Check Compliance
     </Button>
   );
@@ -207,8 +237,7 @@ TaskActions.SubmitDeliverableButton = ({
       disabled={disabled}
       fullWidth
       startIcon={<SendIcon />}
-      onClick={onClick}
-    >
+      onClick={onClick}>
       Submit Deliverable
     </Button>
   );

@@ -71,10 +71,6 @@ public class ReminderService
     {
         var reminder = await dbContext.Reminders
                         .Where(r => r.MeetingID == meeting.MeetingID)
-                        .Include(r => r.Meeting)
-                            .ThenInclude(m => m.Organizer)
-                        .Include(r => r.Meeting)
-                            .ThenInclude(m => m.Attendee)
                         .FirstOrDefaultAsync()
                         ?? throw new Exception("Reminder Not Found!");
 

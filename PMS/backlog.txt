@@ -1,12 +1,16 @@
 Pending Tasks
+  UI Fixes:
+    Restrict size of task action sidebar
+    Allow scrolling through reminder and notifications
+    Add number for reminders
+    Make the nav links more responsive
+    Unify all date processing mechanisms
 
-     Find a user friendly mechanism to allow supervisors to prevent students from submitting
-       deliverables when providing feedback
-     Make the nav links more responsive
-     Fix UI Bugs
+  Urgent:
+    Update implementation
+    Document AI Feedback Analysis
 
-     Update functional and non-functional requirements
-     Document AI Feedback Analysis
-     Update UML Diagrams
-     
-     Improve progress log report generation
+  Update functional and non-functional requirements
+  Update UML Diagrams
+
+  Improve progress log report generation

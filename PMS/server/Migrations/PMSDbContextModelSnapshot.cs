@@ -273,6 +273,9 @@ namespace PMS.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
                     b.Property<long>("ProjectID")
                         .HasColumnType("bigint");
 
@@ -310,6 +313,7 @@ namespace PMS.Migrations
                             AssignedDate = new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Review current papers on Transformer models.",
                             DueDate = new DateTime(2025, 11, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsLocked = false,
                             ProjectID = 1L,
                             Status = "completed",
                             Title = "Literature Review"
@@ -321,6 +325,7 @@ namespace PMS.Migrations
                             AssignedDate = new DateTime(2025, 12, 21, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Gather and clean the training dataset.",
                             DueDate = new DateTime(2026, 1, 31, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsLocked = false,
                             ProjectID = 1L,
                             Status = "pending",
                             Title = "Dataset Collection"
@@ -332,6 +337,7 @@ namespace PMS.Migrations
                             AssignedDate = new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Description = "Submit the formal research proposal.",
                             DueDate = new DateTime(2025, 10, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            IsLocked = false,
                             ProjectID = 1L,
                             Status = "missing",
                             Title = "Proposal Submission"

@@ -77,13 +77,13 @@ public class FeedbackService
                         .OrderBy(c => c.FeedbackCriterionID).ToList();
         var newCriteriaValues = feedbackCriteriaToUpdate.OrderBy(c => c.FeedbackCriterionID).ToList();
 
+
         if (prevFeedbackCriteria.Count != newCriteriaValues.Count)
             throw new Exception("Not all Criteria to update exists");
 
         for (int i = 0; i < prevFeedbackCriteria.Count; i++)
         {
-            prevFeedbackCriteria[i].Description = newCriteriaValues[i].Description
-                                ?? prevFeedbackCriteria[i].Description;
+            prevFeedbackCriteria[i].Description = newCriteriaValues[i].Description ?? prevFeedbackCriteria[i].Description;
             prevFeedbackCriteria[i].Status = newCriteriaValues[i].Status
                                 ?? prevFeedbackCriteria[i].Status;
             prevFeedbackCriteria[i].ChangeObserved = newCriteriaValues[i].ChangeObserved
@@ -154,24 +154,24 @@ public class FeedbackService
                             && (t.Project.StudentID == userID || t.Project.SupervisorID == userID)
                     )
                     .Include(t => t.SubmittedDeliverable)
-                        .ThenInclude(sd => sd.FeedbackCriterias)
                     .Include(t => t.StagedDeliverable)
-                    .AsSplitQuery()
                     .FirstOrDefaultAsync()
                     ?? throw new UnauthorizedAccessException("Task Not Found");
 
         if (task.StagedDeliverable == null || task.SubmittedDeliverable == null)
             throw new Exception("Task must have both a Staged and Submitted Deliverable");
 
-        if (task.SubmittedDeliverable.FeedbackCriterias.Count == 0)
+        var prevFeedbackCriteria = await dbContext.FeedbackCriterias
+                    .Where(c => c.DeliverableID == task.SubmittedDeliverableID)
+                    .ToListAsync();
+        if (prevFeedbackCriteria.Count == 0)
             throw new Exception("No Feedback Found for Submitted Deliverable");
 
         var newFeedbackCriteria = await AIService.EvaluateFeedbackCriteria(
                     task,
                     previousDeliverable: task.SubmittedDeliverable.File,
                     newDeliverable: task.StagedDeliverable.File,
-                    previousCriteria: task.SubmittedDeliverable.FeedbackCriterias
-                                          .Where(c => c.Status == "unmet").ToList()
+                    previousCriteria: prevFeedbackCriteria.Where(c => c.Status == "unmet").ToList()
             );
 
         await UpdateFeedbackCriteria(task.SubmittedDeliverable, newFeedbackCriteria);

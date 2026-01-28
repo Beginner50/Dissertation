@@ -57,13 +57,11 @@ public class UserService
         if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
             throw new AuthenticationException("Invalid Credentials!");
 
-        var accessToken = tokenService.CreateAccessToken(user.UserID, user.Role);
-        var refreshToken = tokenService.CreateRefreshToken(user.UserID, user.Role);
+        var (accessToken, accessTokenExpiry) = tokenService.CreateAccessToken(user.UserID, user.Role);
+        var (refreshToken, refreshTokenExpiry) = tokenService.CreateRefreshToken(user.UserID, user.Role);
 
         user.RefreshToken = refreshToken;
         await dbContext.SaveChangesAsync();
-
-        logger.LogDebug("User {userID} logged in successfully!", user.UserID);
 
         return new GetUserAuth
         {
@@ -74,30 +72,38 @@ public class UserService
                 Email = user.Email,
                 Role = user.Role
             },
-            AccessToken = accessToken,
-            RefreshToken = refreshToken
+            AccessToken = new TokenDTO
+            {
+                Payload = accessToken,
+                Expiry = accessTokenExpiry
+            },
+            RefreshToken = new TokenDTO
+            {
+                Payload = refreshToken,
+                Expiry = refreshTokenExpiry
+            }
         };
     }
 
-    public async Task<string> RefreshAccessToken(string refreshToken)
+    public async Task<TokenDTO> RefreshAccessToken(JwtSecurityToken refreshToken, string refreshTokenPayload)
     {
         try
         {
-            var handler = new JwtSecurityTokenHandler();
-            var jwt = handler.ReadJwtToken(refreshToken);
-            if (jwt.ValidTo < DateTime.UtcNow)
-                throw new Exception("Token expired");
-
-
-            var userId = long.Parse(jwt.Subject);
+            var userId = long.Parse(refreshToken.Subject);
             var user = await dbContext.Users
                             .Where(u => u.UserID == userId)
                             .FirstOrDefaultAsync()
                             ?? throw new UnauthorizedAccessException("User Not Found!");
-            if (user.RefreshToken != refreshToken)
+            if (user.RefreshToken != refreshTokenPayload)
                 throw new Exception("Invalid or revoked session");
 
-            return tokenService.CreateAccessToken(user.UserID, user.Role);
+            var (accessToken, accessTokenExpiry) = tokenService.CreateAccessToken(user.UserID, user.Role);
+
+            return new TokenDTO
+            {
+                Payload = accessToken,
+                Expiry = accessTokenExpiry
+            };
         }
         catch (Exception)
         {

@@ -15,7 +15,7 @@ public class NotificationsController : ControllerBase
 
     [Route("api/users/{userID}/notifications")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GetAllNotifications(
         [FromRoute] long userID
     )

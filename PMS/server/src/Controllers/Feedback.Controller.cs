@@ -17,7 +17,7 @@ public class FeedbackController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GetFeedbackCriteria(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -37,7 +37,7 @@ public class FeedbackController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback")]
     [HttpPost]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
+    [Authorize(Policy = "Ownership", Roles = "supervisor")]
     public async Task<IActionResult> ProvideFeedbackCriteria(
            [FromRoute] long userID,
            [FromRoute] long projectID,
@@ -64,7 +64,7 @@ public class FeedbackController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback/compliance-check")]
     [HttpPost]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> FeedbackComplianceCheck(
         [FromRoute] long userID,
         [FromRoute] long projectID,

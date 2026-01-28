@@ -18,10 +18,9 @@ public class MeetingsController : ControllerBase
         this.projectService = projectService;
     }
 
-    // [Authorize]
     [Route("api/users/{userID}/meetings")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GetSupervisorMeetings(
         [FromRoute] long userID
     )
@@ -33,13 +32,13 @@ public class MeetingsController : ControllerBase
         }
         catch (Exception e)
         {
-            return NotFound(e);
+            return NotFound(e.Message);
         }
     }
 
     [Route("api/meetings/{meetingID}")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GetMeeting([FromRoute] long meetingID)
     {
         try
@@ -49,13 +48,13 @@ public class MeetingsController : ControllerBase
         }
         catch (Exception e)
         {
-            return NotFound(e);
+            return NotFound(e.Message);
         }
     }
 
     [Route("api/users/{userID}/meetings")]
     [HttpPost]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> BookMeeting(
         [FromRoute] long userID,
         [FromBody] BookMeetingDTO bookMeetingDTO)
@@ -75,13 +74,13 @@ public class MeetingsController : ControllerBase
         }
         catch (Exception e)
         {
-            return BadRequest(e);
+            return BadRequest(e.Message);
         }
     }
 
     [Route("api/users/{userID}/meetings/{meetingID}/edit-description")]
     [HttpPut]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> EditMeetingDescription(
                     [FromRoute] long userID,
                     [FromRoute] long meetingID,
@@ -99,13 +98,13 @@ public class MeetingsController : ControllerBase
         }
         catch (Exception e)
         {
-            return BadRequest(e);
+            return BadRequest(e.Message);
         }
     }
 
     [Route("api/users/{userID}/meetings/{meetingID}/cancel")]
     [HttpDelete]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> CancelMeeting(
         [FromRoute] long userID,
         [FromRoute] long meetingID
@@ -118,13 +117,13 @@ public class MeetingsController : ControllerBase
         }
         catch (Exception e)
         {
-            return BadRequest(e);
+            return BadRequest(e.Message);
         }
     }
 
     [Route("api/users/{userID}/meetings/{meetingID}/accept")]
     [HttpPut]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> AcceptMeeting(
         [FromRoute] long userID,
         [FromRoute] long meetingID
@@ -137,13 +136,13 @@ public class MeetingsController : ControllerBase
         }
         catch (Exception e)
         {
-            return BadRequest(e);
+            return BadRequest(e.Message);
         }
     }
 
     [Route("api/users/{userID}/meetings/{meetingID}/reject")]
     [HttpDelete]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> RejectMeeting(
             [FromRoute] long userID,
             [FromRoute] long meetingID
@@ -156,7 +155,7 @@ public class MeetingsController : ControllerBase
         }
         catch (Exception e)
         {
-            return BadRequest(e);
+            return BadRequest(e.Message);
         }
     }
 }

@@ -36,7 +36,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GetProjectsByUser(
         [FromRoute] long userID,
         [FromQuery] long limit,
@@ -61,7 +61,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GetProject(
             [FromRoute] long userID,
             [FromRoute] long projectID
@@ -80,7 +80,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects")]
     [HttpPost]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
+    [Authorize(Policy = "Ownership", Roles = "supervisor")]
     public async Task<IActionResult> CreateProject(
         [FromRoute] long userID,
         [FromBody] CreateProjectDTO createProjectDTO
@@ -100,7 +100,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}")]
     [HttpPut]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
+    [Authorize(Policy = "Ownership", Roles = "supervisor")]
     public async Task<IActionResult> EditProject(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -119,7 +119,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}")]
     [HttpDelete]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
+    [Authorize(Policy = "Ownership", Roles = "supervisor")]
     public async Task<IActionResult> ArchiveProject(
             [FromRoute] long userID,
             [FromRoute] long projectID)
@@ -137,7 +137,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/add-student/{studentID}")]
     [HttpPut]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
+    [Authorize(Policy = "Ownership", Roles = "supervisor")]
     public async Task<IActionResult> AddStudentToProject(
             [FromRoute] long userID,
             [FromRoute] long projectID,
@@ -157,7 +157,7 @@ public class ProjectsController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/progress-log")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GenerateProgressLogReport(
         [FromRoute] long userID,
         [FromRoute] long projectID

@@ -54,6 +54,7 @@ public class ProjectTaskService
             AssignedDate = task.AssignedDate,
             DueDate = task.DueDate,
             Status = task.Status,
+            IsLocked = task.IsLocked,
             StagedDeliverableID = task.StagedDeliverableID,
             SubmittedDeliverableID = task.SubmittedDeliverableID,
             AssignedBy = new UserLookupDTO
@@ -81,13 +82,14 @@ public class ProjectTaskService
             .Take((int)limit)
             .ToListAsync();
 
-        // See GetTask above for explanation for why GetTasks is not idempotent
         bool hasChanges = false;
         foreach (var task in tasks)
         {
             if (task.DueDate < DateTime.UtcNow && task.Status == "pending")
+            {
                 task.Status = "missing";
-            hasChanges = true;
+                hasChanges = true;
+            }
         }
 
         if (hasChanges)
@@ -100,7 +102,7 @@ public class ProjectTaskService
             Description = t.Description,
             AssignedDate = t.AssignedDate,
             DueDate = t.DueDate,
-            Status = t.Status
+            Status = t.Status,
         }), count);
     }
 
@@ -129,6 +131,7 @@ public class ProjectTaskService
                     AssignedByID = userID,
                     ProjectID = projectID,
                     Project = project,
+                    IsLocked = false,
                 };
 
                 dbContext.Tasks.Add(newTask);
@@ -179,11 +182,13 @@ public class ProjectTaskService
                 if (dto.DueDate != task.DueDate)
                 {
                     task.DueDate = (DateTime)dto.DueDate;
+
                     if (task.DueDate < DateTime.UtcNow && task.Status.Equals("pending"))
                         task.Status = "missing";
 
                     dueDateUpdated = true;
                 }
+                task.IsLocked = dto.IsLocked ?? task.IsLocked;
 
                 await dbContext.SaveChangesAsync();
 

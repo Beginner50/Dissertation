@@ -14,12 +14,14 @@ public class MeetingService
     protected readonly MailService mailService;
     protected readonly NotificationService notificationService;
     protected readonly ReminderService reminderService;
-    public MeetingService(PMSDbContext dbContext, MailService mailService, NotificationService notificationService, ReminderService reminderService)
+    protected readonly ILogger<MeetingService> logger;
+    public MeetingService(PMSDbContext dbContext, MailService mailService, NotificationService notificationService, ReminderService reminderService, ILogger<MeetingService> logger)
     {
         this.dbContext = dbContext;
         this.mailService = mailService;
         this.notificationService = notificationService;
         this.reminderService = reminderService;
+        this.logger = logger;
     }
 
     public async Task<Meeting?> GetMeeting(long meetingID)

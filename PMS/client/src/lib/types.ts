@@ -40,6 +40,7 @@ export type Task = {
   title: string;
   description?: string;
   status: "pending" | "completed" | "missing";
+  isLocked?: boolean;
   assignedDate: string;
   dueDate: string;
   assignedBy?: User;

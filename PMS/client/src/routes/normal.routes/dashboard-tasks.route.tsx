@@ -76,6 +76,7 @@ export default function DashboardTasksRoute() {
         })
         .json(),
     retry: 1,
+    refetchInterval: 1000 * 60 * 5, // Refetch every 5 minute
   });
 
   const { data: unsupervisedStudents, isLoading: unsupervisedStudentsLoading } = useQuery(

@@ -17,7 +17,7 @@ public class TaskDeliverablesController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "student")]
+    [Authorize(Policy = "Ownership", Roles = "student")]
     public async Task<IActionResult> GetStagedDeliverable(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -43,7 +43,7 @@ public class TaskDeliverablesController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/submitted-deliverable")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GetSubmittedDeliverable(
             [FromRoute] long userID,
             [FromRoute] long projectID,
@@ -70,7 +70,7 @@ public class TaskDeliverablesController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable")]
     [HttpPost]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "student")]
+    [Authorize(Policy = "Ownership", Roles = "student")]
     public async Task<IActionResult> UploadStagedDeliverable(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -98,7 +98,7 @@ public class TaskDeliverablesController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable")]
     [HttpDelete]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "student")]
+    [Authorize(Policy = "Ownership", Roles = "student")]
     public async Task<IActionResult> RemoveStagedDeliverable(
            [FromRoute] long userID,
            [FromRoute] long projectID,
@@ -122,7 +122,7 @@ public class TaskDeliverablesController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/staged-deliverable/submit")]
     [HttpPost]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "student")]
+    [Authorize(Policy = "Ownership", Roles = "student")]
     public async Task<IActionResult> SubmitStagedDeliverable(
            [FromRoute] long userID,
            [FromRoute] long projectID,

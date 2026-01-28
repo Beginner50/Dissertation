@@ -15,7 +15,7 @@ public class ReminderController : ControllerBase
 
     [Route("api/users/{userID}/reminders")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GetReminders(
         [FromRoute] long userID
     )

@@ -103,6 +103,8 @@ var symmetricKey = new SymmetricSecurityKey(
     ?? "SECRET_KEY_HERE_32_CHARACTERS"
     )
 );
+var mailAccount = builder.Configuration["MAIL_ACCOUNT"] ?? "EMAIL_HERE";
+var mailPassword = builder.Configuration["MAIL_PASSWORD"] ?? "PASSWORD_HERE";
 
 /*
 Instructs the web application to extract the JWT from the bearer header of the
@@ -181,10 +183,10 @@ Based on the official documentation page:
 */
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("OwnershipRBAC", policy =>
+    options.AddPolicy("Ownership", policy =>
     {
         policy.RequireAuthenticatedUser();
-        policy.AddRequirements(new OwnershipRBACRequirement());
+        policy.AddRequirements(new OwnershipRequirement());
     });
 });
 
@@ -205,11 +207,11 @@ AddSingleton:
     For example, if database context were to be a singleton, then all users might try to use
     the same database connection at the same time, leading to race conditions and crashes.
 */
-builder.Services.AddSingleton<IAuthorizationHandler, OwnershipRBACHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, OwnershipHandler>();
 builder.Services.AddSingleton<Client>(); // Gemini client
 builder.Services.AddSingleton<TokenService>(new TokenService(symmetricKey));
 builder.Services.AddSingleton<AIService>();
-builder.Services.AddSingleton<MailService>();
+builder.Services.AddSingleton<MailService>(new MailService(mailAccount, mailPassword));
 
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ProjectService>();

@@ -62,14 +62,17 @@ public enum MailType
 
 public class MailService
 {
-    private readonly ILogger<MailService> logger;
+    private readonly string mailAccount;
+    private readonly string mailPassword;
     private static readonly string MailFooter = """
         <span color="red"> This is an automated reminder from Project Management System (PMS).
         Please do not reply to this email.</span><br/><br/>
     """;
-    public MailService(ILogger<MailService> logger)
+
+    public MailService(string mailAccount, string mailPassword)
     {
-        this.logger = logger;
+        this.mailAccount = mailAccount;
+        this.mailPassword = mailPassword;
     }
 
     public MimeMessage CreateMeetingMail(Meeting meeting, MailType mailType)
@@ -204,17 +207,14 @@ public class MailService
     public async Task SendMail(MimeMessage message)
     {
         using var client = new SmtpClient();
-        client.Timeout = 10000; // 10s
-
         try
         {
             await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
-            await client.AuthenticateAsync("prashant.jatoo@umail.uom.ac.mu", "wwuwkunxqhgfcxvb");
+            await client.AuthenticateAsync(mailAccount, mailPassword);
             await client.SendAsync(message);
         }
         catch (Exception e)
         {
-            logger.LogError(e, "SMTP Error");
             throw;
         }
         finally

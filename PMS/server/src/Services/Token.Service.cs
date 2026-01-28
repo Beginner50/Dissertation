@@ -42,20 +42,26 @@ public class TokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public string CreateAccessToken(long userId, string role)
+    public (string accessToken, DateTime accessTokenExpiry) CreateAccessToken(long userId, string role)
     {
-        return GenerateToken(userId, role, DateTime.UtcNow.AddMinutes(5));
+        var expiry = DateTime.UtcNow.AddMinutes(5);
+        return (GenerateToken(userId, role, expiry), expiry);
     }
 
-    public string CreateRefreshToken(long userId, string role)
+    public (string refreshToken, DateTime refreshTokenExpiry) CreateRefreshToken(long userId, string role)
     {
-        return GenerateToken(userId, role, DateTime.UtcNow.AddDays(14));
+        var expiry = DateTime.UtcNow.AddDays(14);
+        return (GenerateToken(userId, role, expiry), expiry);
     }
 
-    public JwtSecurityToken ExtractClaims(string token)
+    public JwtSecurityToken DecodeAndValidateToken(string token)
     {
         var handler = new JwtSecurityTokenHandler();
         var jwtToken = handler.ReadJwtToken(token);
+
+        if (jwtToken.ValidTo < DateTime.UtcNow)
+            throw new Exception("Token expired");
+
         return jwtToken;
     }
 }

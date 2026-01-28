@@ -9,14 +9,14 @@ namespace PMS.Controllers;
 public class TasksController : ControllerBase
 {
     private readonly ProjectTaskService projectTaskService;
-    public TasksController(ProjectService projectService, ProjectTaskService projectTaskService)
+    public TasksController(ProjectTaskService projectTaskService)
     {
         this.projectTaskService = projectTaskService;
     }
 
-    [Route("api/users/{userID}/projects/{projectID}/[controller]/{taskID}")]
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GetProjectTask(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -34,9 +34,9 @@ public class TasksController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/projects/{projectID}/[controller]")]
+    [Route("api/users/{userID}/projects/{projectID}/tasks")]
     [HttpGet]
-    [Authorize(Policy = "OwnershipRBAC")]
+    [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GetProjectTasks(
         [FromRoute] long userID,
         [FromRoute] long projectID,
@@ -46,7 +46,8 @@ public class TasksController : ControllerBase
     {
         try
         {
-            var (tasks, count) = await projectTaskService.GetProjectTasksWithCount(userID, projectID, limit, offset);
+            var (tasks, count) = await projectTaskService
+                    .GetProjectTasksWithCount(userID, projectID, limit, offset);
 
             return Ok(new
             {
@@ -62,7 +63,7 @@ public class TasksController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks")]
     [HttpPost]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
+    [Authorize(Policy = "Ownership", Roles = "supervisor")]
     public async Task<IActionResult> CreateProjectTask(
             [FromRoute] long userID,
             [FromRoute] long projectID,
@@ -82,7 +83,7 @@ public class TasksController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}")]
     [HttpPut]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
+    [Authorize(Policy = "Ownership", Roles = "supervisor")]
     public async Task<IActionResult> EditProjectTask(
                 [FromRoute] long userID,
                 [FromRoute] long projectID,
@@ -107,7 +108,7 @@ public class TasksController : ControllerBase
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}")]
     [HttpDelete]
-    [Authorize(Policy = "OwnershipRBAC", Roles = "supervisor")]
+    [Authorize(Policy = "Ownership", Roles = "supervisor")]
     public async Task<IActionResult> DeleteProjectTask(
                     [FromRoute] long userID,
                     [FromRoute] long projectID,

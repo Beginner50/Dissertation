@@ -249,8 +249,6 @@ export default function TaskRoute() {
   const handleSubmitFeedback = () => {
     const filteredCriteria = modalCriteria.filter((c) => c.description?.trim() != "");
 
-    console.log("old: ", submittedDeliverable?.feedbackCriterias);
-    console.log("new: ", filteredCriteria);
     const feedbackCriteriaToCreate = filteredCriteria.filter(
       (newCriterion) =>
         !submittedDeliverable?.feedbackCriterias?.some(
@@ -275,13 +273,6 @@ export default function TaskRoute() {
         ),
     );
 
-    console.log(
-      "toCreate: ",
-      feedbackCriteriaToCreate.map((c) => ({
-        description: c.description,
-      })),
-    );
-
     mutation.mutate(
       {
         method: "post",
@@ -303,6 +294,15 @@ export default function TaskRoute() {
     );
   };
 
+  const handleLockTask = () => {
+    mutation.mutate({
+      method: "put",
+      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`,
+      data: { ...task, isLocked: !task?.isLocked },
+      invalidateQueryKeys: [["tasks", taskID]],
+    });
+  };
+
   const handleCheckFeedbackCompliance = () => {
     if (!feedbackComplianceLoading) {
       setFeedbackComplianceLoading(true);
@@ -320,7 +320,6 @@ export default function TaskRoute() {
       );
     }
   };
-
   /* ---------------------------------------------------------------------------------- */
 
   return (
@@ -379,15 +378,24 @@ export default function TaskRoute() {
             />
           ) : (
             user.role == "student" && (
-              <TaskActions.DeliverableUpload handleFileUpload={handleFileUpload} />
+              <TaskActions.DeliverableUpload
+                handleFileUpload={handleFileUpload}
+                taskLocked={task?.isLocked ?? false}
+              />
             )
           )}
 
           <TaskActions.Actions>
             {user.role == "supervisor" && (
               <TaskActions.ProvideFeedbackButton
-                disabled={!submittedDeliverable}
+                disabled={!submittedDeliverable || task?.isLocked}
                 onClick={handleProvideFeedbackClick}
+              />
+            )}
+            {user.role == "supervisor" && (
+              <TaskActions.LockTaskButton
+                isLocked={task?.isLocked ?? false}
+                onLockTaskClick={handleLockTask}
               />
             )}
             {user.role == "student" && (

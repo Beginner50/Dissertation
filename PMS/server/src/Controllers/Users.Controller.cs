@@ -73,12 +73,12 @@ public class UsersController : ControllerBase
                 Path = "/api/users/token"
             };
 
-            Response.Cookies.Append("refreshToken", userAuth.RefreshToken, cookieOptions);
+            Response.Cookies.Append("refreshToken", userAuth.RefreshToken.Payload, cookieOptions);
             return Ok(new
             {
                 User = userAuth.User,
                 Token = userAuth.AccessToken,
-                TokenExpiry = DateTime.UtcNow.AddMinutes(5)
+                TokenExpiry = userAuth.AccessToken.Expiry
             });
         }
         catch (Exception e)
@@ -93,15 +93,16 @@ public class UsersController : ControllerBase
     {
         try
         {
-            if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
+            if (!Request.Cookies.TryGetValue("refreshToken", out var refreshTokenPayload))
                 return BadRequest("Refresh token missing.");
 
-            var newAccessToken = await userService.RefreshAccessToken(refreshToken);
+            var refreshToken = tokenService.DecodeAndValidateToken(refreshTokenPayload);
+            var accessToken = await userService.RefreshAccessToken(refreshToken, refreshTokenPayload);
 
             return Ok(new
             {
-                Token = newAccessToken,
-                TokenExpiry = DateTime.UtcNow.AddMinutes(5)
+                Token = accessToken.Payload,
+                TokenExpiry = accessToken.Expiry
             });
         }
         catch (Exception e)
@@ -118,13 +119,13 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Logout()
     {
-        if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
+        if (!Request.Cookies.TryGetValue("refreshToken", out var refreshTokenPayload))
             return NoContent();
 
-        var token = tokenService.ExtractClaims(refreshToken);
+        var refreshToken = tokenService.DecodeAndValidateToken(refreshTokenPayload);
         try
         {
-            await userService.Logout(long.Parse(token.Subject));
+            await userService.Logout(long.Parse(refreshToken.Subject));
             Response.Cookies.Delete("refreshToken", new CookieOptions
             {
                 Path = "/api/users/token"

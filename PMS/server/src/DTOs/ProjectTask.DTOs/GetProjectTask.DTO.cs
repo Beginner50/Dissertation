@@ -8,6 +8,7 @@ public class GetProjectTaskDTO
     public DateTime AssignedDate { get; set; }
     public DateTime DueDate { get; set; }
     public required string Status { get; set; }
+    public bool? IsLocked { get; set; }
     public UserLookupDTO? AssignedBy { get; set; }
     public long? StagedDeliverableID { get; set; }
     public long? SubmittedDeliverableID { get; set; }
