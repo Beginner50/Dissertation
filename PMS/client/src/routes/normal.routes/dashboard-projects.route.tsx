@@ -166,7 +166,7 @@ export default function DashboardProjectsRoute() {
         ],
       },
       {
-        onSuccess: () => {
+        onSettled: () => {
           setProjectModalState((p) => ({ ...p, open: false }));
         },
       },
@@ -184,7 +184,7 @@ export default function DashboardProjectsRoute() {
         ],
       },
       {
-        onSuccess: () => {
+        onSettled: () => {
           setProjectModalState((p) => ({ ...p, open: false }));
         },
       },
@@ -202,7 +202,7 @@ export default function DashboardProjectsRoute() {
         ],
       },
       {
-        onSuccess: () => {
+        onSettled: () => {
           setProjectModalState((p) => ({ ...p, open: false }));
         },
       },
@@ -272,6 +272,7 @@ export default function DashboardProjectsRoute() {
             activeStep={step}
             onNext={() => setStep(1)}
             onBack={() => setStep(0)}
+            reminderCount={reminders?.length ?? 0}
           />
         </SlidingActivityCard>
       </Box>

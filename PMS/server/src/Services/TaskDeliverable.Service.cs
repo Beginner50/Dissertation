@@ -194,6 +194,8 @@ public class TaskDeliverableService
                 ?? throw new UnauthorizedAccessException("Unauthorized or Task Not Found.");
 
 
+        if (task.IsLocked)
+            throw new InvalidOperationException("Task Submission disabled for Locked Task!");
         if (task.StagedDeliverable == null)
             throw new InvalidOperationException("Staged Deliverable Not Found!");
 

@@ -113,7 +113,7 @@ public class PMSDbContext : DbContext
                 Title = "AI Research",
                 Description = "Research on AI algorithms",
                 Status = "active",
-                StudentID = 3,
+                StudentID = null,
                 SupervisorID = 2
             }
         );
@@ -154,53 +154,6 @@ public class PMSDbContext : DbContext
                 DueDate = new DateTime(2025, 10, 15, 0, 0, 0, DateTimeKind.Utc),
                 Status = "missing",
                 IsLocked = false
-            }
-        );
-
-        modelBuilder.Entity<Meeting>().HasData(
-            // Project 1 - Literature Review (Organizer - Supervisor) Pending
-            new Meeting
-            {
-                MeetingID = 1,
-                TaskID = 1,
-                OrganizerID = 2,
-                AttendeeID = 3,
-                Status = "pending",
-                Start = new DateTime(2026, 01, 30, 10, 0, 0, DateTimeKind.Utc),
-                End = new DateTime(2026, 01, 30, 11, 0, 0, DateTimeKind.Utc)
-            },
-            // Project 1 - Dataset Collection (Organizer - Student) Pending
-            new Meeting
-            {
-                MeetingID = 2,
-                TaskID = 2,
-                OrganizerID = 3,
-                AttendeeID = 2,
-                Status = "pending",
-                Start = new DateTime(2026, 01, 22, 14, 0, 0, DateTimeKind.Utc),
-                End = new DateTime(2026, 01, 22, 15, 0, 0, DateTimeKind.Utc)
-            },
-            // Project 1 - Literature Review (Organizer - Supervisor) Accepted
-            new Meeting
-            {
-                MeetingID = 3,
-                TaskID = 1,
-                OrganizerID = 2,
-                AttendeeID = 3,
-                Status = "accepted",
-                Start = new DateTime(2026, 01, 30, 09, 30, 0, DateTimeKind.Utc),
-                End = new DateTime(2026, 01, 30, 10, 30, 0, DateTimeKind.Utc)
-            },
-            // Project 1 - Proposal Submission (Organizer - Student) Rejected
-            new Meeting
-            {
-                MeetingID = 4,
-                TaskID = 3,
-                OrganizerID = 3,
-                AttendeeID = 2,
-                Status = "rejected",
-                Start = new DateTime(2026, 01, 23, 11, 0, 0, DateTimeKind.Utc),
-                End = new DateTime(2026, 01, 23, 12, 0, 0, DateTimeKind.Utc)
             }
         );
     }

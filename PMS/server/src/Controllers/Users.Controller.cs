@@ -50,6 +50,22 @@ public class UsersController : ControllerBase
         }
     }
 
+    [Route("api/users")]
+    [HttpPost]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> CreateUser()
+    {
+        try
+        {
+
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
+    }
+
     /*
         When the server sends a Set-Cookie header in the response, the browser will then
         read that header and save the refresh token.

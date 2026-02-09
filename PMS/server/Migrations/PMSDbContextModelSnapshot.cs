@@ -133,48 +133,6 @@ namespace PMS.Migrations
                     b.HasIndex("TaskID");
 
                     b.ToTable("Meetings");
-
-                    b.HasData(
-                        new
-                        {
-                            MeetingID = 1L,
-                            AttendeeID = 3L,
-                            End = new DateTime(2026, 1, 30, 11, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 2L,
-                            Start = new DateTime(2026, 1, 30, 10, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "pending",
-                            TaskID = 1L
-                        },
-                        new
-                        {
-                            MeetingID = 2L,
-                            AttendeeID = 2L,
-                            End = new DateTime(2026, 1, 22, 15, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 3L,
-                            Start = new DateTime(2026, 1, 22, 14, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "pending",
-                            TaskID = 2L
-                        },
-                        new
-                        {
-                            MeetingID = 3L,
-                            AttendeeID = 3L,
-                            End = new DateTime(2026, 1, 30, 10, 30, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 2L,
-                            Start = new DateTime(2026, 1, 30, 9, 30, 0, 0, DateTimeKind.Utc),
-                            Status = "accepted",
-                            TaskID = 1L
-                        },
-                        new
-                        {
-                            MeetingID = 4L,
-                            AttendeeID = 2L,
-                            End = new DateTime(2026, 1, 23, 12, 0, 0, 0, DateTimeKind.Utc),
-                            OrganizerID = 3L,
-                            Start = new DateTime(2026, 1, 23, 11, 0, 0, 0, DateTimeKind.Utc),
-                            Status = "rejected",
-                            TaskID = 3L
-                        });
                 });
 
             modelBuilder.Entity("PMS.Models.Notification", b =>
@@ -246,7 +204,6 @@ namespace PMS.Migrations
                             ProjectID = 1L,
                             Description = "Research on AI algorithms",
                             Status = "active",
-                            StudentID = 3L,
                             SupervisorID = 2L,
                             Title = "AI Research"
                         });

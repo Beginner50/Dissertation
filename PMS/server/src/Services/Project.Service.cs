@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
 using PMS.DTOs;
@@ -9,9 +10,11 @@ namespace PMS.Services;
 public class ProjectService
 {
     protected readonly PMSDbContext dbContext;
-    public ProjectService(PMSDbContext _dbContext)
+    protected readonly ILogger<ProjectService> logger;
+    public ProjectService(PMSDbContext dbContext, ILogger<ProjectService> logger)
     {
-        dbContext = _dbContext;
+        this.dbContext = dbContext;
+        this.logger = logger;
     }
 
     public async Task<GetProjectDTO> GetProject(
@@ -57,11 +60,15 @@ public class ProjectService
         GetProjectsWithCount(long userID, long limit = 5, long offset = 0)
     {
         var projectsQuery = dbContext.Projects
-            .Where(p => p.SupervisorID == userID || p.StudentID == userID);
+            .Where(p => (p.SupervisorID == userID || p.StudentID == userID)
+                            && p.Status != "archived")
+        .Skip((int)offset)
+        .Take((int)limit);
 
         var count = await projectsQuery.LongCountAsync();
 
-        var projects = await projectsQuery.AsSplitQuery()
+        var projects = await projectsQuery
+            .AsSplitQuery()
             .Select(p => new GetProjectDTO
             {
                 ProjectID = p.ProjectID,
@@ -90,8 +97,6 @@ public class ProjectService
                     .ToList()
             }
         )
-        .Skip((int)offset)
-        .Take((int)limit)
         .ToListAsync();
 
         return (projects, count);
@@ -168,7 +173,7 @@ public class ProjectService
                 .FirstOrDefaultAsync()
                 ?? throw new UnauthorizedAccessException("Not Authorized or Project Not Found!");
 
-        project.Status = "Archived";
+        project.Status = "archived";
 
         await dbContext.SaveChangesAsync();
     }

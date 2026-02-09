@@ -84,6 +84,7 @@ export default function DashboardTasksRoute() {
       queryKey: [user.userID, "users", "unsupervised"],
       queryFn: async (): Promise<User[]> =>
         await authorizedAPI.get(`api/users/unsupervised`).json(),
+      enabled: user.role == "supervisor",
       retry: 1,
     },
   );
@@ -159,7 +160,7 @@ export default function DashboardTasksRoute() {
         invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
       },
       {
-        onSuccess: () => {
+        onSettled: () => {
           setTaskModalState((t) => ({ ...t, open: false }));
         },
       },
@@ -175,7 +176,7 @@ export default function DashboardTasksRoute() {
         invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
       },
       {
-        onSuccess: () => {
+        onSettled: () => {
           setTaskModalState((t) => ({ ...t, open: false }));
         },
       },
@@ -191,7 +192,7 @@ export default function DashboardTasksRoute() {
         invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
       },
       {
-        onSuccess: () => {
+        onSettled: () => {
           setTaskModalState((t) => ({ ...t, open: false }));
         },
       },
@@ -210,7 +211,7 @@ export default function DashboardTasksRoute() {
         ],
       },
       {
-        onSuccess: () => {
+        onSettled: () => {
           setSelectedStudent(undefined);
           setTaskModalState((t) => ({ ...t, open: false }));
         },

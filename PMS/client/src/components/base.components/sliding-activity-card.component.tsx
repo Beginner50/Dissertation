@@ -7,6 +7,7 @@ import {
   Box,
   useTheme,
   type SxProps,
+  Badge,
 } from "@mui/material";
 import { KeyboardArrowLeft, KeyboardArrowRight } from "@mui/icons-material";
 import type { ReactNode } from "react";
@@ -29,8 +30,7 @@ export function SlidingActivityCard({
         borderRadius: 3,
         overflow: "hidden",
         ...sx,
-      }}
-    >
+      }}>
       {children}
     </Card>
   );
@@ -53,8 +53,7 @@ SlidingActivityCard.Content = ({
             duration: theme.transitions.duration.standard,
           }),
           transform: `translateX(-${activeStep * 100}%)`,
-        }}
-      >
+        }}>
         {React.Children.map(children, (child) => (
           <Box sx={{ minWidth: "100%", flexShrink: 0 }}>{child}</Box>
         ))}
@@ -67,10 +66,12 @@ SlidingActivityCard.Navigation = ({
   activeStep,
   onNext,
   onBack,
+  reminderCount,
 }: {
   activeStep: number;
   onNext: () => void;
   onBack: () => void;
+  reminderCount: number;
 }) => (
   <MobileStepper
     variant="dots"
@@ -96,9 +97,10 @@ SlidingActivityCard.Navigation = ({
           bgcolor: "background.paper",
           boxShadow: 2,
           "&.Mui-disabled": { opacity: 0 },
-        }}
-      >
-        <KeyboardArrowRight />
+        }}>
+        <Badge color="success" badgeContent={reminderCount} invisible={activeStep == 1}>
+          <KeyboardArrowRight />
+        </Badge>
       </IconButton>
     }
     backButton={
@@ -114,8 +116,7 @@ SlidingActivityCard.Navigation = ({
           bgcolor: "background.paper",
           boxShadow: 2,
           "&.Mui-disabled": { opacity: 0 },
-        }}
-      >
+        }}>
         <KeyboardArrowLeft />
       </IconButton>
     }

@@ -29,13 +29,6 @@ public class MeetingService
         var meeting = await dbContext.Meetings.FindAsync(meetingID) ?? throw new
                             InvalidOperationException("Meeting Not Found!");
 
-        /*
-            If the meeting has been past its end, update its Status
-
-            While it breaks the idempotency principle for GET requests in REST, the alternative
-            requires cron job scheduling for updating the status, which might be overkill for
-            this dissertation project (can be suggested as an improvement).
-        */
         if (meeting.End < DateTime.UtcNow && meeting.Status.Equals("pending"))
             meeting.Status = "missed";
 
@@ -57,7 +50,6 @@ public class MeetingService
                     .Where(m => m.AttendeeID == projectSupervisor.UserID || m.OrganizerID == projectSupervisor.UserID)
                     .ToListAsync();
 
-        // See GetMeeting above to see why GetSupervisorMeetings is not idempotent
         foreach (var meeting in meetings)
         {
             if (meeting.End < DateTime.UtcNow && meeting.Status.Equals("pending"))
@@ -94,7 +86,7 @@ public class MeetingService
         .ToList();
     }
 
-    public async Task<Meeting> BookMeeting(
+    public async Task BookMeeting(
         long organizerID, long attendeeID, long taskID,
         string? description, DateTime start, DateTime end
     )
@@ -115,9 +107,7 @@ public class MeetingService
                 {
                     TaskID = taskID,
                     OrganizerID = organizerID,
-                    Organizer = organizer,
                     AttendeeID = attendeeID,
-                    Attendee = attendee,
                     Description = description,
                     Start = start,
                     End = end,
@@ -126,6 +116,9 @@ public class MeetingService
                 dbContext.Meetings.Add(newMeeting);
 
                 await dbContext.SaveChangesAsync();
+
+                await dbContext.Entry(newMeeting).Reference(m => m.Organizer).LoadAsync();
+                await dbContext.Entry(newMeeting).Reference(m => m.Attendee).LoadAsync();
 
                 await notificationService.CreateMeetingNotification(newMeeting, NotificationType.MEETING_BOOKED);
                 await reminderService.CreateMeetingReminder(newMeeting);
@@ -141,7 +134,6 @@ public class MeetingService
         }
 
         await mailService.SendMail(mail);
-        return newMeeting;
     }
 
     public async Task EditMeetingDescription(

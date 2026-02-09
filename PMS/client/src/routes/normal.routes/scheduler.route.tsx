@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { EventClickArg } from "@fullcalendar/core/index.js";
 import Scheduler from "../../components/scheduler.components/scheduler.component";
 import SchedulerActions from "../../components/scheduler.components/scheduler-actions.component";
@@ -16,7 +16,7 @@ export default function SchedulerRoute() {
 
   const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(
-    null
+    null,
   );
 
   const [meetingFormData, setMeetingFormData] = useState<MeetingFormData>({
@@ -55,9 +55,13 @@ export default function SchedulerRoute() {
 
   const { data: userProjects } = useQuery({
     queryKey: [user.userID, "projects"],
-    queryFn: async (): Promise<Project[]> =>
-      await authorizedAPI.get(`api/users/${user.userID}/projects`).json(),
-    select: (data) => data.filter((p: Project) => p.student?.userID !== 0),
+    queryFn: async (): Promise<{ items: Project[]; totalCount: number }> =>
+      await authorizedAPI
+        .get(`api/users/${user.userID}/projects`, {
+          searchParams: { limit: 50, offset: 0 },
+        })
+        .json(),
+    select: (data) => data.items.filter((p: Project) => p.student != null),
     retry: 1,
   });
 
@@ -121,12 +125,18 @@ export default function SchedulerRoute() {
   /* ---------------------------------------------------------------------------------- */
 
   const handleBookMeeting = () => {
-    mutation.mutate({
-      method: "post",
-      url: `api/users/${user.userID}/meetings`,
-      data: meetingFormData,
-    });
-    setSelectedSlot(null);
+    mutation.mutate(
+      {
+        method: "post",
+        url: `api/users/${user.userID}/meetings`,
+        data: meetingFormData,
+      },
+      {
+        onSettled: () => {
+          setSelectedSlot(null);
+        },
+      },
+    );
   };
 
   const handleUpdateDescription = (newDesc: string) => {
@@ -141,32 +151,50 @@ export default function SchedulerRoute() {
 
   const handleAcceptMeeting = () => {
     if (!selectedMeeting) return;
-    mutation.mutate({
-      method: "put",
-      url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}/accept`,
-      data: {},
-    });
-    setSelectedMeeting(null);
+    mutation.mutate(
+      {
+        method: "put",
+        url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}/accept`,
+        data: {},
+      },
+      {
+        onSettled: () => {
+          setSelectedMeeting(null);
+        },
+      },
+    );
   };
 
   const handleRejectMeeting = () => {
     if (!selectedMeeting) return;
-    mutation.mutate({
-      method: "delete",
-      url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}/reject`,
-      data: {},
-    });
-    setSelectedMeeting(null);
+    mutation.mutate(
+      {
+        method: "delete",
+        url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}/reject`,
+        data: {},
+      },
+      {
+        onSettled: () => {
+          setSelectedMeeting(null);
+        },
+      },
+    );
   };
 
   const handleCancelMeeting = () => {
     if (!selectedMeeting) return;
-    mutation.mutate({
-      method: "delete",
-      url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}/cancel`,
-      data: {},
-    });
-    setSelectedMeeting(null);
+    mutation.mutate(
+      {
+        method: "delete",
+        url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}/cancel`,
+        data: {},
+      },
+      {
+        onSettled: () => {
+          setSelectedMeeting(null);
+        },
+      },
+    );
   };
 
   /* ---------------------------------------------------------------------------------- */
@@ -230,7 +258,8 @@ export default function SchedulerRoute() {
             <BookMeetingForm.AttendeeDisplay name={attendee?.name} />
 
             <BookMeetingForm.SubmitButton
-              isValid={isFormValid && !mutation.isPending}
+              isValid={isFormValid}
+              isLoading={mutation.status == "pending"}
               handleBookMeeting={handleBookMeeting}
             />
           </BookMeetingForm>
@@ -280,6 +309,7 @@ export default function SchedulerRoute() {
             {selectedMeeting.status === "pending" && (
               <Box sx={{ mt: 2 }}>
                 <SchedulerActions.BookedMeetingActions
+                  isLoading={mutation.status == "pending"}
                   isOrganizer={selectedMeeting.organizer.userID === user.userID}
                   isAttendee={selectedMeeting.attendee.userID === user.userID}
                   handleCancel={handleCancelMeeting}

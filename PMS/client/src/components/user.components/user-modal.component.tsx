@@ -83,7 +83,6 @@ UserModal.Name = ({
         onChange={(e) => setLocalValue(e.target.value)}
         onBlur={() => handleNameChange(localValue)}
         size="small"
-        placeholder="e.g. John Doe"
       />
     </FormControl>
   );
@@ -111,7 +110,6 @@ UserModal.Email = ({
         onChange={(e) => setLocalValue(e.target.value)}
         onBlur={() => handleEmailChange(localValue)}
         size="small"
-        placeholder="john.doe@example.com"
       />
     </FormControl>
   );

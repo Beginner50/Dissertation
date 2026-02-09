@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,12 @@ namespace PMS.Controllers;
 public class ProjectsController : ControllerBase
 {
     private readonly ProjectService projectService;
+    private readonly ILogger<ProjectsController> logger;
 
-    public ProjectsController(ProjectService projectService)
+    public ProjectsController(ProjectService projectService, ILogger<ProjectsController> logger)
     {
         this.projectService = projectService;
+        this.logger = logger;
     }
 
     [Route("/api/projects")]
@@ -39,8 +42,8 @@ public class ProjectsController : ControllerBase
     [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> GetProjectsByUser(
         [FromRoute] long userID,
-        [FromQuery] long limit,
-        [FromQuery] long offset
+        [FromQuery] long limit = 5,
+        [FromQuery] long offset = 0
     )
     {
         try

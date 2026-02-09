@@ -289,7 +289,7 @@ export default function TaskRoute() {
         invalidateQueryKeys: [[taskID, "deliverables", "submitted"]],
       },
       {
-        onSuccess: () => setFeedbackModalOpen(false),
+        onSettled: () => setFeedbackModalOpen(false),
       },
     );
   };
@@ -358,6 +358,7 @@ export default function TaskRoute() {
         <TaskActions
           sx={{
             flexGrow: 1,
+            maxWidth: "30vw",
             background: "hsla(0,0%,100%,50%)",
           }}>
           <TaskActions.Header title="Task Actions" />
@@ -369,7 +370,7 @@ export default function TaskRoute() {
               onOpenDeliverable={handleOpenSubmittedDeliverable}
             />
           )}
-          {stagedDeliverable ? (
+          {!task?.isLocked && stagedDeliverable ? (
             <DeliverableCard
               cardDescription="Staged Deliverable"
               deliverable={stagedDeliverable}
@@ -411,7 +412,9 @@ export default function TaskRoute() {
             {user.role == "student" && (
               <TaskActions.SubmitDeliverableButton
                 disabled={
-                  !stagedDeliverable || tableCriteria.some((c) => c.status === "unmet")
+                  task?.isLocked ||
+                  !stagedDeliverable ||
+                  tableCriteria.some((c) => c.status === "unmet")
                 }
                 onClick={handleSubmitDeliverable}
               />

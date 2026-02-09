@@ -140,9 +140,11 @@ BookMeetingForm.TaskSelect = ({
 
 BookMeetingForm.SubmitButton = ({
   isValid,
+  isLoading,
   handleBookMeeting,
 }: {
   isValid: boolean;
+  isLoading: boolean;
   handleBookMeeting: () => void;
 }) => (
   <Button
@@ -150,6 +152,7 @@ BookMeetingForm.SubmitButton = ({
     color="primary"
     onClick={handleBookMeeting}
     disabled={!isValid}
+    loading={isLoading}
     fullWidth>
     Book Meeting
   </Button>
