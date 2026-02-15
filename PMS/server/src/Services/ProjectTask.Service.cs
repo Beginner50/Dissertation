@@ -10,12 +10,17 @@ namespace PMS.Services;
 
 public class ProjectTaskService
 {
+    private readonly ILogger logger;
     protected readonly MailService mailService;
     protected readonly NotificationService notificationService;
     protected readonly ReminderService reminderService;
     protected readonly PMSDbContext dbContext;
-    public ProjectTaskService(PMSDbContext dbContext, MailService mailService, NotificationService notificationService, ReminderService reminderService)
+    public ProjectTaskService(
+        ILogger<ProjectTaskService> logger,
+        PMSDbContext dbContext,
+        MailService mailService, NotificationService notificationService, ReminderService reminderService)
     {
+        this.logger = logger;
         this.dbContext = dbContext;
         this.mailService = mailService;
         this.notificationService = notificationService;
@@ -33,19 +38,6 @@ public class ProjectTaskService
         .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
 
-        /*
-            If the task has been past its DueDate, update its Status
-
-            While it breaks the idempotency principle for GET requests in REST, the alternative
-            requires cron job scheduling for updating the status (can be suggested as an
-            improvement).
-        */
-        if (task.DueDate < DateTime.UtcNow && task.Status == "pending")
-        {
-            task.Status = "missing";
-            await dbContext.SaveChangesAsync();
-        }
-
         return new GetProjectTaskDTO
         {
             TaskID = task.ProjectTaskID,
@@ -53,7 +45,7 @@ public class ProjectTaskService
             Description = task.Description,
             AssignedDate = task.AssignedDate,
             DueDate = task.DueDate,
-            Status = task.Status,
+            Status = GetProjectTaskStatus(task.SubmittedDeliverableID, task.DueDate),
             IsLocked = task.IsLocked,
             StagedDeliverableID = task.StagedDeliverableID,
             SubmittedDeliverableID = task.SubmittedDeliverableID,
@@ -82,19 +74,6 @@ public class ProjectTaskService
             .Take((int)limit)
             .ToListAsync();
 
-        bool hasChanges = false;
-        foreach (var task in tasks)
-        {
-            if (task.DueDate < DateTime.UtcNow && task.Status == "pending")
-            {
-                task.Status = "missing";
-                hasChanges = true;
-            }
-        }
-
-        if (hasChanges)
-            await dbContext.SaveChangesAsync();
-
         return (tasks.Select(t => new GetProjectTaskDTO
         {
             TaskID = t.ProjectTaskID,
@@ -102,7 +81,7 @@ public class ProjectTaskService
             Description = t.Description,
             AssignedDate = t.AssignedDate,
             DueDate = t.DueDate,
-            Status = t.Status,
+            Status = GetProjectTaskStatus(t.SubmittedDeliverableID, t.DueDate),
         }), count);
     }
 
@@ -116,7 +95,6 @@ public class ProjectTaskService
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Project Not Found!");
 
         ProjectTask newTask;
-        MimeMessage? mail = null;
 
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
@@ -127,7 +105,6 @@ public class ProjectTaskService
                     Title = dto.Title,
                     Description = dto.Description,
                     DueDate = dto.DueDate,
-                    Status = "pending",
                     AssignedByID = userID,
                     ProjectID = projectID,
                     Project = project,
@@ -141,7 +118,7 @@ public class ProjectTaskService
                 {
                     await notificationService.CreateTaskNotification(newTask, NotificationType.TASK_CREATED);
                     await reminderService.CreateTaskReminder(newTask);
-                    mail = mailService.CreateTaskMail(newTask, MailType.TASK_ASSIGNED);
+                    mailService.CreateAndEnqueueTaskMail(newTask, MailType.TASK_ASSIGNED);
                 }
 
                 await transaction.CommitAsync();
@@ -152,9 +129,6 @@ public class ProjectTaskService
                 throw;
             }
         }
-
-        if (mail != null)
-            await mailService.SendMail(mail);
 
         return newTask;
     }
@@ -171,8 +145,6 @@ public class ProjectTaskService
             ?? throw new KeyNotFoundException("Unauthorized Access or Task Not Found.");
 
         bool dueDateUpdated = false;
-        MimeMessage? mail = null;
-
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
             try
@@ -182,10 +154,6 @@ public class ProjectTaskService
                 if (dto.DueDate != task.DueDate)
                 {
                     task.DueDate = (DateTime)dto.DueDate;
-
-                    if (task.DueDate < DateTime.UtcNow && task.Status.Equals("pending"))
-                        task.Status = "missing";
-
                     dueDateUpdated = true;
                 }
                 task.IsLocked = dto.IsLocked ?? task.IsLocked;
@@ -199,7 +167,7 @@ public class ProjectTaskService
                     if (dueDateUpdated)
                     {
                         await reminderService.UpdateTaskReminder(task);
-                        mail = mailService.CreateTaskMail(task, MailType.TASK_UPDATED);
+                        mailService.CreateAndEnqueueTaskMail(task, MailType.TASK_UPDATED);
                     }
                 }
 
@@ -211,9 +179,6 @@ public class ProjectTaskService
                 throw;
             }
         }
-
-        if (mail != null)
-            await mailService.SendMail(mail);
     }
 
     public async Task DeleteProjectTask(long userID, long projectID, long taskID)
@@ -227,8 +192,6 @@ public class ProjectTaskService
             .FirstOrDefaultAsync()
             ?? throw new KeyNotFoundException("Unauthorized Access or Task Not Found.");
 
-        MimeMessage? mail = null;
-
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
             try
@@ -237,7 +200,7 @@ public class ProjectTaskService
                 {
                     await notificationService.CreateTaskNotification(task, NotificationType.TASK_DELETED);
                     await reminderService.DeleteTaskReminder(task);
-                    mail = mailService.CreateTaskMail(task, MailType.TASK_DELETED);
+                    mailService.CreateAndEnqueueTaskMail(task, MailType.TASK_DELETED);
                 }
 
                 dbContext.Remove(task);
@@ -252,8 +215,15 @@ public class ProjectTaskService
                 throw;
             }
         }
+    }
 
-        if (mail != null)
-            await mailService.SendMail(mail);
+    protected static string GetProjectTaskStatus(long? latestSubmission, DateTime dueDate)
+    {
+        if (latestSubmission != null)
+            return "completed";
+        else if (dueDate < DateTime.UtcNow)
+            return "missing";
+        else
+            return "pending";
     }
 }

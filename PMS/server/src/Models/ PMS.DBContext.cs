@@ -113,8 +113,8 @@ public class PMSDbContext : DbContext
                 Title = "AI Research",
                 Description = "Research on AI algorithms",
                 Status = "active",
-                StudentID = null,
-                SupervisorID = 2
+                StudentID = 3,
+                SupervisorID = 2,
             }
         );
 
@@ -128,7 +128,6 @@ public class PMSDbContext : DbContext
                 AssignedDate = new DateTime(2025, 11, 1, 0, 0, 0, DateTimeKind.Utc),
                 AssignedByID = 2,
                 DueDate = new DateTime(2025, 11, 15, 0, 0, 0, DateTimeKind.Utc),
-                Status = "completed",
                 IsLocked = false,
             },
             new ProjectTask
@@ -140,7 +139,6 @@ public class PMSDbContext : DbContext
                 AssignedDate = new DateTime(2025, 12, 21, 0, 0, 0, DateTimeKind.Utc),
                 AssignedByID = 2,
                 DueDate = new DateTime(2026, 01, 31, 0, 0, 0, DateTimeKind.Utc),
-                Status = "pending",
                 IsLocked = false
             },
             new ProjectTask
@@ -152,7 +150,6 @@ public class PMSDbContext : DbContext
                 AssignedDate = new DateTime(2025, 10, 1, 0, 0, 0, DateTimeKind.Utc),
                 AssignedByID = 2,
                 DueDate = new DateTime(2025, 10, 15, 0, 0, 0, DateTimeKind.Utc),
-                Status = "missing",
                 IsLocked = false
             }
         );

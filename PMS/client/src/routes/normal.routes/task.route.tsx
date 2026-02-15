@@ -8,6 +8,7 @@ import type {
   Deliverable,
   DeliverableFile,
   FeedbackCriterion,
+  FeedbackCriterionModal,
   Task,
   User,
 } from "../../lib/types";
@@ -26,7 +27,7 @@ export default function TaskRoute() {
     useState<boolean>(false);
 
   const [tableCriteria, setTableCriteria] = useState<FeedbackCriterion[]>([]);
-  const [modalCriteria, setModalCriteria] = useState<Partial<FeedbackCriterion>[]>([]);
+  const [modalCriteria, setModalCriteria] = useState<FeedbackCriterionModal[]>([]);
 
   const { projectID, taskID } = useParams();
 
@@ -102,7 +103,13 @@ export default function TaskRoute() {
 
   useEffect(() => {
     const criteria = submittedDeliverable?.feedbackCriterias ?? [];
-    setModalCriteria(criteria);
+    setModalCriteria(
+      criteria.map((c) => ({
+        feedbackCriterionID: c.feedbackCriterionID,
+        description: c.description,
+        updateStatus: "unchanged",
+      })),
+    );
     setTableCriteria(criteria);
   }, [submittedDeliverable]);
 
@@ -127,7 +134,7 @@ export default function TaskRoute() {
       {
         feedbackCriterionID: (prev[prev.length - 1]?.feedbackCriterionID ?? 0) + 1,
         description: "",
-        status: "unmet",
+        updateStatus: "created",
       },
     ]);
   };
@@ -136,18 +143,28 @@ export default function TaskRoute() {
     updatedCriterion: Partial<FeedbackCriterion>,
   ) => {
     setModalCriteria((prev) =>
-      prev.map(
-        (c): Partial<FeedbackCriterion> =>
-          c.feedbackCriterionID == updatedCriterion.feedbackCriterionID
-            ? { ...c, description: updatedCriterion.description }
-            : c,
+      prev.map((c) =>
+        c.feedbackCriterionID == updatedCriterion.feedbackCriterionID
+          ? {
+              ...c,
+              description: updatedCriterion.description ?? "",
+              updateStatus: c.updateStatus == "created" ? "created" : "updated",
+            }
+          : c,
       ),
     );
   };
 
   const handleCriterionDelete = (deletedCriterion: Partial<FeedbackCriterion>) => {
     setModalCriteria((prev) =>
-      prev.filter((c) => c.feedbackCriterionID != deletedCriterion.feedbackCriterionID),
+      prev.map((c) =>
+        c.feedbackCriterionID == deletedCriterion.feedbackCriterionID
+          ? {
+              ...c,
+              updateStatus: "deleted",
+            }
+          : c,
+      ),
     );
   };
 
@@ -236,60 +253,43 @@ export default function TaskRoute() {
     });
   };
 
-  /*
-    Feedback criteria filtering logic:
-
-      Prev Criteria: [{id: 1, ...}, {id: 2, ...}]
-      New Criteria: [{id: 2, ...}, {id: 3, ...}]
-
-      toCreate = In new but not in prev
-      toUpdate = Both in prev and in new (only those whose description have changed)
-      toDelete = In prev but not in new
-    */
   const handleSubmitFeedback = () => {
-    const filteredCriteria = modalCriteria.filter((c) => c.description?.trim() != "");
-
-    const feedbackCriteriaToCreate = filteredCriteria.filter(
-      (newCriterion) =>
-        !submittedDeliverable?.feedbackCriterias?.some(
-          (prevCriterion) =>
-            prevCriterion.feedbackCriterionID == newCriterion.feedbackCriterionID,
-        ),
+    const existingIDs = new Set(
+      submittedDeliverable?.feedbackCriterias?.map((f) => f.feedbackCriterionID),
     );
 
-    const feedbackCriteriaToUpdate = filteredCriteria.filter((newCriterion) =>
-      submittedDeliverable?.feedbackCriterias?.some(
-        (prevCriterion) =>
-          prevCriterion.feedbackCriterionID == newCriterion.feedbackCriterionID &&
-          prevCriterion.description != newCriterion.description,
-      ),
-    );
+    const toCreate = modalCriteria
+      .filter((c) => c.updateStatus === "created")
+      .map((c) => ({
+        description: c.description,
+      }));
 
-    const feedbackCriteriaToDelete = submittedDeliverable?.feedbackCriterias?.filter(
-      (prevCriterion) =>
-        !filteredCriteria.some(
-          (newCriterion) =>
-            newCriterion.feedbackCriterionID == prevCriterion.feedbackCriterionID,
-        ),
-    );
+    const toUpdate = modalCriteria.filter((c) => c.updateStatus === "updated");
+
+    const toDelete = modalCriteria
+      .filter(
+        (c) => c.updateStatus === "deleted" && existingIDs.has(c.feedbackCriterionID),
+      )
+      .map((c) => ({
+        feedbackCriterionID: c.feedbackCriterionID,
+      }));
 
     mutation.mutate(
       {
         method: "post",
         url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback`,
         data: {
-          feedbackCriteriaToCreate: feedbackCriteriaToCreate.map((c) => ({
-            description: c.description,
-          })),
-          feedbackCriteriaToUpdate,
-          feedbackCriteriaToDelete: feedbackCriteriaToDelete?.map((c) => ({
-            feedbackCriterionID: c.feedbackCriterionID,
-          })),
+          feedbackCriteriaToCreate: toCreate,
+          feedbackCriteriaToUpdate: toUpdate,
+          feedbackCriteriaToDelete: toDelete,
         },
         invalidateQueryKeys: [[taskID, "deliverables", "submitted"]],
       },
       {
-        onSettled: () => setFeedbackModalOpen(false),
+        onSettled: () => {
+          setFeedbackModalOpen(false);
+          setModalCriteria((prev) => prev.filter((c) => c.updateStatus != "deleted"));
+        },
       },
     );
   };
@@ -338,7 +338,7 @@ export default function TaskRoute() {
         <TaskDetails sx={{ maxWidth: "63vw", flexGrow: 3 }}>
           <TaskDetails.Header
             title={task?.title ?? "Task Title"}
-            deadline={task?.dueDate ?? "Due Date"}
+            dueDate={task?.dueDate ?? "Due Date"}
           />
 
           <TaskDetails.Content>
@@ -357,8 +357,8 @@ export default function TaskRoute() {
         {/* Right Section - Task Actions */}
         <TaskActions
           sx={{
-            flexGrow: 1,
-            maxWidth: "30vw",
+            width: "25vw",
+            minWidth: "25vw",
             background: "hsla(0,0%,100%,50%)",
           }}>
           <TaskActions.Header title="Task Actions" />
@@ -390,6 +390,9 @@ export default function TaskRoute() {
             {user.role == "supervisor" && (
               <TaskActions.ProvideFeedbackButton
                 disabled={!submittedDeliverable || task?.isLocked}
+                hasPreviousCriteria={
+                  (submittedDeliverable?.feedbackCriterias ?? [])?.length > 0
+                }
                 onClick={handleProvideFeedbackClick}
               />
             )}
@@ -437,6 +440,9 @@ export default function TaskRoute() {
         </FeedbackModal.Content>
 
         <FeedbackModal.Actions
+          hasPreviousCriteria={
+            (submittedDeliverable?.feedbackCriterias ?? [])?.length > 0
+          }
           onCancel={handleCancelClick}
           onSubmit={handleSubmitFeedback}
         />

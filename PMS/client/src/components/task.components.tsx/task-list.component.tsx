@@ -75,12 +75,16 @@ TaskList.Content = ({
 }) => (
   <List disablePadding>
     {tasks.map((task) => (
-      <TaskListEntry key={task.taskID} status={task.status}>
+      <TaskListEntry key={task.taskID}>
+        <TaskListEntry.Icon status={task.status} />
+
         <TaskListEntry.Link
           title={task.title}
           url={`/projects/${projectID}/tasks/${task.taskID}`}
           dueDate={task.dueDate}
+          status={task.status}
         />
+
         {menuEnabled && (
           <TaskListEntry.MenuButton
             onEditButtonClick={() =>

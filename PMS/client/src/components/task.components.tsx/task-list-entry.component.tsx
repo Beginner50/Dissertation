@@ -17,14 +17,10 @@ import {
   MissingVariant1,
   PendingVariant1,
 } from "../base.components/status-tags.component";
+import type { Task } from "../../lib/types";
+import { displayISODate } from "../../lib/utils";
 
-export default function TaskListEntry({
-  status,
-  children,
-}: {
-  status: string;
-  children?: ReactNode;
-}) {
+export default function TaskListEntry({ children }: { children?: ReactNode }) {
   return (
     <ListItem
       sx={{
@@ -45,36 +41,36 @@ export default function TaskListEntry({
           boxShadow: theme.shadowSoft,
         },
       }}>
-      <ListItemIcon>
-        {status == "completed" ? (
-          <CompletedVariant1 />
-        ) : status == "missing" ? (
-          <MissingVariant1 />
-        ) : (
-          <PendingVariant1 />
-        )}
-      </ListItemIcon>
       {children}
     </ListItem>
   );
 }
 
+TaskListEntry.Icon = ({ status }: { status: Task["status"] }) => {
+  return (
+    <ListItemIcon>
+      {status == "completed" ? (
+        <CompletedVariant1 />
+      ) : status == "missing" ? (
+        <MissingVariant1 />
+      ) : (
+        <PendingVariant1 />
+      )}
+    </ListItemIcon>
+  );
+};
+
 TaskListEntry.Link = ({
   title,
   url,
+  status,
   dueDate,
 }: {
   title: string;
   url: string;
+  status: Task["status"];
   dueDate: string;
 }) => {
-  const datePart = dueDate.split("T")[0];
-  const timePart = dueDate.split("T")[1].slice(0, 5);
-
-  const deadline = new Date(dueDate);
-  const isDeadlinePast =
-    !Number.isNaN(deadline.getTime()) && deadline.getTime() < Date.now();
-
   return (
     <ListItemText
       sx={{ m: 0 }}
@@ -98,13 +94,13 @@ TaskListEntry.Link = ({
           component="span"
           sx={{
             color: "text.secondary",
-            textDecoration: isDeadlinePast ? "line-through" : "none",
+            textDecoration: status == "missing" ? "line-through" : "none",
             display: "block",
             mt: 0.5,
           }}>
-          Deadline:{" "}
-          <strong style={{ fontWeight: isDeadlinePast ? 400 : 600 }}>
-            {datePart} {timePart}
+          Due Date:{" "}
+          <strong style={{ fontWeight: status == "missing" ? 400 : 600 }}>
+            {displayISODate(dueDate)}
           </strong>
         </Typography>
       }

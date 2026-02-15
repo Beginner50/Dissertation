@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router";
 import { theme } from "../../lib/theme";
 import { useAuth } from "../../providers/auth.provider";
 import type { User } from "../../lib/types";
-import React from "react";
+import React, { useState } from "react";
 
 export default function Header({ children }: { children: React.ReactNode }) {
   return (
@@ -31,24 +31,29 @@ Header.Brand = ({ title }: { title: string }) => {
 
 Header.Navigation = ({ children }: { children: React.ReactNode }) => {
   return (
-    <Box component="nav" sx={{ display: "flex", gap: 4, ml: 5 }}>
+    <Box component="nav" sx={{ display: "flex", gap: 1, ml: 5 }}>
       {children}
     </Box>
   );
 };
 
 Header.NavItem = ({ to, label }: { to: string; label: string }) => {
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+
   return (
     <NavLink
       to={to}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={({ isActive }) => ({
         textDecoration: "none",
         fontSize: "1rem",
         fontWeight: 500,
-        padding: "18px 0",
+        padding: "18px 8px",
         borderBottom: isActive ? `3px solid ${theme.link}` : "3px solid transparent",
         color: isActive ? theme.linkFocused : theme.textMuted,
         transition: "all 0.2s ease",
+        backgroundColor: isHovered ? "rgba(0, 123, 255, 0.08)" : "transparent",
       })}>
       {label}
     </NavLink>

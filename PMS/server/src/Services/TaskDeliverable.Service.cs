@@ -122,6 +122,8 @@ public class TaskDeliverableService
             t.ProjectTaskID == taskID &&
                 t.ProjectID == projectID &&
                     t.Project.StudentID == userID)
+            .Include(t => t.SubmittedDeliverable)
+                .ThenInclude(s => s.FeedbackCriterias)
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
 
@@ -132,7 +134,7 @@ public class TaskDeliverableService
             ContentType = contentType,
             SubmissionTimestamp = DateTime.UtcNow,
             TaskID = taskID,
-            SubmittedByID = userID
+            SubmittedByID = userID,
         };
 
         dbContext.Deliverables.Add(deliverable);
@@ -221,7 +223,6 @@ public class TaskDeliverableService
 
                 task.SubmittedDeliverable = task.StagedDeliverable;
                 task.StagedDeliverable = null;
-                task.Status = "completed";
 
                 await dbContext.SaveChangesAsync();
 

@@ -39,9 +39,9 @@ public class ReminderService
                         .ToList();
     }
 
-    public async Task CreateMeetingReminder(Meeting meeting)
+    public async Task CreateMeetingReminders(Meeting meeting)
     {
-        var meetingReminder = new Reminder
+        var attendeeReminder = new Reminder
         {
             Message = $"{meeting.Organizer.Name} has booked a meeting with you.",
             RemindAt = meeting.Start,
@@ -50,31 +50,42 @@ public class ReminderService
             MeetingID = meeting.MeetingID,
         };
 
-        await dbContext.AddAsync(meetingReminder);
+        var organizerReminder = new Reminder
+        {
+            Message = $"You have booked a meeting with {meeting.Attendee.Name}.",
+            RemindAt = meeting.Start,
+            Type = "meeting",
+            RecipientID = meeting.OrganizerID,
+            MeetingID = meeting.MeetingID,
+        };
+
+        await dbContext.AddAsync(attendeeReminder);
+        await dbContext.AddAsync(organizerReminder);
 
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task UpdateMeetingReminder(Meeting meeting)
+    public async Task UpdateMeetingReminders(Meeting meeting)
     {
-        var reminder = await dbContext.Reminders
+        var reminders = await dbContext.Reminders
                         .Where(r => r.MeetingID == meeting.MeetingID)
-                        .FirstOrDefaultAsync()
+                        .ToListAsync()
                         ?? throw new Exception("Reminder Not Found!");
 
-        reminder.RemindAt = meeting.Start;
+        foreach (var reminder in reminders)
+            reminder.RemindAt = meeting.Start;
 
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task DeleteMeetingReminder(Meeting meeting)
+    public async Task DeleteMeetingReminders(Meeting meeting)
     {
-        var reminder = await dbContext.Reminders
+        var reminders = await dbContext.Reminders
                         .Where(r => r.MeetingID == meeting.MeetingID)
-                        .FirstOrDefaultAsync()
+                        .ToListAsync()
                         ?? throw new Exception("Reminder Not Found!");
 
-        dbContext.Reminders.Remove(reminder);
+        dbContext.Reminders.RemoveRange(reminders);
         await dbContext.SaveChangesAsync();
     }
 

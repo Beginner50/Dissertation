@@ -11,7 +11,6 @@ public class ProjectTask
     public required string Description { get; set; }
     public DateTime AssignedDate { get; set; } = DateTime.UtcNow;
     public required DateTime DueDate { get; set; }
-    public required string Status { get; set; }
     public required bool IsLocked { get; set; }
 
     public long? StagedDeliverableID { get; set; }

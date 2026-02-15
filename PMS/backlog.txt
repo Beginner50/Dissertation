@@ -1,16 +1,15 @@
 Pending Tasks
+  Move feedback criterion to task instead of deliverable
+
+
   UI Fixes:
-    Restrict size of task action sidebar
     Allow scrolling through reminder and notifications
     Add number for reminders
-    Make the nav links more responsive
-    Unify all date processing mechanisms
 
   Urgent:
-    Update implementation
     Document AI Feedback Analysis
 
-  Update functional and non-functional requirements
   Update UML Diagrams
+  Document Background Workers
 
   Improve progress log report generation

@@ -206,12 +206,17 @@ AddSingleton:
 
     For example, if database context were to be a singleton, then all users might try to use
     the same database connection at the same time, leading to race conditions and crashes.
+
+AddHostedService:
+    AddHostedService is used to register a background service that runs alongside the
+    web application. Hence, their lifetime is not scoped to a client request but rather 
+    to the entire application lifetime.
 */
 builder.Services.AddSingleton<IAuthorizationHandler, OwnershipHandler>();
 builder.Services.AddSingleton<Client>(); // Gemini client
 builder.Services.AddSingleton<TokenService>(new TokenService(symmetricKey));
 builder.Services.AddSingleton<AIService>();
-builder.Services.AddSingleton<MailService>(new MailService(mailAccount, mailPassword));
+builder.Services.AddSingleton<MailService>(new MailService(new MailQueue(), mailAccount, mailPassword));
 
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ProjectService>();
@@ -221,6 +226,8 @@ builder.Services.AddScoped<FeedbackService>();
 builder.Services.AddScoped<MeetingService>();
 builder.Services.AddScoped<ReminderService>();
 builder.Services.AddScoped<NotificationService>();
+
+builder.Services.AddHostedService<MailWorker>();
 
 builder.Services.AddDbContext<PMSDbContext>(); // Database Context Registration
 builder.Services.AddControllers();

@@ -111,15 +111,14 @@ namespace PMS.Migrations
                     b.Property<DateTime>("End")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("boolean");
+
                     b.Property<long>("OrganizerID")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("Start")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<long>("TaskID")
                         .HasColumnType("bigint");
@@ -204,6 +203,7 @@ namespace PMS.Migrations
                             ProjectID = 1L,
                             Description = "Research on AI algorithms",
                             Status = "active",
+                            StudentID = 3L,
                             SupervisorID = 2L,
                             Title = "AI Research"
                         });
@@ -239,10 +239,6 @@ namespace PMS.Migrations
                     b.Property<long?>("StagedDeliverableID")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<long?>("SubmittedDeliverableID")
                         .HasColumnType("bigint");
 
@@ -272,7 +268,6 @@ namespace PMS.Migrations
                             DueDate = new DateTime(2025, 11, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsLocked = false,
                             ProjectID = 1L,
-                            Status = "completed",
                             Title = "Literature Review"
                         },
                         new
@@ -284,7 +279,6 @@ namespace PMS.Migrations
                             DueDate = new DateTime(2026, 1, 31, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsLocked = false,
                             ProjectID = 1L,
-                            Status = "pending",
                             Title = "Dataset Collection"
                         },
                         new
@@ -296,7 +290,6 @@ namespace PMS.Migrations
                             DueDate = new DateTime(2025, 10, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsLocked = false,
                             ProjectID = 1L,
-                            Status = "missing",
                             Title = "Proposal Submission"
                         });
                 });

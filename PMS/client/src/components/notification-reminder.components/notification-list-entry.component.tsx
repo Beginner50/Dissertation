@@ -3,6 +3,7 @@ import type { Notification } from "../../lib/types";
 import { ListItem, Typography, Box, Stack, type SxProps } from "@mui/material";
 import { Event, Assignment } from "@mui/icons-material";
 import type { ReactNode } from "react";
+import { displayISODate } from "../../lib/utils";
 
 const getNotificationAgeStyle = (timestamp: string) => {
   const now = new Date("2026-01-03T22:14:47");
@@ -48,8 +49,7 @@ export default function NotificationEntry({
         border: "1px solid",
         borderColor: "divider",
         ...sx,
-      }}
-    >
+      }}>
       {children}
     </ListItem>
   );
@@ -69,8 +69,7 @@ NotificationEntry.Icon = ({ type }: { type: Notification["type"] }) => {
         bgcolor: `${color}10`,
         color: color,
         flexShrink: 0,
-      }}
-    >
+      }}>
       {icon}
     </Box>
   );
@@ -92,14 +91,12 @@ NotificationEntry.Description = ({ text }: { text: string }) => (
       overflow: "hidden",
       textOverflow: "ellipsis",
       display: "block",
-    }}
-  >
+    }}>
     {text}
   </Typography>
 );
 
 NotificationEntry.Time = ({ timestamp }: { timestamp: string }) => {
-  const dateObj = new Date(timestamp);
   return (
     <Typography
       variant="caption"
@@ -107,14 +104,8 @@ NotificationEntry.Time = ({ timestamp }: { timestamp: string }) => {
         color: "text.disabled",
         fontWeight: 500,
         fontSize: "0.7rem",
-      }}
-    >
-      {dateObj.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-      })}
+      }}>
+      {displayISODate(timestamp)}
     </Typography>
   );
 };

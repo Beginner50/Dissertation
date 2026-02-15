@@ -70,6 +70,13 @@ export type FeedbackCriterion = {
   changeObserved: string;
 };
 
+export type FeedbackCriterionModal = Pick<
+  FeedbackCriterion,
+  "feedbackCriterionID" | "description"
+> & {
+  updateStatus: "unchanged" | "created" | "updated" | "deleted";
+};
+
 export type Meeting = {
   meetingID: number;
   start: string;
@@ -78,7 +85,7 @@ export type Meeting = {
   task: { taskID: number; title: string };
   organizer: { userID: number; name: string; email: string };
   attendee: { userID: number; name: string; email: string };
-  status: "accepted" | "pending";
+  status: "accepted" | "pending" | "missed";
 };
 
 export type MeetingFormData = {

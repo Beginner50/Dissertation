@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 import { theme } from "../../lib/theme";
 import { Box, Typography, type SxProps } from "@mui/material";
 import type { Theme } from "@emotion/react";
+import { displayISODate } from "../../lib/utils";
 
 export function TaskDetails({
   sx,
@@ -30,10 +31,7 @@ export function TaskDetails({
   );
 }
 
-TaskDetails.Header = ({ title, deadline }: { title: string; deadline: string }) => {
-  const datePart = deadline.split("T")[0] ?? "";
-  const timePart = deadline.split("T")[1]?.slice(0, 5) ?? "";
-
+TaskDetails.Header = ({ title, dueDate }: { title: string; dueDate: string }) => {
   return (
     <Box
       sx={{
@@ -50,9 +48,9 @@ TaskDetails.Header = ({ title, deadline }: { title: string; deadline: string }) 
       <Typography
         component="p"
         sx={{ fontSize: "0.9rem", color: theme.textMuted, marginTop: "4px" }}>
-        Deadline:{" "}
+        Due Date:{" "}
         <Box component="strong" sx={{ color: theme.textStrong }}>
-          {datePart} {timePart}
+          {displayISODate(dueDate)}
         </Box>
       </Typography>
     </Box>

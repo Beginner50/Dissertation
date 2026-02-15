@@ -9,7 +9,7 @@ public class Meeting
     public required DateTime Start { get; set; }
     public required DateTime End { get; set; }
     public string? Description { get; set; }
-    public required string Status { get; set; }
+    public required bool IsAccepted { get; set; }
 
     public required long OrganizerID { get; set; }
     [ForeignKey("OrganizerID")]

@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
-import type { FeedbackCriterion } from "../../lib/types";
+import type { FeedbackCriterion, FeedbackCriterionModal } from "../../lib/types";
 
 export default function FeedbackModal({
   open,
@@ -57,12 +57,14 @@ FeedbackModal.CriteriaList = ({
   onCriterionDescriptionChange,
   onCriterionDelete,
 }: {
-  criteria: Partial<FeedbackCriterion>[];
-  onCriterionDescriptionChange: (updatedCriterion: Partial<FeedbackCriterion>) => void;
-  onCriterionDelete: (deletedCriterion: Partial<FeedbackCriterion>) => void;
+  criteria: FeedbackCriterionModal[];
+  onCriterionDescriptionChange: (
+    updatedCriterion: Partial<FeedbackCriterionModal>,
+  ) => void;
+  onCriterionDelete: (deletedCriterion: Partial<FeedbackCriterionModal>) => void;
 }) => {
   const handleDescriptionChange =
-    (criterion: Partial<FeedbackCriterion>) => (updatedDescription: string) => {
+    (criterion: Partial<FeedbackCriterionModal>) => (updatedDescription: string) => {
       onCriterionDescriptionChange({ ...criterion, description: updatedDescription });
     };
 
@@ -77,6 +79,7 @@ FeedbackModal.CriteriaList = ({
           key={criterion.feedbackCriterionID ?? index}
           index={index}
           description={criterion.description ?? ""}
+          updateStatus={criterion.updateStatus}
           onDescriptionChange={handleDescriptionChange(criterion)}
           onDelete={() => onCriterionDelete(criterion)}
         />
@@ -96,22 +99,38 @@ FeedbackModal.CriteriaList = ({
 FeedbackModal.CriterionInput = ({
   index,
   description,
+  updateStatus,
   onDescriptionChange,
   onDelete,
 }: {
   index: number;
   description: string;
+  updateStatus: FeedbackCriterionModal["updateStatus"];
   onDescriptionChange: (updatedDescription: string) => void;
   onDelete: () => void;
 }) => {
   const [localText, setLocalText] = useState(description ?? "");
+
   useEffect(() => {
     setLocalText(description);
   }, [description]);
 
   return (
-    <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
-      <Typography sx={{ mt: 1, fontWeight: "bold", minWidth: "20px" }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 1.5,
+        opacity: updateStatus == "deleted" ? 0.4 : 1,
+        transition: "opacity 0.2s ease",
+      }}>
+      <Typography
+        sx={{
+          mt: 1,
+          fontWeight: "bold",
+          minWidth: "20px",
+          color: updateStatus == "deleted" ? "text.disabled" : "text.primary",
+        }}>
         {index + 1}.
       </Typography>
 
@@ -120,11 +139,19 @@ FeedbackModal.CriterionInput = ({
           fullWidth
           multiline
           size="small"
-          placeholder="Describe what needs to be fixed..."
+          disabled={updateStatus == "deleted"}
           value={localText}
           onChange={(e) => setLocalText(e.target.value)}
           onBlur={() => {
             if (localText !== description) onDescriptionChange(localText);
+          }}
+          sx={{
+            "& .MuiInputBase-input": {
+              textDecoration: updateStatus == "deleted" ? "line-through" : "none",
+            },
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: updateStatus == "deleted" ? "action.hover" : "transparent",
+            },
           }}
         />
       </FormControl>
@@ -132,8 +159,11 @@ FeedbackModal.CriterionInput = ({
       <IconButton
         color="error"
         onClick={onDelete}
-        sx={{ mt: 0.5 }}
-        title="Delete criterion">
+        disabled={updateStatus == "deleted"}
+        sx={{
+          mt: 0.5,
+          visibility: updateStatus == "deleted" ? "hidden" : "visible",
+        }}>
         <DeleteOutlineIcon fontSize="small" />
       </IconButton>
     </Box>
@@ -152,10 +182,12 @@ FeedbackModal.AddButton = ({ onAdd }: { onAdd: () => void }) => (
 );
 
 FeedbackModal.Actions = ({
+  hasPreviousCriteria,
   onCancel,
   onSubmit,
   disabled,
 }: {
+  hasPreviousCriteria: boolean;
   onCancel: () => void;
   onSubmit: () => void;
   disabled?: boolean;
@@ -165,7 +197,7 @@ FeedbackModal.Actions = ({
       Cancel
     </Button>
     <Button variant="contained" onClick={onSubmit} disabled={disabled} color="primary">
-      Submit Feedback
+      {hasPreviousCriteria ? "Update" : "Submit"}
     </Button>
   </DialogActions>
 );

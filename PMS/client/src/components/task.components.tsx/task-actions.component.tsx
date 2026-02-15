@@ -159,9 +159,11 @@ TaskActions.Actions = ({ children }: { children: ReactNode }) => {
 
 TaskActions.ProvideFeedbackButton = ({
   onClick,
+  hasPreviousCriteria,
   disabled = false,
 }: {
   onClick: () => void;
+  hasPreviousCriteria: boolean;
   disabled?: boolean;
 }) => {
   return (
@@ -173,7 +175,7 @@ TaskActions.ProvideFeedbackButton = ({
       fullWidth
       startIcon={<CommentIcon />}
       onClick={onClick}>
-      Provide Feedback
+      {hasPreviousCriteria ? "Update Feedback" : "Provide Feedback"}
     </Button>
   );
 };

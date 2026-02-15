@@ -10,6 +10,7 @@ import {
   Typography,
   Collapse,
   type SxProps,
+  Tooltip,
 } from "@mui/material";
 import {
   Check as CheckIcon,
@@ -18,6 +19,7 @@ import {
   ToggleOn,
   KeyboardArrowDown,
   KeyboardArrowUp,
+  InfoOutlined,
 } from "@mui/icons-material";
 import { theme } from "../../lib/theme";
 import type { FeedbackCriterion } from "../../lib/types";
@@ -47,9 +49,9 @@ export default function FeedbackCriteriaTable({
         <TableHead>
           <TableRow sx={{ backgroundColor: "#f8f8f8" }}>
             {/* Cell Reserved for Collapse Button */}
-            <TableCell />
+            <TableCell sx={{ width: "2vw" }} />
 
-            <TableCell sx={{ fontWeight: 600, color: theme.textStrong, width: "35vw" }}>
+            <TableCell sx={{ fontWeight: 600, color: theme.textStrong, width: "33vw" }}>
               Criteria
             </TableCell>
             <TableCell
@@ -98,10 +100,19 @@ FeedbackCriteriaTable.Row = ({
     <>
       <TableRow>
         <TableCell>
-          {hasObservation && (
+          {hasObservation ? (
             <IconButton size="small" onClick={() => setOpen(!open)}>
               {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
             </IconButton>
+          ) : (
+            <Tooltip
+              title="This feedback criterion has not been analyzed by AI."
+              arrow
+              placement="top">
+              <IconButton size="small" sx={{ cursor: "help", color: "text.disabled" }}>
+                <InfoOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
           )}
         </TableCell>
 

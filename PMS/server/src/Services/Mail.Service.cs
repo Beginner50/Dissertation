@@ -1,9 +1,7 @@
-using System.Text.Json;
+using System.Threading.Channels;
 using MailKit.Net.Smtp;
 using MailKit.Security;
-using Microsoft.EntityFrameworkCore;
 using MimeKit;
-using PMS.DatabaseContext;
 using PMS.Models;
 
 namespace PMS.Services;
@@ -57,29 +55,52 @@ public enum MailType
     TASK_DELETED,
     MEETING_SCHEDULED,
     MEETING_CANCELLED,
+    MEETING_ACCEPTED,
     MEETING_REJECTED,
+}
+
+public class MailQueue
+{
+    private readonly Channel<MimeMessage> queue;
+
+    public MailQueue()
+    {
+        queue = Channel.CreateUnbounded<MimeMessage>();
+    }
+
+    public void QueueMail(MimeMessage message)
+    {
+        if (message == null) return;
+        queue.Writer.TryWrite(message);
+    }
+
+    public async Task<MimeMessage> DequeueMail(CancellationToken cancellationToken)
+    {
+        return await queue.Reader.ReadAsync(cancellationToken);
+    }
 }
 
 public class MailService
 {
+    private readonly MailQueue mailQueue;
     private readonly string mailAccount;
     private readonly string mailPassword;
     private static readonly string MailFooter = """
-        <span color="red"> This is an automated reminder from Project Management System (PMS).
+        <span style="color: red;"> This is an automated reminder from Project Management System (PMS).
         Please do not reply to this email.</span><br/><br/>
     """;
 
-    public MailService(string mailAccount, string mailPassword)
+    public MailService(MailQueue mailQueue, string mailAccount, string mailPassword)
     {
+        this.mailQueue = mailQueue;
         this.mailAccount = mailAccount;
         this.mailPassword = mailPassword;
     }
 
-    public MimeMessage CreateMeetingMail(Meeting meeting, MailType mailType)
+    public void CreateAndEnqueueMeetingMail(Meeting meeting, MailType mailType)
     {
-        var message = new MimeMessage();
-        message.From.Add(new MailboxAddress("Project Management System", "noreply@pms.com"));
-        message.To.Add(new MailboxAddress("", meeting.Attendee.Email));
+        var mail = new MimeMessage();
+        mail.From.Add(new MailboxAddress("Project Management System", "noreply@pms.com"));
 
         switch (mailType)
         {
@@ -88,8 +109,8 @@ public class MailService
                                          ? "" :
                                          $"Meeting Description:<br/> <span color='gray'><{meeting.Description}</span><br/><br/>";
 
-                message.Subject = "FYP: New Meeting Scheduled";
-                message.Body = new TextPart("html")
+                mail.Subject = "FYP: New Meeting Scheduled";
+                mail.Body = new TextPart("html")
                 {
                     Text = $"""
                     Dear {meeting.Attendee.Name},<br/><br/>
@@ -104,25 +125,43 @@ public class MailService
                     {MailFooter}
                     """
                 };
+                mail.To.Add(new MailboxAddress("", meeting.Attendee.Email));
                 break;
-            case MailType.MEETING_REJECTED:
-                message.Subject = "FYP: Meeting Schedule Updated";
-                message.Body = new TextPart("html")
+            case MailType.MEETING_ACCEPTED:
+                mail.Subject = "FYP: Meeting Accepted";
+                mail.Body = new TextPart("html")
                 {
                     Text = $"""
                     Dear {meeting.Organizer.Name},<br/><br/>
 
-                    {meeting.Attendee.Name} has cancelled the meeting at
+                    {meeting.Attendee.Name} has accepted the meeting at
                     <b>{meeting.Start.ToLocalTime()}</b> to <b>{meeting.End.ToLocalTime()}</b>
                     with you.<br/><br/>
 
                     {MailFooter}
                     """
                 };
+                mail.To.Add(new MailboxAddress("", meeting.Organizer.Email));
+                break;
+            case MailType.MEETING_REJECTED:
+                mail.Subject = "FYP: Meeting Rejected";
+                mail.Body = new TextPart("html")
+                {
+                    Text = $"""
+                    Dear {meeting.Organizer.Name},<br/><br/>
+
+                    {meeting.Attendee.Name} has rejected the meeting at
+                    <b>{meeting.Start.ToLocalTime()}</b> to <b>{meeting.End.ToLocalTime()}</b>
+                    with you.<br/><br/>
+
+                    {MailFooter}
+                    """
+                };
+                mail.To.Add(new MailboxAddress("", meeting.Organizer.Email));
                 break;
             case MailType.MEETING_CANCELLED:
-                message.Subject = "FYP: Meeting Cancelled";
-                message.Body = new TextPart("html")
+                mail.Subject = "FYP: Meeting Cancelled";
+                mail.Body = new TextPart("html")
                 {
                     Text = $"""
                     Dear {meeting.Attendee.Name},<br/><br/>
@@ -134,17 +173,20 @@ public class MailService
                     {MailFooter}
                     """
                 };
+                mail.To.Add(new MailboxAddress("", meeting.Attendee.Email));
                 break;
         }
 
-        return message;
+
+        mailQueue.QueueMail(mail);
     }
 
-    public MimeMessage CreateTaskMail(ProjectTask task, MailType mailType)
+
+    public void CreateAndEnqueueTaskMail(ProjectTask task, MailType mailType)
     {
-        var message = new MimeMessage();
-        message.From.Add(new MailboxAddress("Project Management System", "noreply@pms.com"));
-        message.To.Add(new MailboxAddress("", task.Project.Student.Email));
+        var mail = new MimeMessage();
+        mail.From.Add(new MailboxAddress("Project Management System", "noreply@pms.com"));
+        mail.To.Add(new MailboxAddress("", task.Project.Student.Email));
 
         switch (mailType)
         {
@@ -153,8 +195,8 @@ public class MailService
                                          ? "" :
                                          $"Task Description:<br/> <span color='gray'><{task.Description}</span><br/><br/>";
 
-                message.Subject = "FYP: New Task Assigned";
-                message.Body = new TextPart("html")
+                mail.Subject = "FYP: New Task Assigned";
+                mail.Body = new TextPart("html")
                 {
                     Text = $"""
                     Dear {task.Project.Student.Name},<br/><br/>
@@ -171,8 +213,8 @@ public class MailService
                 };
                 break;
             case MailType.TASK_UPDATED:
-                message.Subject = "FYP: Task Updated";
-                message.Body = new TextPart("html")
+                mail.Subject = "FYP: Task Updated";
+                mail.Body = new TextPart("html")
                 {
                     Text = $"""
                     Dear {task.Project.Student.Name},<br/><br/>
@@ -187,8 +229,8 @@ public class MailService
                 };
                 break;
             case MailType.TASK_DELETED:
-                message.Subject = "FYP: Task Deleted";
-                message.Body = new TextPart("html")
+                mail.Subject = "FYP: Task Deleted";
+                mail.Body = new TextPart("html")
                 {
                     Text = $"""
                     Dear {task.Project.Student.Name},<br/><br/>
@@ -202,16 +244,19 @@ public class MailService
                 break;
         }
 
-        return message;
+        mailQueue.QueueMail(mail);
     }
-    public async Task SendMail(MimeMessage message)
+
+    public async Task DequeueAndSendMail(CancellationToken cancellationToken)
     {
+        var mail = await mailQueue.DequeueMail(cancellationToken);
+
         using var client = new SmtpClient();
         try
         {
             await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
             await client.AuthenticateAsync(mailAccount, mailPassword);
-            await client.SendAsync(message);
+            await client.SendAsync(mail);
         }
         catch (Exception e)
         {
