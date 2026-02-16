@@ -3,36 +3,24 @@ import type { Notification } from "../../lib/types";
 import { ListItem, Typography, Box, Stack, type SxProps } from "@mui/material";
 import { Event, Assignment } from "@mui/icons-material";
 import type { ReactNode } from "react";
-import { displayISODate } from "../../lib/utils";
-
-const getNotificationAgeStyle = (timestamp: string) => {
-  const now = new Date("2026-01-03T22:14:47");
-  const then = new Date(timestamp);
-  const diffInMs = now.getTime() - then.getTime();
-  const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-
-  if (diffInDays < 1) return { opacity: 1, grayness: "text.primary" };
-  if (diffInDays < 7) return { opacity: 0.85, grayness: "text.secondary" };
-  if (diffInDays < 30) return { opacity: 0.7, grayness: "text.secondary" };
-  return { opacity: 0.5, grayness: "text.disabled" };
-};
-
-const getTypeMeta = (type: Notification["type"]) => {
-  return type === "meeting"
-    ? { color: theme.link || "#1976d2", icon: <Event sx={{ fontSize: 16 }} /> }
-    : { color: "#2e7d32", icon: <Assignment sx={{ fontSize: 16 }} /> };
-};
 
 export default function NotificationEntry({
   timestamp,
   children,
   sx,
 }: {
-  timestamp: string;
+  timestamp: Date;
   children: ReactNode;
   sx?: SxProps;
 }) {
-  const { opacity } = getNotificationAgeStyle(timestamp);
+  const opacity = (() => {
+    const diffInMs = new Date().getTime() - timestamp.getTime();
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+
+    if (diffInDays < 1) return 1;
+    if (diffInDays < 7) return 0.85;
+    if (diffInDays < 30) return 0.7;
+  })();
 
   return (
     <ListItem
@@ -56,7 +44,6 @@ export default function NotificationEntry({
 }
 
 NotificationEntry.Icon = ({ type }: { type: Notification["type"] }) => {
-  const { color, icon } = getTypeMeta(type);
   return (
     <Box
       sx={{
@@ -66,11 +53,15 @@ NotificationEntry.Icon = ({ type }: { type: Notification["type"] }) => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        bgcolor: `${color}10`,
-        color: color,
+        bgcolor: `${type == "meeting" ? theme.link : "#2e7d32"}10`,
+        color: type == "meeting" ? theme.link : "#2e7d32",
         flexShrink: 0,
       }}>
-      {icon}
+      {type == "meeting" ? (
+        <Event sx={{ fontSize: 16 }} />
+      ) : (
+        <Assignment sx={{ fontSize: 16 }} />
+      )}
     </Box>
   );
 };
@@ -96,7 +87,7 @@ NotificationEntry.Description = ({ text }: { text: string }) => (
   </Typography>
 );
 
-NotificationEntry.Time = ({ timestamp }: { timestamp: string }) => {
+NotificationEntry.Time = ({ timestamp }: { timestamp: Date }) => {
   return (
     <Typography
       variant="caption"
@@ -105,7 +96,7 @@ NotificationEntry.Time = ({ timestamp }: { timestamp: string }) => {
         fontWeight: 500,
         fontSize: "0.7rem",
       }}>
-      {displayISODate(timestamp)}
+      {timestamp.toLocaleString("en-US")}
     </Typography>
   );
 };

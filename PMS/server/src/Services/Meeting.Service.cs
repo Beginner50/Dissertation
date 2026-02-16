@@ -32,7 +32,7 @@ public class MeetingService
     public async Task<GetMeetingsDTO> GetMeeting(long meetingID)
     {
         var meeting = await dbContext.Meetings.FindAsync(meetingID) ?? throw new
-                            InvalidOperationException("Meeting Not Found!");
+                            UnauthorizedAccessException("Meeting Not Found!");
 
         return new GetMeetingsDTO
         {
@@ -110,6 +110,15 @@ public class MeetingService
         string? description, DateTime start, DateTime end
     )
     {
+        var task = await dbContext.Tasks.Where(
+                        t => t.ProjectTaskID == taskID
+                            && ((t.Project.StudentID == organizerID
+                                 && t.Project.SupervisorID == attendeeID)
+                            || (t.Project.SupervisorID == organizerID
+                                && t.Project.StudentID == attendeeID))
+                    ).FirstOrDefaultAsync()
+                    ?? throw new UnauthorizedAccessException("Unauthorized Access!");
+
         var organizer = await dbContext.Users.FindAsync(organizerID)
                             ?? throw new Exception("Organizer Not Found!");
         var attendee = await dbContext.Users.FindAsync(attendeeID)

@@ -100,24 +100,29 @@ public class MailService
     public void CreateAndEnqueueMeetingMail(Meeting meeting, MailType mailType)
     {
         var mail = new MimeMessage();
+
+        var sanitizedMeetingDescription = Sanitization.SanitizeString(meeting.Description);
+        var sanitizedAttendeeName = Sanitization.SanitizeString(meeting.Attendee.Name);
+        var sanitizedOrganizerName = Sanitization.SanitizeString(meeting.Organizer.Name);
+
         mail.From.Add(new MailboxAddress("Project Management System", "noreply@pms.com"));
 
         switch (mailType)
         {
             case MailType.MEETING_SCHEDULED:
-                var meetingDescription = meeting.Description == null || meeting.Description == ""
+                var description = meeting.Description == null || meeting.Description == ""
                                          ? "" :
-                                         $"Meeting Description:<br/> <span color='gray'><{meeting.Description}</span><br/><br/>";
+                                         $"Meeting Description:<br/> <span color='gray'><{sanitizedMeetingDescription}</span><br/><br/>";
 
                 mail.Subject = "FYP: New Meeting Scheduled";
                 mail.Body = new TextPart("html")
                 {
                     Text = $"""
-                    Dear {meeting.Attendee.Name},<br/><br/>
+                    Dear {sanitizedAttendeeName},<br/><br/>
 
-                    You have a new meeting scheduled with {meeting.Organizer.Name}.<br/><br/>
+                    You have a new meeting scheduled with {sanitizedOrganizerName}.<br/><br/>
 
-                    {meetingDescription}
+                    {description}
 
                     <b>Meeting Start Time:</b> {meeting.Start.ToLocalTime()}<br/>
                     <b>Meeting End Time:</b> {meeting.End.ToLocalTime()}<br/><br/>
@@ -132,9 +137,9 @@ public class MailService
                 mail.Body = new TextPart("html")
                 {
                     Text = $"""
-                    Dear {meeting.Organizer.Name},<br/><br/>
+                    Dear {sanitizedOrganizerName},<br/><br/>
 
-                    {meeting.Attendee.Name} has accepted the meeting at
+                    {sanitizedAttendeeName} has accepted the meeting at
                     <b>{meeting.Start.ToLocalTime()}</b> to <b>{meeting.End.ToLocalTime()}</b>
                     with you.<br/><br/>
 
@@ -148,9 +153,9 @@ public class MailService
                 mail.Body = new TextPart("html")
                 {
                     Text = $"""
-                    Dear {meeting.Organizer.Name},<br/><br/>
+                    Dear {sanitizedOrganizerName},<br/><br/>
 
-                    {meeting.Attendee.Name} has rejected the meeting at
+                    {sanitizedAttendeeName} has rejected the meeting at
                     <b>{meeting.Start.ToLocalTime()}</b> to <b>{meeting.End.ToLocalTime()}</b>
                     with you.<br/><br/>
 
@@ -164,9 +169,9 @@ public class MailService
                 mail.Body = new TextPart("html")
                 {
                     Text = $"""
-                    Dear {meeting.Attendee.Name},<br/><br/>
+                    Dear {sanitizedAttendeeName},<br/><br/>
 
-                    {meeting.Organizer.Name} has cancelled the meeting at
+                    {sanitizedOrganizerName} has cancelled the meeting at
                     <b>{meeting.Start.ToLocalTime()}<b/> to <b>{meeting.End.ToLocalTime()}</b>
                     with you.<br/><br/>
 
@@ -185,6 +190,12 @@ public class MailService
     public void CreateAndEnqueueTaskMail(ProjectTask task, MailType mailType)
     {
         var mail = new MimeMessage();
+
+        var sanitizedTaskDescription = Sanitization.SanitizeString(task.Description);
+        var sanitizedStudentName = Sanitization.SanitizeString(task.Project.Student.Name);
+        var sanitizedSupervisorName = Sanitization.SanitizeString(task.Project.Supervisor.Name);
+        var sanitizedTaskTitle = Sanitization.SanitizeString(task.Title);
+
         mail.From.Add(new MailboxAddress("Project Management System", "noreply@pms.com"));
         mail.To.Add(new MailboxAddress("", task.Project.Student.Email));
 
@@ -193,16 +204,16 @@ public class MailService
             case MailType.TASK_ASSIGNED:
                 var taskDescription = task.Description == null || task.Description == ""
                                          ? "" :
-                                         $"Task Description:<br/> <span color='gray'><{task.Description}</span><br/><br/>";
+                                         $"Task Description:<br/> <span color='gray'><{sanitizedTaskDescription}</span><br/><br/>";
 
                 mail.Subject = "FYP: New Task Assigned";
                 mail.Body = new TextPart("html")
                 {
                     Text = $"""
-                    Dear {task.Project.Student.Name},<br/><br/>
+                    Dear {sanitizedStudentName},<br/><br/>
 
-                    {task.Project.Supervisor.Name} has assigned you a new task,
-                    <b> {task.Title} </b><br/><br/>
+                    {sanitizedSupervisorName} has assigned you a new task,
+                    <b> {sanitizedTaskTitle} </b><br/><br/>
 
                     {taskDescription}
 
@@ -217,10 +228,10 @@ public class MailService
                 mail.Body = new TextPart("html")
                 {
                     Text = $"""
-                    Dear {task.Project.Student.Name},<br/><br/>
+                    Dear {sanitizedStudentName},<br/><br/>
 
-                    {task.Project.Supervisor.Name} has updated the due date for the task,
-                    <b>{task.Title}</b>.<br/><br/>
+                    {sanitizedSupervisorName} has updated the due date for the task,
+                    <b>{sanitizedTaskTitle}</b>.<br/><br/>
 
                     <b>New Task Due Date:</b> {task.DueDate.ToLocalTime()}<br/><br/>
 
@@ -233,10 +244,10 @@ public class MailService
                 mail.Body = new TextPart("html")
                 {
                     Text = $"""
-                    Dear {task.Project.Student.Name},<br/><br/>
+                    Dear {sanitizedStudentName},<br/><br/>
 
-                    {task.Project.Supervisor.Name} has deleted the task, 
-                    <b>{task.Title}</b>.<br/><br/>
+                    {sanitizedSupervisorName} has deleted the task, 
+                    <b>{sanitizedTaskTitle}</b>.<br/><br/>
 
                     {MailFooter}
                     """

@@ -7,11 +7,12 @@ import {
   List,
   type SxProps,
   type Theme,
+  CircularProgress,
+  Box,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { type ReactNode } from "react";
 import type { Task, TaskFormData } from "../../lib/types";
-import { Pagination as MuiPagination } from "@mui/material";
 import TaskListEntry from "./task-list-entry.component";
 
 export function TaskList({
@@ -29,7 +30,6 @@ export function TaskList({
         bgcolor: "background.paper",
         borderRadius: 2,
         display: "flex",
-        overflowY: "auto",
         flexDirection: "column",
         ...sx,
       }}>
@@ -72,43 +72,53 @@ TaskList.Content = ({
   menuEnabled: boolean;
   handleEditTaskClick: (data: TaskFormData) => void;
   handleDeleteTaskClick: (data: TaskFormData) => void;
-}) => (
-  <List disablePadding>
-    {tasks.map((task) => (
-      <TaskListEntry key={task.taskID}>
-        <TaskListEntry.Icon status={task.status} />
+}) => {
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <CircularProgress size={32} />
+      </Box>
+    );
+  }
 
-        <TaskListEntry.Link
-          title={task.title}
-          url={`/projects/${projectID}/tasks/${task.taskID}`}
-          dueDate={task.dueDate}
-          status={task.status}
-        />
+  return (
+    <List disablePadding>
+      {tasks.map((task) => (
+        <TaskListEntry key={task.taskID}>
+          <TaskListEntry.Icon status={task.status} />
 
-        {menuEnabled && (
-          <TaskListEntry.MenuButton
-            onEditButtonClick={() =>
-              handleEditTaskClick({
-                taskID: task.taskID,
-                title: task.title,
-                description: task.description,
-                dueDate: task.dueDate,
-              })
-            }
-            onDeleteButtonClick={() =>
-              handleDeleteTaskClick({
-                taskID: task.taskID,
-                title: task.title,
-                description: task.description,
-                dueDate: task.dueDate,
-              })
-            }
+          <TaskListEntry.Link
+            title={task.title}
+            url={`/projects/${projectID}/tasks/${task.taskID}`}
+            dueDate={task.dueDate}
+            status={task.status}
           />
-        )}
-      </TaskListEntry>
-    ))}
-  </List>
-);
+
+          {menuEnabled && (
+            <TaskListEntry.MenuButton
+              onEditButtonClick={() =>
+                handleEditTaskClick({
+                  taskID: task.taskID,
+                  title: task.title,
+                  description: task.description,
+                  dueDate: task.dueDate,
+                })
+              }
+              onDeleteButtonClick={() =>
+                handleDeleteTaskClick({
+                  taskID: task.taskID,
+                  title: task.title,
+                  description: task.description,
+                  dueDate: task.dueDate,
+                })
+              }
+            />
+          )}
+        </TaskListEntry>
+      ))}
+    </List>
+  );
+};
 
 TaskList.CreateTaskButton = ({ onClick }: { onClick: () => void }) => (
   <Button variant="contained" startIcon={<AddIcon />} onClick={onClick} disableElevation>

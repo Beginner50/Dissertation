@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import type { Deliverable } from "../../lib/types";
 import { theme } from "../../lib/theme";
+import { toLocalDateString } from "../../lib/utils";
 
 export default function DeliverableCard({
   cardDescription,
@@ -82,9 +83,9 @@ DeliverableCard.FileName = ({ filename }: { filename: string }) => (
   </Typography>
 );
 
-DeliverableCard.Date = ({ timestamp }: { timestamp: string }) => (
+DeliverableCard.Date = ({ timestamp }: { timestamp: Date }) => (
   <Typography variant="caption" color="text.secondary">
-    {new Date(timestamp).toLocaleDateString("en-GB")}
+    {toLocalDateString(timestamp)}
   </Typography>
 );
 
@@ -105,7 +106,7 @@ DeliverableCard.Actions = ({
         </IconButton>
       )}
 
-      <IconButton size="small" component="a" onClick={onOpenDeliverable}>
+      <IconButton size="small" onClick={onOpenDeliverable}>
         <RemoveRedEye fontSize="small" />
       </IconButton>
     </Stack>

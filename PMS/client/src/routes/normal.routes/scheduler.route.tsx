@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { EventClickArg } from "@fullcalendar/core/index.js";
 import Scheduler from "../../components/scheduler.components/scheduler.component";
 import SchedulerActions from "../../components/scheduler.components/scheduler-actions.component";
@@ -21,8 +21,8 @@ export default function SchedulerRoute() {
 
   const [meetingFormData, setMeetingFormData] = useState<MeetingFormData>({
     description: "",
-    start: "",
-    end: "",
+    start: new Date(),
+    end: new Date(),
     attendeeID: 0,
     projectID: 0,
     taskID: 0,
@@ -46,10 +46,23 @@ export default function SchedulerRoute() {
     },
   });
 
+  /*
+    During transfer from the server to the client and vice-versa, temporal data is converted
+    into ISO format to account for timezones. 
+
+    Date represents datetime in the local timezone
+  */
   const { data: meetingEvents } = useQuery({
     queryKey: [user.userID, "meetings"],
     queryFn: async (): Promise<Meeting[]> =>
       await authorizedAPI.get(`api/users/${user.userID}/meetings`).json(),
+    select: (data: any[]) => {
+      return data.map((m) => ({
+        ...m,
+        start: new Date(m.start),
+        end: new Date(m.end),
+      }));
+    },
     retry: 1,
   });
 
@@ -72,12 +85,9 @@ export default function SchedulerRoute() {
     setSelectedSlot({ start: slot.start, end: slot.end });
 
     setMeetingFormData({
-      description: "",
-      start: slot.start.toISOString(),
-      end: slot.end.toISOString(),
-      attendeeID: 0,
-      projectID: 0,
-      taskID: 0,
+      ...meetingFormData,
+      start: slot.start,
+      end: slot.end,
     });
   };
 
@@ -92,14 +102,14 @@ export default function SchedulerRoute() {
     setMeetingFormData((prev) => ({ ...prev, description: val }));
   };
 
-  const handleStartChange = (start: string) => {
+  const handleStartChange = (start: Date) => {
     setMeetingFormData((prev) => ({
       ...prev,
       start: start,
     }));
   };
 
-  const handleEndChange = (end: string) => {
+  const handleEndChange = (end: Date) => {
     setMeetingFormData((prev) => ({
       ...prev,
       end: end,
@@ -119,7 +129,7 @@ export default function SchedulerRoute() {
   };
 
   const handleTaskChange = (taskID: number) => {
-    setMeetingFormData({ ...meetingFormData, taskID });
+    setMeetingFormData(prev => ({ ...prev, taskID }));
   };
 
   /* ---------------------------------------------------------------------------------- */
@@ -129,7 +139,11 @@ export default function SchedulerRoute() {
       {
         method: "post",
         url: `api/users/${user.userID}/meetings`,
-        data: meetingFormData,
+        data: {
+          ...meetingFormData,
+          start: meetingFormData.start.toISOString(),
+          end: meetingFormData.end.toISOString(),
+        },
       },
       {
         onSettled: () => {
@@ -207,8 +221,16 @@ export default function SchedulerRoute() {
   const selectableTasks =
     userProjects?.find((p) => p.projectID === meetingFormData.projectID)?.tasks || [];
 
-  const startTimePart = selectedMeeting?.start.split("T")[1].slice(0, 5);
-  const endTimePart = selectedMeeting?.end.split("T")[1].slice(0, 5);
+  const startTimePart = selectedMeeting?.start.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+  const endTimePart = selectedMeeting?.end.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 
   return (
     <Stack

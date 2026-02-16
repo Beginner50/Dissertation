@@ -150,15 +150,17 @@ FeedbackCriteriaTable.Row = ({
       </TableRow>
 
       {/* Collapsible Nested Row */}
-      {open && (
-        <TableRow>
-          <TableCell
-            sx={{
-              paddingBottom: 0,
-              paddingTop: 0,
-            }}
-            colSpan={5}>
-            <Collapse in={open} timeout="auto" unmountOnExit>
+      <TableRow>
+        <TableCell
+          colSpan={5}
+          sx={{
+            paddingTop: "0 !important",
+            paddingBottom: "0 !important",
+            verticalAlign: "top",
+            border: "none",
+          }}>
+          <Collapse in={open} timeout="auto" unmountOnExit collapsedSize={0}>
+            <Box sx={{ py: 2 }}>
               <Typography
                 variant="subtitle2"
                 gutterBottom
@@ -169,10 +171,10 @@ FeedbackCriteriaTable.Row = ({
               <Typography variant="body2" color="text.secondary">
                 {c.changeObserved}
               </Typography>
-            </Collapse>
-          </TableCell>
-        </TableRow>
-      )}
+            </Box>
+          </Collapse>
+        </TableCell>
+      </TableRow>
     </>
   );
 };

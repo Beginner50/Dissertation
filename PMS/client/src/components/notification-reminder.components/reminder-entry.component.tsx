@@ -3,6 +3,7 @@ import type { Reminder } from "../../lib/types";
 import { ListItem, Typography, Box, Stack, type SxProps } from "@mui/material";
 import { Event, Assignment } from "@mui/icons-material";
 import type { ReactNode } from "react";
+import { toLocalDateString, toLocalTimeString } from "../../lib/utils";
 
 const getReminderTypeMeta = (type: Reminder["type"]) => {
   switch (type) {
@@ -38,8 +39,7 @@ export default function ReminderEntry({
         alignItems: "center",
         gap: 2,
         ...sx,
-      }}
-    >
+      }}>
       {children}
     </ListItem>
   );
@@ -59,8 +59,7 @@ ReminderEntry.Icon = ({ type }: { type: Reminder["type"] }) => {
         bgcolor: `${color}12`,
         color: color,
         flexShrink: 0,
-      }}
-    >
+      }}>
       {icon}
     </Box>
   );
@@ -72,8 +71,7 @@ ReminderEntry.Content = ({ children }: { children: ReactNode }) => (
   </Box>
 );
 
-ReminderEntry.Time = ({ remindAt }: { remindAt: string }) => {
-  const dateObj = new Date(remindAt);
+ReminderEntry.Time = ({ remindAt }: { remindAt: Date }) => {
   return (
     <Typography
       variant="body1"
@@ -84,22 +82,13 @@ ReminderEntry.Time = ({ remindAt }: { remindAt: string }) => {
         display: "flex",
         alignItems: "center",
         gap: 1,
-      }}
-    >
-      {dateObj.toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}
+      }}>
+      {toLocalTimeString(remindAt)}
       <Typography
         component="span"
         variant="caption"
-        sx={{ color: "text.disabled", fontWeight: 600, mt: 0.2 }}
-      >
-        •{" "}
-        {dateObj.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-        })}
+        sx={{ color: "text.disabled", fontWeight: 600, mt: 0.2 }}>
+        • {toLocalDateString(remindAt)}
       </Typography>
     </Typography>
   );
@@ -115,8 +104,7 @@ ReminderEntry.Description = ({ text }: { text: string }) => (
       overflow: "hidden",
       textOverflow: "ellipsis",
       display: "block",
-    }}
-  >
+    }}>
     {text}
   </Typography>
 );

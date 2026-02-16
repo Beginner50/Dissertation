@@ -61,9 +61,7 @@ public class ProjectService
     {
         var projectsQuery = dbContext.Projects
             .Where(p => (p.SupervisorID == userID || p.StudentID == userID)
-                            && p.Status != "archived")
-        .Skip((int)offset)
-        .Take((int)limit);
+                            && p.Status != "archived");
 
         var count = await projectsQuery.LongCountAsync();
 
@@ -97,6 +95,8 @@ public class ProjectService
                     .ToList()
             }
         )
+        .Skip((int)offset)
+        .Take((int)limit)
         .ToListAsync();
 
         return (projects, count);
@@ -212,7 +212,7 @@ public class ProjectService
         var pdfData = PDFUtils.GenerateProgressLogReport(project, tasksWithMeetings);
         return new TaskDeliverableFileDTO
         {
-            Filename = $"{project.Title}_ProgressLog_{DateTime.UtcNow:dd/MM/yyyy}",
+            Filename = Sanitization.SanitizeFilename($"{project.Title}_ProgressLog_{DateTime.UtcNow:dd/MM/yyyy}"),
             File = pdfData,
             ContentType = "application/pdf"
         };

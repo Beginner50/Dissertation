@@ -1,10 +1,6 @@
 Pending Tasks
-  Move feedback criterion to task instead of deliverable
-
-
   UI Fixes:
     Allow scrolling through reminder and notifications
-    Add number for reminders
 
   Urgent:
     Document AI Feedback Analysis

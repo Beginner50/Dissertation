@@ -1,3 +1,5 @@
+using PMS.Models;
+
 namespace PMS.DTOs;
 
 public class GetProjectTaskDTO
@@ -12,4 +14,5 @@ public class GetProjectTaskDTO
     public UserLookupDTO? AssignedBy { get; set; }
     public long? StagedDeliverableID { get; set; }
     public long? SubmittedDeliverableID { get; set; }
+    public List<GetFeedbackCriterionDTO> FeedbackCriterias { get; set; } = [];
 }

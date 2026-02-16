@@ -88,6 +88,10 @@ export default function Scheduler({
           ":hover": { boxShadow: "0 0 5px rgba(0, 0, 0, 0.3)", opacity: 0.95 },
         },
 
+        ".fc-timegrid-slot": {
+          height: "1.95rem !important",
+        },
+
         // Attendee
         ".attendee.pending": {
           backgroundColor: COLOR_ATTENDEE,
@@ -132,9 +136,18 @@ export default function Scheduler({
         plugins={[timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
         height={"100%"}
-        slotMinTime={"09:00:00"}
-        slotMaxTime={"19:00:00"}
+        slotMinTime={"08:00:00"}
+        slotMaxTime={"21:00:00"}
+        slotDuration={"01:00:00"}
+        snapDuration={"01:00:00"}
         eventDisplay="block"
+        slotLabelFormat={{
+          hour: "numeric",
+          minute: "2-digit",
+          omitZeroMinute: false,
+          meridiem: "short",
+        }}
+        timeZone="local"
         allDaySlot={false}
         events={adaptMeetingData(userID, meetingData)}
         selectable={true}

@@ -9,6 +9,4 @@ public class GetTaskDeliverablesDTO
     public DateTime SubmissionTimestamp { get; set; }
     public long TaskID { get; set; }
     public UserLookupDTO? SubmittedBy { get; set; }
-
-    public List<FeedbackCriterion> FeedbackCriterias { get; set; } = [];
 }

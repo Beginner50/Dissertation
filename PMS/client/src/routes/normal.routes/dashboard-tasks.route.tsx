@@ -6,7 +6,6 @@ import { useCallback, useState } from "react";
 import TaskModal, {
   type ModalState,
 } from "../../components/task.components.tsx/task-modal.component";
-import { Selector } from "../../components/base.components/selector.component";
 import { useAuth } from "../../providers/auth.provider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box } from "@mui/material";
@@ -16,7 +15,7 @@ export default function DashboardTasksRoute() {
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
 
-  const [taskListLimit, setTaskListLimit] = useState(5);
+  const [taskListLimit, setTaskListLimit] = useState(4);
   const [taskListOffset, setTaskListOffset] = useState(0);
 
   const [taskModalState, setTaskModalState] = useState<ModalState>({
@@ -27,11 +26,8 @@ export default function DashboardTasksRoute() {
     taskID: 0,
     title: "",
     description: "",
-    dueDate: "",
+    dueDate: new Date(),
   });
-
-  const [studentSearchTerm, setStudentSearchTerm] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState<User | undefined>(undefined);
 
   const { projectID } = useParams();
 
@@ -75,34 +71,27 @@ export default function DashboardTasksRoute() {
           },
         })
         .json(),
+    select: (data) => ({
+      ...data,
+      items: data.items.map((t: any) => ({
+        ...t,
+        assignedDate: new Date(t.assignedDate),
+        dueDate: new Date(t.dueDate),
+      })),
+    }),
     retry: 1,
     refetchInterval: 1000 * 60 * 5, // Refetch every 5 minute
   });
 
-  const { data: unsupervisedStudents, isLoading: unsupervisedStudentsLoading } = useQuery(
-    {
-      queryKey: [user.userID, "users", "unsupervised"],
-      queryFn: async (): Promise<User[]> =>
-        await authorizedAPI.get(`api/users/unsupervised`).json(),
-      enabled: user.role == "supervisor",
-      retry: 1,
-    },
-  );
-
   /* ---------------------------------------------------------------------------------- */
-
-  const handleSelectStudent = (student: User) => {
-    setSelectedStudent(student);
-  };
 
   const handleCancelClick = () => {
     setTaskModalData({
       taskID: 0,
       title: "",
       description: "",
-      dueDate: "",
+      dueDate: new Date(),
     });
-    setSelectedStudent(undefined);
     setTaskModalState((t) => ({ ...t, open: false }));
   };
 
@@ -111,7 +100,7 @@ export default function DashboardTasksRoute() {
       taskID: 0,
       title: "",
       description: "",
-      dueDate: "",
+      dueDate: new Date(),
     });
     setTaskModalState((t) => ({ ...t, mode: "create", open: true }));
   };
@@ -126,26 +115,19 @@ export default function DashboardTasksRoute() {
     setTaskModalState((t) => ({ ...t, mode: "delete", open: true }));
   };
 
-  const handleAddStudentClick = () => {
-    setTaskModalState((t) => ({ ...t, mode: "add-student", open: true }));
-  };
-
   const handlePageChange = (newOffset: number) => {
     setTaskListOffset(newOffset);
   };
 
   /* ---------------------------------------------------------------------------------- */
 
-  const handleSearchChange = useCallback((searchTerm: string) => {
-    setStudentSearchTerm(searchTerm);
-  }, []);
   const handleTitleChange = useCallback((title: string) => {
     setTaskModalData((t) => ({ ...t, title: title }));
   }, []);
   const handleDescriptionChange = useCallback((description: string) => {
     setTaskModalData((t) => ({ ...t, description: description }));
   }, []);
-  const handleDueDateChange = useCallback((dueDate: string) => {
+  const handleDueDateChange = useCallback((dueDate: Date) => {
     setTaskModalData((t) => ({ ...t, dueDate: dueDate }));
   }, []);
 
@@ -156,7 +138,7 @@ export default function DashboardTasksRoute() {
       {
         method: "post",
         url: `api/users/${user.userID}/projects/${projectID}/tasks`,
-        data: taskModalData,
+        data: { ...taskModalData, dueDate: taskModalData.dueDate.toISOString() },
         invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
       },
       {
@@ -172,7 +154,7 @@ export default function DashboardTasksRoute() {
       {
         method: "put",
         url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
-        data: taskModalData,
+        data: { ...taskModalData, dueDate: taskModalData.dueDate.toISOString() },
         invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
       },
       {
@@ -188,31 +170,11 @@ export default function DashboardTasksRoute() {
       {
         method: "delete",
         url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
-        data: taskModalData,
+        data: { ...taskModalData, dueDate: taskModalData.dueDate.toISOString() },
         invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
       },
       {
         onSettled: () => {
-          setTaskModalState((t) => ({ ...t, open: false }));
-        },
-      },
-    );
-  };
-
-  const handleAddStudent = () => {
-    mutation.mutate(
-      {
-        method: "put",
-        url: `api/users/${user.userID}/projects/${projectID}/add-student/${selectedStudent?.userID}`,
-        data: {},
-        invalidateQueryKeys: [
-          ["projects", projectID],
-          [user.userID.toString(), "users", "unsupervised"],
-        ],
-      },
-      {
-        onSettled: () => {
-          setSelectedStudent(undefined);
           setTaskModalState((t) => ({ ...t, open: false }));
         },
       },
@@ -237,24 +199,34 @@ export default function DashboardTasksRoute() {
   */
   const handleGenerateProgressLogReport = async () => {
     try {
-      const blob = await authorizedAPI
-        .get(`api/users/${user.userID}/projects/${projectID}/progress-log`)
-        .blob();
+      const response = await authorizedAPI.get(
+        `api/users/${user.userID}/projects/${projectID}/progress-log`,
+      );
 
-      const fileUrl = window.URL.createObjectURL(blob);
-      window.open(fileUrl, "_blank", "noopener,noreferrer");
+      const contentDisposition = response.headers.get("content-disposition");
+      const filename = (() => {
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^";]+)"/);
+          if (match && match[1]) return match[1];
+        }
+        return "progress_log.pdf";
+      })();
+
+      const blob = await response.blob();
+      const file = new File([blob], filename, { type: blob.type });
+      const fileURL = window.URL.createObjectURL(file);
+
+      window.open(fileURL, "_blank", "noopener,noreferrer");
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(fileURL);
+      }, 1000 * 30);
     } catch (error) {
       console.error("Could not generate progress log report!");
     }
   };
 
   /* ---------------------------------------------------------------------------------- */
-
-  const filteredStudents = unsupervisedStudents?.filter(
-    (s) =>
-      s.name.toLowerCase().includes(studentSearchTerm.toLowerCase()) ||
-      s.userID.toString().toLowerCase().includes(studentSearchTerm.toLowerCase()),
-  );
 
   const formDataIncomplete = (() => {
     switch (taskModalState.mode) {
@@ -265,73 +237,12 @@ export default function DashboardTasksRoute() {
           if (key == "description") return false;
           return val == "";
         });
-      case "add-student":
-        return selectedStudent == null;
       case "delete":
         return false;
     }
   })();
 
   /* ---------------------------------------------------------------------------------- */
-
-  const modalViews = {
-    create: (
-      <TaskModal.Fields>
-        <TaskModal.TaskTitle
-          title={taskModalData.title ?? ""}
-          handleTitleChange={handleTitleChange}
-        />
-        <TaskModal.TaskDescription
-          description={taskModalData.description ?? ""}
-          handleDescriptionChange={handleDescriptionChange}
-        />
-        <TaskModal.DueDate
-          dueDate={taskModalData.dueDate}
-          handleDueDateChange={handleDueDateChange}
-        />
-      </TaskModal.Fields>
-    ),
-    edit: (
-      <TaskModal.Fields>
-        <TaskModal.TaskID taskID={taskModalData.taskID} />
-        <TaskModal.TaskTitle
-          title={taskModalData.title ?? ""}
-          handleTitleChange={handleTitleChange}
-        />
-        <TaskModal.TaskDescription
-          description={taskModalData.description ?? ""}
-          handleDescriptionChange={handleDescriptionChange}
-        />
-        <TaskModal.DueDate
-          dueDate={taskModalData.dueDate}
-          handleDueDateChange={handleDueDateChange}
-        />
-      </TaskModal.Fields>
-    ),
-    "add-student": (
-      <Selector>
-        <Selector.Search
-          searchTerm={studentSearchTerm}
-          placeholder="Search for students..."
-          handleSearchChange={handleSearchChange}
-        />
-        <Selector.Content>
-          {filteredStudents && filteredStudents.length > 0 ? (
-            filteredStudents.map((s) => (
-              <Selector.StudentListEntry
-                student={s}
-                isSelected={selectedStudent?.userID == s.userID}
-                handleSelectStudent={() => handleSelectStudent(s)}
-              />
-            ))
-          ) : (
-            <Selector.NotFound placeholder="No students match your search" />
-          )}
-        </Selector.Content>
-      </Selector>
-    ),
-    delete: <TaskModal.DeleteWarning />,
-  };
 
   return (
     <>
@@ -361,8 +272,9 @@ export default function DashboardTasksRoute() {
             handleEditTaskClick={handleEditTaskClick}
             handleDeleteTaskClick={handleDeleteTaskClick}
           />
+
           <Pagination
-            totalCount={tasks?.totalCount ?? 5}
+            totalCount={tasks?.totalCount ?? 0}
             limit={taskListLimit}
             offset={taskListOffset}
             onPageChange={handlePageChange}
@@ -379,16 +291,11 @@ export default function DashboardTasksRoute() {
             student={project?.student}
             supervisor={project?.supervisor}
           />
+
           <ProjectDetails.Actions>
             <ProjectDetails.GenerateProgressLogReportButton
               handleGenerateProgressLogReport={handleGenerateProgressLogReport}
             />
-            {user.role == "supervisor" && (
-              <ProjectDetails.AddStudentButton
-                isStudentAssigned={!!project?.student}
-                handleAddStudentClick={handleAddStudentClick}
-              />
-            )}
           </ProjectDetails.Actions>
         </ProjectDetails>
       </Box>
@@ -397,7 +304,27 @@ export default function DashboardTasksRoute() {
       <TaskModal open={taskModalState.open}>
         <TaskModal.Header mode={taskModalState.mode} />
 
-        {modalViews[taskModalState.mode]}
+        {taskModalState.mode != "delete" ? (
+          <TaskModal.Fields>
+            {taskModalState.mode == "edit" && (
+              <TaskModal.TaskID taskID={taskModalData.taskID} />
+            )}
+            <TaskModal.TaskTitle
+              title={taskModalData.title ?? ""}
+              handleTitleChange={handleTitleChange}
+            />
+            <TaskModal.TaskDescription
+              description={taskModalData.description ?? ""}
+              handleDescriptionChange={handleDescriptionChange}
+            />
+            <TaskModal.DueDate
+              dueDate={taskModalData.dueDate}
+              handleDueDateChange={handleDueDateChange}
+            />
+          </TaskModal.Fields>
+        ) : (
+          <TaskModal.DeleteWarning />
+        )}
 
         <TaskModal.Actions
           mode={taskModalState.mode}
@@ -407,7 +334,6 @@ export default function DashboardTasksRoute() {
           handleCreateTask={handleCreateTask}
           handleEditTask={handleEditTask}
           handleDeleteTask={handleDeleteTask}
-          handleAddStudent={handleAddStudent}
         />
       </TaskModal>
     </>

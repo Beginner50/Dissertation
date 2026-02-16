@@ -41,9 +41,10 @@ export type Task = {
   description?: string;
   status: "pending" | "completed" | "missing";
   isLocked?: boolean;
-  assignedDate: string;
-  dueDate: string;
+  assignedDate: Date;
+  dueDate: Date;
   assignedBy?: User;
+  feedbackCriterias?: FeedbackCriterion[];
 };
 
 export type TaskFormData = Pick<Task, "taskID" | "title" | "description" | "dueDate">;
@@ -51,10 +52,9 @@ export type TaskFormData = Pick<Task, "taskID" | "title" | "description" | "dueD
 export type Deliverable = {
   deliverableID: number;
   filename: string;
-  submissionTimestamp: string;
+  submissionTimestamp: Date;
   taskID: number;
   submittedBy: User;
-  feedbackCriterias?: FeedbackCriterion[];
 };
 
 export type DeliverableFile = {
@@ -79,8 +79,8 @@ export type FeedbackCriterionModal = Pick<
 
 export type Meeting = {
   meetingID: number;
-  start: string;
-  end: string;
+  start: Date;
+  end: Date;
   description: string;
   task: { taskID: number; title: string };
   organizer: { userID: number; name: string; email: string };
@@ -90,8 +90,8 @@ export type Meeting = {
 
 export type MeetingFormData = {
   description: string;
-  start: string;
-  end: string;
+  start: Date;
+  end: Date;
   attendeeID: number;
   projectID: number;
   taskID: number;
@@ -100,7 +100,7 @@ export type MeetingFormData = {
 export type Reminder = {
   reminderID: number;
   type: "meeting" | "task";
-  remindAt: string;
+  remindAt: Date;
   message: string;
   recipientID: number;
 };
@@ -109,6 +109,6 @@ export type Notification = {
   notificationID: number;
   type: "meeting" | "task";
   description: string;
-  timestamp: string;
+  timestamp: Date;
   recipientID: number;
 };

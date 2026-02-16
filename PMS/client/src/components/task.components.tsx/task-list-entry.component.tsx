@@ -18,7 +18,6 @@ import {
   PendingVariant1,
 } from "../base.components/status-tags.component";
 import type { Task } from "../../lib/types";
-import { displayISODate } from "../../lib/utils";
 
 export default function TaskListEntry({ children }: { children?: ReactNode }) {
   return (
@@ -69,7 +68,7 @@ TaskListEntry.Link = ({
   title: string;
   url: string;
   status: Task["status"];
-  dueDate: string;
+  dueDate: Date;
 }) => {
   return (
     <ListItemText
@@ -100,7 +99,7 @@ TaskListEntry.Link = ({
           }}>
           Due Date:{" "}
           <strong style={{ fontWeight: status == "missing" ? 400 : 600 }}>
-            {displayISODate(dueDate)}
+            {dueDate.toLocaleString("en-US")}
           </strong>
         </Typography>
       }

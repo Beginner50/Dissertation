@@ -9,9 +9,9 @@ public class FeedbackCriterion
     public required string Status { get; set; }
     public string? ChangeObserved { get; set; }
 
-    public required long DeliverableID { get; set; }
-    [ForeignKey("DeliverableID")]
-    public Deliverable Deliverable { get; init; }
+    public required long TaskID { get; set; }
+    [ForeignKey("TaskID")]
+    public ProjectTask Task { get; init; }
 
     public required long ProvidedByID { get; set; }
     [ForeignKey("ProvidedByID")]

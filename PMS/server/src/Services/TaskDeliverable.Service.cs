@@ -1,3 +1,4 @@
+using System.Security;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
@@ -70,7 +71,6 @@ public class TaskDeliverableService
                     Email = t.SubmittedDeliverable.SubmittedBy.Email
                 },
                 TaskID = t.ProjectTaskID,
-                FeedbackCriterias = t.SubmittedDeliverable.FeedbackCriterias
             } : null)
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Submitted Deliverable Not Found!");
@@ -118,19 +118,22 @@ public class TaskDeliverableService
     long userID, long projectID, long taskID,
     byte[] fileData, string filename, string contentType)
     {
+        if (!Sanitization.IsValidPdf(fileData))
+            throw new SecurityException("File Is Not A Valid PDF!");
+
         var task = await dbContext.Tasks.Where(t =>
             t.ProjectTaskID == taskID &&
                 t.ProjectID == projectID &&
                     t.Project.StudentID == userID)
             .Include(t => t.SubmittedDeliverable)
-                .ThenInclude(s => s.FeedbackCriterias)
+            .Include(t => t.FeedbackCriterias)
             .FirstOrDefaultAsync()
-            ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
+            ?? throw new UnauthorizedAccessException("Task Not Found!");
 
         var deliverable = new Deliverable
         {
             File = fileData,
-            Filename = filename,
+            Filename = Sanitization.SanitizeFilename(filename),
             ContentType = contentType,
             SubmissionTimestamp = DateTime.UtcNow,
             TaskID = taskID,
@@ -154,8 +157,7 @@ public class TaskDeliverableService
                          t.Project.StudentID == userID)
             .Include(t => t.StagedDeliverable)
             .FirstOrDefaultAsync()
-            ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
-
+            ?? throw new UnauthorizedAccessException("Task Not Found!");
 
         if (task.StagedDeliverable == null)
             throw new InvalidOperationException("Staged Deliverable Not Found!");
@@ -168,9 +170,6 @@ public class TaskDeliverableService
     }
 
     /*
-        Changes the staged deliverable to submitted deliverable and updates the task
-        status to completed
-
         AsSplitQuery is used to avoid the cartesian explosion problem when including multiple
         collections. For each included collection, EF Core generates a separate query to load
         the related data, which helps to reduce the amount of redundant data being retrieved.
@@ -191,10 +190,9 @@ public class TaskDeliverableService
                     .ThenInclude(p => p.Supervisor)
                 .Include(t => t.StagedDeliverable)
                 .Include(t => t.SubmittedDeliverable)
-                    .ThenInclude(submittedDeliverable => submittedDeliverable.FeedbackCriterias)
+                .Include(t => t.FeedbackCriterias)
                 .FirstOrDefaultAsync()
-                ?? throw new UnauthorizedAccessException("Unauthorized or Task Not Found.");
-
+                ?? throw new UnauthorizedAccessException("Task Not Found.");
 
         if (task.IsLocked)
             throw new InvalidOperationException("Task Submission disabled for Locked Task!");
@@ -205,17 +203,13 @@ public class TaskDeliverableService
         {
             try
             {
-                // Override unmet criteria if any
-                if (task.SubmittedDeliverable != null &&
-                        task.SubmittedDeliverable.FeedbackCriterias.Count > 0)
+                if (task.FeedbackCriterias.Count > 0)
                 {
-                    var unmetFeedbackCriteria = task.SubmittedDeliverable.FeedbackCriterias
+                    var unmetFeedbackCriteria = task.FeedbackCriterias
                                                     .Where(c => c.Status == "unmet")
                                                     .ToList();
                     foreach (var feedbackCriteria in unmetFeedbackCriteria)
-                    {
                         feedbackCriteria.Status = "overriden";
-                    }
                 }
 
                 if (task.SubmittedDeliverable != null)

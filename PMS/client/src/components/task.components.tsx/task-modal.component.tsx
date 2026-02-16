@@ -12,8 +12,9 @@ import {
   FormGroup,
   CircularProgress,
 } from "@mui/material";
+import { mergeDateTime, toLocalDateString, toLocalTimeString } from "../../lib/utils";
 
-export type ModalMode = "create" | "edit" | "add-student" | "delete";
+export type ModalMode = "create" | "edit" | "delete";
 export type ModalState = {
   mode: ModalMode;
   open: boolean;
@@ -46,7 +47,6 @@ TaskModal.Header = ({ mode }: { mode: ModalMode }) => {
     create: "Create New Task",
     edit: "Edit Task Details",
     delete: "Delete Task",
-    "add-student": "Add Student",
   };
   return <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>;
 };
@@ -129,24 +129,25 @@ TaskModal.DueDate = ({
   dueDate,
   handleDueDateChange,
 }: {
-  dueDate: string;
-  handleDueDateChange: (dueDate: string) => void;
+  dueDate: Date;
+  handleDueDateChange: (dueDate: Date) => void;
 }) => {
-  const datePart = dueDate.split("T")[0] ?? "";
-  const timePart = dueDate.split("T")[1]?.slice(0, 5) ?? "00:00";
-
   return (
     <Stack direction="row" spacing={2}>
       <FormControl fullWidth>
         <TextField
           label="Due Date"
           type="date"
-          value={datePart}
-          onChange={(e) => handleDueDateChange(`${e.target.value}T${timePart}Z`)}
+          value={toLocalDateString(dueDate)}
+          onChange={(e) => {
+            const newDatePart = e.target.value;
+            const newDueDate = mergeDateTime(dueDate, newDatePart, "date");
+            handleDueDateChange(newDueDate);
+          }}
           size="small"
           slotProps={{
             inputLabel: { shrink: true },
-            htmlInput: { min: new Date().toISOString().split("T")[0] },
+            htmlInput: { min: new Date().toISOString() },
           }}
         />
       </FormControl>
@@ -155,10 +156,16 @@ TaskModal.DueDate = ({
         <TextField
           label="Due Time"
           type="time"
-          value={timePart}
-          onChange={(e) => handleDueDateChange(`${datePart}T${e.target.value}Z`)}
+          value={toLocalTimeString(dueDate)}
+          onChange={(e) => {
+            const newTimePart = e.target.value;
+            const newDueDate = mergeDateTime(dueDate, newTimePart, "time");
+            handleDueDateChange(newDueDate);
+          }}
           size="small"
-          slotProps={{ inputLabel: { shrink: true } }}
+          slotProps={{
+            inputLabel: { shrink: true },
+          }}
         />
       </FormControl>
     </Stack>
@@ -182,7 +189,6 @@ TaskModal.Actions = ({
   handleCreateTask,
   handleEditTask,
   handleDeleteTask,
-  handleAddStudent,
 }: {
   mode: ModalMode;
   loading: boolean;
@@ -191,19 +197,16 @@ TaskModal.Actions = ({
   handleCreateTask: () => void;
   handleEditTask: () => void;
   handleDeleteTask: () => void;
-  handleAddStudent: () => void;
 }) => {
   const labels = {
     create: "Create",
     edit: "Save",
     delete: "Delete",
-    "add-student": "Add",
   };
   const actions = {
     create: handleCreateTask,
     edit: handleEditTask,
     delete: handleDeleteTask,
-    "add-student": handleAddStudent,
   };
 
   return (

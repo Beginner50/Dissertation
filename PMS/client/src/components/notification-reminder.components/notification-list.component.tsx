@@ -11,9 +11,9 @@ export function NotificationList({
   notifications: Notification[];
   sx?: SxProps<Theme>;
 }) {
-  const sortedNotifications = [...notifications].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-  );
+  const sortedNotifications = [...notifications].sort((a, b) => {
+    return b.timestamp.getTime() - a.timestamp.getTime();
+  });
 
   return (
     <Box

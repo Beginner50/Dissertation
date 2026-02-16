@@ -1,12 +1,5 @@
 import type { Theme } from "@emotion/react";
-import {
-  Box,
-  Divider,
-  List,
-  Stack,
-  Typography,
-  type SxProps,
-} from "@mui/material";
+import { Box, Divider, List, Stack, Typography, type SxProps } from "@mui/material";
 import type { Reminder } from "../../lib/types";
 import ReminderEntry from "./reminder-entry.component";
 import type { ReactNode } from "react";
@@ -27,14 +20,13 @@ export function ReminderList({
         borderRadius: "8px",
         overflowY: "auto",
         ...sx,
-      }}
-    >
+      }}>
       <ReminderList.Header />
 
       <Stack>
         {reminders && reminders.length > 0 ? (
           reminders?.map((reminder) => (
-            <ReminderEntry>
+            <ReminderEntry key={reminder.reminderID}>
               <ReminderEntry.Icon type={reminder.type} />
 
               <ReminderEntry.Content>
@@ -61,8 +53,7 @@ ReminderList.Header = ({ children }: { children?: ReactNode }) => {
         alignItems="center"
         justifyContent="space-between"
         spacing={2}
-        sx={{ mb: 1.5 }}
-      >
+        sx={{ mb: 1.5 }}>
         <Typography variant="h6" component="h2" sx={{ fontWeight: "bold" }}>
           Reminders
         </Typography>

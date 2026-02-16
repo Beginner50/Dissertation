@@ -47,6 +47,7 @@ public class TasksController : ControllerBase
     {
         try
         {
+            if (limit > 100) limit = 100;
             var (tasks, count) = await projectTaskService
                     .GetProjectTasksWithCount(userID, projectID, limit, offset);
 

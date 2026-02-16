@@ -59,18 +59,11 @@ ProjectModal.Fields = ({ children }: { children: ReactNode }) => (
   </DialogContent>
 );
 
-ProjectModal.ProjectID = ({
-  projectID,
-  visible,
-}: {
-  projectID: number;
-  visible: boolean;
-}) =>
-  visible ? (
-    <FormControl fullWidth>
-      <TextField label="Project ID" value={projectID} disabled size="small" />
-    </FormControl>
-  ) : null;
+ProjectModal.ProjectID = ({ projectID }: { projectID: number }) => (
+  <FormControl fullWidth>
+    <TextField label="Project ID" value={projectID} disabled size="small" />
+  </FormControl>
+);
 
 ProjectModal.ProjectTitle = ({
   title,
@@ -86,7 +79,8 @@ ProjectModal.ProjectTitle = ({
   }, [title]);
 
   useEffect(() => {
-    if (title == "") handleTitleChange(localValue);
+    if (title == "" || (localValue == "" && title != ""))
+      handleTitleChange(localValue);
   }, [localValue]);
 
   return (

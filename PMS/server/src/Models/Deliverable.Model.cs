@@ -19,12 +19,4 @@ public class Deliverable
     [ForeignKey("SubmittedByID")]
     public User SubmittedBy { get; init; }
 
-    /*
-        The InverseProperty is explictly used to connect a Navigation property to its
-        inverse in another entity referencing Deliverable.
-
-        A Navigation Property does not actually exist in the database table
-    */
-    [InverseProperty("Deliverable")]
-    public List<FeedbackCriterion> FeedbackCriterias { get; set; } = [];
 }

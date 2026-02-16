@@ -20,7 +20,7 @@ public class MeetingsController : ControllerBase
 
     [Route("api/users/{userID}/meetings")]
     [HttpGet]
-    [Authorize(Policy = "Ownership")]
+    [Authorize]
     public async Task<IActionResult> GetSupervisorMeetings(
         [FromRoute] long userID
     )
@@ -38,7 +38,7 @@ public class MeetingsController : ControllerBase
 
     [Route("api/meetings/{meetingID}")]
     [HttpGet]
-    [Authorize(Policy = "Ownership")]
+    [Authorize]
     public async Task<IActionResult> GetMeeting([FromRoute] long meetingID)
     {
         try

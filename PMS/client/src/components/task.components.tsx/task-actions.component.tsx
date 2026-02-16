@@ -194,8 +194,18 @@ TaskActions.LockTaskButton = ({
       size="medium"
       fullWidth
       onClick={onLockTaskClick}
-      startIcon={!isLocked ? <Lock /> : <LockOpen />}>
-      {!isLocked ? "Lock Task" : "Unlock Task"}
+      startIcon={isLocked ? <LockOpen /> : <Lock />}
+      sx={{
+        transition: "background-color 0.3s ease, color 0.3s ease",
+        backgroundColor: isLocked ? "#9c27b01a" : "transparent",
+        borderColor: "secondary.main",
+        color: "secondary.main",
+        "&:hover": {
+          backgroundColor: isLocked ? "#9c27b026" : "#9c27b00d",
+          borderColor: "secondary.main",
+        },
+      }}>
+      {isLocked ? "Unlock Task" : "Lock Task"}
     </Button>
   );
 };

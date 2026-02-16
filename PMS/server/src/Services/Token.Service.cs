@@ -54,6 +54,13 @@ public class TokenService
         return (GenerateToken(userId, role, expiry), expiry);
     }
 
+    /*
+        Meant only for tokens stored in HTTP-only cookies
+
+        They cannot be compromised easily due to restrictions set upon their creation,
+        and are restricted only to two endpoints. Their low attack vector justifies
+        the following checks for token validation.
+    */
     public JwtSecurityToken DecodeAndValidateToken(string token)
     {
         var handler = new JwtSecurityTokenHandler();

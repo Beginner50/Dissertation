@@ -2,7 +2,7 @@ import FeedbackCriteriaTable from "../../components/feedback.components/feedback
 import * as base64js from "base64-js";
 import TaskActions from "../../components/task.components.tsx/task-actions.component";
 import { TaskDetails } from "../../components/task.components.tsx/task-details.component";
-import { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import DeliverableCard from "../../components/task.components.tsx/deliverable-card.component";
 import type {
   Deliverable,
@@ -39,12 +39,19 @@ export default function TaskRoute() {
       method,
       url,
       data,
+      timeout,
     }: {
       method: string;
       url: string;
       data: any;
+      timeout?: number;
       invalidateQueryKeys: any[][];
-    }) => await authorizedAPI(url, { method: method, json: data }),
+    }) =>
+      await authorizedAPI(url, {
+        method: method,
+        json: data,
+        timeout: timeout ?? 1000 * 10,
+      }),
     onSuccess: (_data, variables) =>
       variables.invalidateQueryKeys.forEach((key) =>
         queryClient.invalidateQueries({
@@ -59,6 +66,13 @@ export default function TaskRoute() {
       await authorizedAPI
         .get(`api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`)
         .json(),
+    select: useCallback((data: any): Task => {
+      return {
+        ...data,
+        assignedDate: new Date(data.assignedDate),
+        dueDate: new Date(data.dueDate),
+      };
+    }, []),
     retry: 1,
   });
 
@@ -78,6 +92,9 @@ export default function TaskRoute() {
         throw error;
       }
     },
+    select: useCallback((data: any): Deliverable => {
+      return { ...data, submissionTimestamp: new Date(data.submissionTimestamp) };
+    }, []),
     retry: 1,
   });
 
@@ -91,27 +108,31 @@ export default function TaskRoute() {
           )
           .json();
       } catch (error: any) {
-        if (error.response?.status === 404) {
+        if (error.response?.status === 404 || error.status == 404) {
           return null;
         }
         throw error;
       }
     },
+    select: useCallback((data: any): Deliverable | null => {
+      if (!data) return null;
+      return { ...data, submissionTimestamp: new Date(data.submissionTimestamp) };
+    }, []),
     retry: 1,
     enabled: user.role != "supervisor",
   });
 
   useEffect(() => {
-    const criteria = submittedDeliverable?.feedbackCriterias ?? [];
+    const criteria = task?.feedbackCriterias ?? [];
     setModalCriteria(
-      criteria.map((c) => ({
+      criteria.map((c: FeedbackCriterion) => ({
         feedbackCriterionID: c.feedbackCriterionID,
         description: c.description,
         updateStatus: "unchanged",
       })),
     );
     setTableCriteria(criteria);
-  }, [submittedDeliverable]);
+  }, [task]);
 
   /* ---------------------------------------------------------------------------------- */
 
@@ -179,14 +200,28 @@ export default function TaskRoute() {
 
   const handleOpenStagedDeliverable = async () => {
     try {
-      const blob = await authorizedAPI
-        .get(
-          `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`,
-        )
-        .blob();
+      const response = await authorizedAPI.get(
+        `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`,
+      );
 
-      const fileUrl = window.URL.createObjectURL(blob);
-      window.open(fileUrl, "_blank", "noopener,noreferrer");
+      const contentDisposition = response.headers.get("content-disposition");
+      const filename = (() => {
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^";]+)"/);
+          if (match && match[1]) return match[1];
+        }
+        return "staged_deliverable.pdf";
+      })();
+
+      const blob = await response.blob();
+      const file = new File([blob], filename, { type: blob.type });
+      const fileURL = window.URL.createObjectURL(file);
+
+      window.open(fileURL, "_blank", "noopener,noreferrer");
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(fileURL);
+      }, 1000 * 30);
     } catch (error) {
       console.error("Could not open staged deliverable:", error);
     }
@@ -194,14 +229,28 @@ export default function TaskRoute() {
 
   const handleOpenSubmittedDeliverable = async () => {
     try {
-      const blob = await authorizedAPI
-        .get(
-          `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable?file=true`,
-        )
-        .blob();
+      const response = await authorizedAPI.get(
+        `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable?file=true`,
+      );
 
-      const fileUrl = window.URL.createObjectURL(blob);
-      window.open(fileUrl, "_blank", "noopener,noreferrer");
+      const contentDisposition = response.headers.get("content-disposition");
+      const filename = (() => {
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename="?([^";]+)"/);
+          if (match && match[1]) return match[1];
+        }
+        return "submitted_deliverable.pdf";
+      })();
+
+      const blob = await response.blob();
+      const file = new File([blob], filename, { type: blob.type });
+      const fileURL = window.URL.createObjectURL(file);
+
+      window.open(fileURL, "_blank", "noopener,noreferrer");
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(fileURL);
+      }, 1000 * 30);
     } catch (error) {
       console.error("Could not open submitted deliverable:", error);
     }
@@ -255,7 +304,7 @@ export default function TaskRoute() {
 
   const handleSubmitFeedback = () => {
     const existingIDs = new Set(
-      submittedDeliverable?.feedbackCriterias?.map((f) => f.feedbackCriterionID),
+      task?.feedbackCriterias?.map((f: FeedbackCriterion) => f.feedbackCriterionID),
     );
 
     const toCreate = modalCriteria
@@ -283,7 +332,7 @@ export default function TaskRoute() {
           feedbackCriteriaToUpdate: toUpdate,
           feedbackCriteriaToDelete: toDelete,
         },
-        invalidateQueryKeys: [[taskID, "deliverables", "submitted"]],
+        invalidateQueryKeys: [["tasks", taskID]],
       },
       {
         onSettled: () => {
@@ -298,7 +347,7 @@ export default function TaskRoute() {
     mutation.mutate({
       method: "put",
       url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`,
-      data: { ...task, isLocked: !task?.isLocked },
+      data: { ...task, dueDate: task?.dueDate.toISOString(), isLocked: !task?.isLocked },
       invalidateQueryKeys: [["tasks", taskID]],
     });
   };
@@ -311,7 +360,8 @@ export default function TaskRoute() {
           method: "post",
           url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/compliance-check`,
           data: {},
-          invalidateQueryKeys: [[taskID, "deliverables", "submitted"]],
+          timeout: 1000 * 60,
+          invalidateQueryKeys: [["tasks", taskID]],
         },
         {
           onSuccess: () => setFeedbackComplianceLoading(false),
@@ -338,7 +388,8 @@ export default function TaskRoute() {
         <TaskDetails sx={{ maxWidth: "63vw", flexGrow: 3 }}>
           <TaskDetails.Header
             title={task?.title ?? "Task Title"}
-            dueDate={task?.dueDate ?? "Due Date"}
+            dueDate={task?.dueDate ?? new Date()}
+            isLocked={task?.isLocked ?? false}
           />
 
           <TaskDetails.Content>
@@ -389,10 +440,8 @@ export default function TaskRoute() {
           <TaskActions.Actions>
             {user.role == "supervisor" && (
               <TaskActions.ProvideFeedbackButton
-                disabled={!submittedDeliverable || task?.isLocked}
-                hasPreviousCriteria={
-                  (submittedDeliverable?.feedbackCriterias ?? [])?.length > 0
-                }
+                disabled={!submittedDeliverable}
+                hasPreviousCriteria={(task?.feedbackCriterias ?? [])?.length > 0}
                 onClick={handleProvideFeedbackClick}
               />
             )}
@@ -440,9 +489,7 @@ export default function TaskRoute() {
         </FeedbackModal.Content>
 
         <FeedbackModal.Actions
-          hasPreviousCriteria={
-            (submittedDeliverable?.feedbackCriterias ?? [])?.length > 0
-          }
+          hasPreviousCriteria={(task?.feedbackCriterias ?? [])?.length > 0}
           onCancel={handleCancelClick}
           onSubmit={handleSubmitFeedback}
         />

@@ -37,8 +37,6 @@ export default function SignInRoute() {
       return;
     }
 
-    console.log({ email, password });
-
     try {
       await signIn({ email, password });
       navigate("/");

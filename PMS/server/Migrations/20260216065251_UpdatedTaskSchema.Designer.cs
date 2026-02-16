@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PMS.DatabaseContext;
@@ -11,9 +12,11 @@ using PMS.DatabaseContext;
 namespace PMS.Migrations
 {
     [DbContext(typeof(PMSDbContext))]
-    partial class PMSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260216065251_UpdatedTaskSchema")]
+    partial class UpdatedTaskSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,6 +78,9 @@ namespace PMS.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<long>("ProjectTaskID")
+                        .HasColumnType("bigint");
+
                     b.Property<long>("ProvidedByID")
                         .HasColumnType("bigint");
 
@@ -87,9 +93,9 @@ namespace PMS.Migrations
 
                     b.HasKey("FeedbackCriterionID");
 
-                    b.HasIndex("ProvidedByID");
+                    b.HasIndex("ProjectTaskID");
 
-                    b.HasIndex("TaskID");
+                    b.HasIndex("ProvidedByID");
 
                     b.ToTable("FeedbackCriterias");
                 });
@@ -433,15 +439,15 @@ namespace PMS.Migrations
 
             modelBuilder.Entity("PMS.Models.FeedbackCriterion", b =>
                 {
-                    b.HasOne("PMS.Models.User", "ProvidedBy")
-                        .WithMany("ProvidedFeedbackCriterias")
-                        .HasForeignKey("ProvidedByID")
+                    b.HasOne("PMS.Models.ProjectTask", "Task")
+                        .WithMany("FeedbackCriterias")
+                        .HasForeignKey("ProjectTaskID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("PMS.Models.ProjectTask", "Task")
-                        .WithMany("FeedbackCriterias")
-                        .HasForeignKey("TaskID")
+                    b.HasOne("PMS.Models.User", "ProvidedBy")
+                        .WithMany("ProvidedFeedbackCriterias")
+                        .HasForeignKey("ProvidedByID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

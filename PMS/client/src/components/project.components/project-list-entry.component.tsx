@@ -1,4 +1,4 @@
-import { Edit, Archive, MoreVert } from "@mui/icons-material";
+import { Edit, Archive, MoreVert, SupervisorAccount, School } from "@mui/icons-material";
 import {
   ListItem,
   ListItemText,
@@ -8,6 +8,9 @@ import {
   MenuItem,
   Typography,
   Divider,
+  Chip,
+  Box,
+  Stack,
 } from "@mui/material";
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
@@ -22,7 +25,7 @@ export default function ProjectListEntry({ children }: { children?: ReactNode })
         flexDirection: "row",
         alignItems: "center",
         gap: 2,
-        p: "8px 16px",
+        p: "4px 16px",
         mb: 1.5,
         bgcolor: "hsl(0,0%,99.5%)",
         borderRadius: 2,
@@ -45,38 +48,87 @@ ProjectListEntry.Link = ({
   title,
   url,
   student,
+  supervisor,
 }: {
   title: string;
   url: string;
   student?: User;
-}) => (
-  <ListItemText
-    sx={{ flexGrow: 1 }}
-    primary={
-      <Link to={url} style={{ textDecoration: "none" }}>
-        <Typography
-          variant="body1"
-          component="span"
-          sx={{
-            fontWeight: 600,
-            color: theme.link || "primary.main",
-            "&:hover": { textDecoration: "underline" },
-          }}>
-          {title}
+  supervisor?: User;
+}) => {
+  return (
+    <ListItemText
+      sx={{ flexGrow: 1 }}
+      primary={
+        <Link to={url} style={{ textDecoration: "none" }}>
+          <Typography
+            variant="subtitle1"
+            component="span"
+            sx={{
+              fontWeight: 600,
+              color: theme.link || "primary.main",
+              transition: "color 0.2s",
+              "&:hover": { textDecoration: "underline" },
+            }}>
+            {title}
+          </Typography>
+        </Link>
+      }
+      secondary={
+        <Typography component="div">
+          <Stack direction="row" spacing={1.5} sx={{ mt: 1, flexWrap: "wrap", gap: 1 }}>
+            {/* Student */}
+            {student && (
+              <Chip
+                icon={<School sx={{ fontSize: "1rem !important" }} />}
+                label={
+                  <Box component="span">
+                    <Typography variant="caption" sx={{ opacity: 0.7, mr: 0.5 }}>
+                      Student:
+                    </Typography>
+                    {student.name}
+                  </Box>
+                }
+                size="small"
+                variant="outlined"
+                sx={{ borderRadius: "6px", px: 0.5 }}
+              />
+            )}
+
+            {supervisor && (
+              <Chip
+                icon={
+                  <SupervisorAccount
+                    sx={{ fontSize: "1rem !important", color: "primary.main" }}
+                  />
+                }
+                label={
+                  <Box component="span">
+                    <Typography
+                      variant="caption"
+                      sx={{ fontWeight: 700, mr: 0.5, color: "primary.dark" }}>
+                      Supervisor:
+                    </Typography>
+                    <span style={{ fontWeight: 500 }}>{supervisor.name}</span>
+                  </Box>
+                }
+                size="small"
+                variant="outlined"
+                sx={{
+                  borderRadius: "6px",
+                  px: 0.5,
+                  borderColor: "primary.main",
+                  bgcolor: "rgba(25, 118, 210, 0.05)",
+                  color: "primary.dark",
+                  "& .MuiChip-icon": { color: "inherit" },
+                }}
+              />
+            )}
+          </Stack>
         </Typography>
-      </Link>
-    }
-    secondary={
-      <Typography
-        variant="body2"
-        component="span"
-        sx={{ color: "text.secondary", mt: 0.5, display: "block" }}>
-        Student:{" "}
-        <strong style={{ color: "text.primary" }}>{student?.name ?? "N/A"}</strong>
-      </Typography>
-    }
-  />
-);
+      }
+    />
+  );
+};
 
 ProjectListEntry.MenuButton = ({
   onEditButtonClick,

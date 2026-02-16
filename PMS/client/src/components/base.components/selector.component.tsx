@@ -12,7 +12,6 @@ import {
   FormControl,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import AssignmentIcon from "@mui/icons-material/Assignment";
 import PersonIcon from "@mui/icons-material/Person";
 import { type ReactNode } from "react";
 import type { Project, User } from "../../lib/types";

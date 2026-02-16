@@ -25,7 +25,7 @@ export default function DashboardProjectsRoute() {
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
 
-  const [projectListLimit, setProjectListLimit] = useState(5);
+  const [projectListLimit, setProjectListLimit] = useState(4);
   const [projectListOffset, setProjectListOffset] = useState(0);
   const [step, setStep] = useState(0);
 
@@ -104,6 +104,12 @@ export default function DashboardProjectsRoute() {
     queryKey: [user.userID, "reminders"],
     queryFn: async (): Promise<Reminder[]> =>
       await authorizedAPI.get(`api/users/${user.userID}/reminders`).json(),
+    select: (data: any[]): Reminder[] => {
+      return data.map((r) => ({
+        ...r,
+        remindAt: new Date(r.remindAt),
+      }));
+    },
     retry: 1,
     refetchInterval: 1000 * 60, // 1 minute
   });
@@ -112,6 +118,12 @@ export default function DashboardProjectsRoute() {
     queryKey: [user.userID, "notifications"],
     queryFn: async (): Promise<Notification[]> =>
       await authorizedAPI.get(`api/users/${user.userID}/notifications`).json(),
+    select: (data: any[]): Notification[] => {
+      return data.map((n) => ({
+        ...n,
+        timestamp: new Date(n.timestamp),
+      }));
+    },
     retry: 1,
     refetchInterval: 1000 * 60 * 5, // 5 minutes
   });
@@ -215,10 +227,7 @@ export default function DashboardProjectsRoute() {
     switch (projectModalState.mode) {
       case "create":
       case "edit":
-        return Object.entries(projectModalData).some(([key, val]) => {
-          if (typeof val == "number") return Number.isNaN(val);
-          return val == "";
-        });
+        return Number.isNaN(projectModalData.projectID) || projectModalData.title === "";
       case "archive":
         return false;
     }
@@ -253,6 +262,7 @@ export default function DashboardProjectsRoute() {
             handleEditProjectClick={handleEditProjectClick}
             handleArchiveProjectClick={handleArchiveProjectClick}
           />
+
           <Pagination
             totalCount={projects?.totalCount ?? 0}
             limit={projectListLimit}
@@ -283,10 +293,9 @@ export default function DashboardProjectsRoute() {
 
         {projectModalState.mode === "create" || projectModalState.mode === "edit" ? (
           <ProjectModal.Fields>
-            <ProjectModal.ProjectID
-              projectID={projectModalData?.projectID ?? 0}
-              visible={projectModalState.mode === "edit"}
-            />
+            {projectModalState.mode == "edit" && (
+              <ProjectModal.ProjectID projectID={projectModalData?.projectID ?? 0} />
+            )}
             <ProjectModal.ProjectTitle
               title={projectModalData?.title ?? ""}
               handleTitleChange={handleTitleChange}

@@ -35,6 +35,7 @@ public class ProjectTaskService
                     (t.Project.StudentID == userID || t.Project.SupervisorID == userID)
         )
         .Include(t => t.AssignedBy)
+        .Include(t => t.FeedbackCriterias)
         .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
 
@@ -54,7 +55,15 @@ public class ProjectTaskService
                 UserID = task.AssignedBy.UserID,
                 Name = task.AssignedBy.Name,
                 Email = task.AssignedBy.Email
-            }
+            },
+            FeedbackCriterias = task.FeedbackCriterias.Select(c =>
+                new GetFeedbackCriterionDTO
+                {
+                    FeedbackCriterionID = c.FeedbackCriterionID,
+                    Description = c.Description,
+                    Status = c.Status,
+                    ChangeObserved = c.ChangeObserved
+                }).ToList()
         };
     }
 

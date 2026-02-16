@@ -31,7 +31,7 @@ export default function Pagination({
         color="primary"
         variant="outlined"
         shape="rounded"
-        size="small"
+        size="medium"
       />
     </Stack>
   );

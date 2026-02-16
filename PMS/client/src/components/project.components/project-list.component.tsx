@@ -7,10 +7,11 @@ import {
   Stack,
   List,
   type SxProps,
+  CircularProgress,
+  Box,
 } from "@mui/material";
-import { Add, AddCircleOutline, GroupAdd } from "@mui/icons-material";
+import { Add, GroupAdd } from "@mui/icons-material";
 import { type ReactNode } from "react";
-import { Pagination as MuiPagination } from "@mui/material";
 import type { Project, User } from "../../lib/types";
 import ProjectListEntry from "./project-list-entry.component";
 
@@ -29,8 +30,9 @@ export function ProjectList({
         flexGrow: 1,
         bgcolor: "background.paper",
         borderRadius: 2,
-        overflowY: "auto",
+        display: "flex",
         flexDirection: "column",
+        overflow: "visible",
         ...sx,
       }}>
       {children}
@@ -109,15 +111,24 @@ ProjectList.Content = ({
 }) => {
   const activeProjects = projects.filter((p) => p.status === "active");
 
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <CircularProgress size={32} />
+      </Box>
+    );
+  }
+
   return (
-    <List disablePadding>
+    <List disablePadding sx={{ overflow: "visible" }}>
       {activeProjects.length > 0 ? (
         activeProjects.map((project) => (
           <ProjectListEntry key={project.projectID}>
             <ProjectListEntry.Link
               title={project.title}
               url={`/projects/${project.projectID}/tasks`}
-              student={project?.student ?? undefined}
+              student={project?.student}
+              supervisor={project?.supervisor}
             />
             {menuEnabled && (
               <ProjectListEntry.MenuButton

@@ -12,12 +12,10 @@ namespace PMS.Controllers;
 public class ProjectsController : ControllerBase
 {
     private readonly ProjectService projectService;
-    private readonly ILogger<ProjectsController> logger;
 
-    public ProjectsController(ProjectService projectService, ILogger<ProjectsController> logger)
+    public ProjectsController(ProjectService projectService)
     {
         this.projectService = projectService;
-        this.logger = logger;
     }
 
     [Route("/api/projects")]
@@ -48,6 +46,7 @@ public class ProjectsController : ControllerBase
     {
         try
         {
+            if (limit > 100) limit = 100;
             var (projects, count) = await projectService.GetProjectsWithCount(userID, limit, offset);
 
             return Ok(new

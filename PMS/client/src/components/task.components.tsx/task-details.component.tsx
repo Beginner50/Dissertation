@@ -1,8 +1,8 @@
 import { type ReactNode } from "react";
 import { theme } from "../../lib/theme";
-import { Box, Typography, type SxProps } from "@mui/material";
+import { Box, Stack, Tooltip, Typography, type SxProps } from "@mui/material";
 import type { Theme } from "@emotion/react";
-import { displayISODate } from "../../lib/utils";
+import { LockOpen, LockOutline, LockOutlined } from "@mui/icons-material";
 
 export function TaskDetails({
   sx,
@@ -22,7 +22,7 @@ export function TaskDetails({
         display: "flex",
         flexDirection: "column",
         maxWidth: "65vw",
-        maxHeight: "78vh",
+        maxHeight: "75.8vh",
         boxShadow: theme.shadowSoft,
         ...sx,
       }}>
@@ -31,7 +31,15 @@ export function TaskDetails({
   );
 }
 
-TaskDetails.Header = ({ title, dueDate }: { title: string; dueDate: string }) => {
+TaskDetails.Header = ({
+  title,
+  dueDate,
+  isLocked,
+}: {
+  title: string;
+  dueDate: Date;
+  isLocked: boolean;
+}) => {
   return (
     <Box
       sx={{
@@ -39,20 +47,49 @@ TaskDetails.Header = ({ title, dueDate }: { title: string; dueDate: string }) =>
         paddingBottom: "10px",
         borderBottom: `1px solid ${theme.borderSoft}`,
       }}>
-      <Typography
-        variant="h1"
-        component="h1"
-        sx={{ fontSize: "1.5rem", fontWeight: 700, color: theme.textStrong }}>
-        {title}
-      </Typography>
-      <Typography
-        component="p"
-        sx={{ fontSize: "0.9rem", color: theme.textMuted, marginTop: "4px" }}>
-        Due Date:{" "}
-        <Box component="strong" sx={{ color: theme.textStrong }}>
-          {displayISODate(dueDate)}
+      <Stack direction="row" spacing={2} alignItems="flex-start">
+        <Box sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h1"
+            component="h1"
+            sx={{ fontSize: "1.5rem", fontWeight: 700, color: theme.textStrong }}>
+            {title}
+          </Typography>
+
+          <Typography
+            component="p"
+            sx={{
+              fontSize: "0.9rem",
+              color: theme.textMuted,
+              marginTop: "8px",
+            }}>
+            Due Date:{" "}
+            <Box component="strong" sx={{ color: theme.textStrong }}>
+              {dueDate.toLocaleString("en-US")}
+            </Box>
+          </Typography>
         </Box>
-      </Typography>
+
+        <Tooltip title={isLocked ? "Task is locked" : "Task is open"}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "8px",
+              borderRadius: "50%",
+              color: isLocked ? "secondary.main" : theme.status.completed,
+              opacity: isLocked ? 1 : 0.6,
+              transition: "all 0.3s ease",
+            }}>
+            {isLocked ? (
+              <LockOutlined sx={{ fontSize: "1.8rem" }} />
+            ) : (
+              <LockOpen sx={{ fontSize: "1.8rem" }} />
+            )}
+          </Box>
+        </Tooltip>
+      </Stack>
     </Box>
   );
 };

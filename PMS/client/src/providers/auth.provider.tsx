@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async (): Promise<void> => {
     try {
       await ky.post(`${baseURL}/api/users/token/logout`, { credentials: "include" });
-    } catch {
+    } finally {
       setAuthState(initialAuthState);
     }
   }, []);

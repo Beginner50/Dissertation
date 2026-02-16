@@ -9,6 +9,7 @@ import {
   TextField,
 } from "@mui/material";
 import type { Project } from "../../lib/types";
+import { mergeDateTime, toLocalTimeString } from "../../lib/utils";
 
 export function BookMeetingForm({ children }: { children: React.ReactNode }) {
   return (
@@ -42,32 +43,34 @@ BookMeetingForm.TimePickers = ({
   onStartChange,
   onEndChange,
 }: {
-  start: string;
-  end: string;
-  onStartChange: (start: string) => void;
-  onEndChange: (end: string) => void;
+  start: Date;
+  end: Date;
+  onStartChange: (start: Date) => void;
+  onEndChange: (end: Date) => void;
 }) => {
-  const startDatePart = start.split("T")[0];
-  const startTimePart = start.split("T")[1]?.slice(0, 5) ?? "00:00";
-
-  const endDatePart = end.split("T")[0];
-  const endTimePart = end.split("T")[1]?.slice(0, 5) ?? "00:00";
-
   return (
     <Box display="flex" sx={{ gap: "1rem" }}>
       <TextField
         label="Start Time"
         type="time"
-        value={startTimePart}
-        onChange={(e) => onStartChange(`${startDatePart}T${e.target.value}Z`)}
+        value={toLocalTimeString(start)}
+        onChange={(e) => {
+          const newTimePart = e.target.value;
+          const newStartDate = mergeDateTime(start, newTimePart, "time");
+          onStartChange(newStartDate);
+        }}
         fullWidth
         size="small"
       />
       <TextField
         label="End Time"
         type="time"
-        value={endTimePart}
-        onChange={(e) => onEndChange(`${endDatePart}T${e.target.value}Z`)}
+        value={toLocalTimeString(end)}
+        onChange={(e) => {
+          const newTimePart = e.target.value;
+          const newEndDate = mergeDateTime(end, newTimePart, "time");
+          onEndChange(newEndDate);
+        }}
         fullWidth
         size="small"
       />
@@ -90,7 +93,7 @@ BookMeetingForm.ProjectSelect = ({
       value={selectedID || ""}
       label="Select Project"
       onChange={(e) => {
-        const project = projects.find((p) => p.projectID === e.target.value);
+        const project = projects.find((p) => p.projectID == e.target.value);
         if (project) onProjectChange(project);
       }}>
       {projects.map((p) => (

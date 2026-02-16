@@ -77,11 +77,10 @@ public class AIService
             }
         );
 
-
         var jsonText = response?.Candidates?[0]?.Content?.Parts?[0].Text ?? "[]";
-        // logger.LogInformation("AI Response: {AIResponse}", jsonText);
+        logger.LogInformation("AI Response: {AIResponse}", jsonText);
         var newCriteria = JsonSerializer.Deserialize<List<UpdateFeedbackCriterionDTO>>(jsonText) ?? [];
-        // logger.LogInformation("AI Response: {AIResponse}", JsonSerializer.Serialize(newCriteria));
+        logger.LogInformation("AI Response: {AIResponse}", JsonSerializer.Serialize(newCriteria));
 
         if (newCriteria.Count != previousCriteria.Count)
             throw new Exception("AI evaluation returned unexpected number of criteria");
