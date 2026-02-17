@@ -1,3 +1,4 @@
+using System.CodeDom;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
@@ -24,7 +25,8 @@ public class ProjectService
     {
         return await dbContext.Projects
             .AsSplitQuery()
-            .Where(p => p.ProjectID == projectID && (p.SupervisorID == userID || p.StudentID == userID))
+            .Where(p => p.ProjectID == projectID &&
+                    (p.SupervisorID == userID || p.StudentID == userID))
             .Select(p => new GetProjectDTO
             {
                 ProjectID = p.ProjectID,
@@ -35,13 +37,15 @@ public class ProjectService
                 {
                     UserID = p.Student.UserID,
                     Name = p.Student.Name,
-                    Email = p.Student.Email
+                    Email = p.Student.Email,
+                    IsDeleted = p.Student.IsDeleted
                 } : null,
                 Supervisor = p.Supervisor != null ? new UserLookupDTO
                 {
                     UserID = p.Supervisor.UserID,
                     Name = p.Supervisor.Name,
-                    Email = p.Supervisor.Email
+                    Email = p.Supervisor.Email,
+                    IsDeleted = p.Supervisor.IsDeleted
                 } : null,
                 Tasks = p.Tasks
                 .OrderByDescending(t => t.AssignedDate)
@@ -57,7 +61,7 @@ public class ProjectService
     }
 
     public async Task<(IEnumerable<GetProjectDTO> projects, long count)>
-        GetProjectsWithCount(long userID, long limit = 5, long offset = 0)
+        GetUserProjectsWithCount(long userID, long limit = 5, long offset = 0)
     {
         var projectsQuery = dbContext.Projects
             .Where(p => (p.SupervisorID == userID || p.StudentID == userID)
@@ -77,13 +81,15 @@ public class ProjectService
                 {
                     UserID = p.Supervisor.UserID,
                     Name = p.Supervisor.Name,
-                    Email = p.Supervisor.Email
+                    Email = p.Supervisor.Email,
+                    IsDeleted = p.Supervisor.IsDeleted
                 } : null,
                 Student = p.Student != null ? new UserLookupDTO
                 {
                     UserID = p.Student.UserID,
                     Name = p.Student.Name,
-                    Email = p.Student.Email
+                    Email = p.Student.Email,
+                    IsDeleted = p.Student.IsDeleted
                 } : null,
                 Tasks = p.Tasks
                     .OrderByDescending(t => t.AssignedDate)
@@ -102,65 +108,112 @@ public class ProjectService
         return (projects, count);
     }
 
-    public async Task<IEnumerable<GetProjectDTO>> GetAllUnsupervisedProjects()
+    public async Task<(IEnumerable<GetProjectDTO> projects, long count)>
+     GetAllProjectsWithCount(long limit = 5, long offset = 0)
     {
-        return await dbContext.Projects
+        var count = await dbContext.Projects.LongCountAsync();
+
+        var projects = await dbContext.Projects
             .AsSplitQuery()
-            .Where(p => p.Supervisor == null)
             .Select(p => new GetProjectDTO
             {
                 ProjectID = p.ProjectID,
                 Title = p.Title,
                 Status = p.Status,
-                Student = p.Student != null ? new UserLookupDTO
-                {
-                    UserID = p.Student.UserID,
-                    Name = p.Student.Name,
-                    Email = p.Student.Email
-                } : null,
+                Description = p.Description,
                 Supervisor = p.Supervisor != null ? new UserLookupDTO
                 {
                     UserID = p.Supervisor.UserID,
                     Name = p.Supervisor.Name,
-                    Email = p.Supervisor.Email
+                    Email = p.Supervisor.Email,
+                    IsDeleted = p.Supervisor.IsDeleted
+                } : null,
+                Student = p.Student != null ? new UserLookupDTO
+                {
+                    UserID = p.Student.UserID,
+                    Name = p.Student.Name,
+                    Email = p.Student.Email,
+                    IsDeleted = p.Student.IsDeleted
                 } : null,
                 Tasks = p.Tasks
-                .OrderByDescending(t => t.AssignedDate)
-                .Select(t => new ProjectTaskLookupDTO
-                {
-                    TaskID = t.ProjectTaskID,
-                    Title = t.Title
-                })
-                .ToList()
-            })
-            .ToListAsync();
+                    .OrderByDescending(t => t.AssignedDate)
+                    .Select(t => new ProjectTaskLookupDTO
+                    {
+                        TaskID = t.ProjectTaskID,
+                        Title = t.Title
+                    })
+                    .ToList()
+            }
+        )
+        .Skip((int)offset)
+        .Take((int)limit)
+        .ToListAsync();
+
+        return (projects, count);
     }
 
-    public async Task CreateProject(long userID, CreateProjectDTO dto)
+    public async Task CreateProject(
+        long supervisorID, string title, string? description = "", long? studentID = null
+    )
     {
         var newProject = new Project
         {
-            Title = dto.Title,
-            Description = dto.Description,
+            Title = title,
+            Description = description,
             Status = "active",
-            StudentID = null,
-            SupervisorID = userID
+            StudentID = studentID,
+            SupervisorID = supervisorID
         };
 
         dbContext.Projects.Add(newProject);
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task EditProject(long userID, long projectID, EditProjectDTO dto)
+    // Reserved for admin endpoints
+    public async Task EditProject(
+        long projectID, string? title, string? description,
+        long? studentID, long? supervisorID, string? status
+    )
     {
         var project = await dbContext.Projects.Where(p =>
-            p.ProjectID == projectID &&
-                    p.SupervisorID == userID)
+            p.ProjectID == projectID && p.Status != "archived")
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Not Authorized or Project Not Found!");
 
-        project.Title = dto.Title;
-        project.Description = dto.Description;
+        project.Title = title ?? project.Title;
+        project.Description = description ?? project.Description;
+        project.StudentID = studentID ?? project.StudentID;
+        project.SupervisorID = supervisorID ?? project.SupervisorID;
+        project.Status = status ?? project.Status;
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task EditProject(
+        long userID, long projectID, string? title, string? description
+    )
+    {
+        var project = await dbContext.Projects.Where(p =>
+            p.ProjectID == projectID &&
+                    p.SupervisorID == userID && p.Status != "archived")
+            .FirstOrDefaultAsync()
+            ?? throw new UnauthorizedAccessException("Not Authorized or Project Not Found!");
+
+        project.Title = title ?? project.Title;
+        project.Description = description ?? project.Description;
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    // Reserved for admin endpoints
+    public async Task ArchiveProject(long projectID)
+    {
+        var project = await dbContext.Projects.Where(p =>
+                p.ProjectID == projectID && p.Status != "archived")
+                .FirstOrDefaultAsync()
+                ?? throw new UnauthorizedAccessException("Project Not Found!");
+
+        project.Status = "archived";
 
         await dbContext.SaveChangesAsync();
     }
@@ -169,7 +222,7 @@ public class ProjectService
     {
         var project = await dbContext.Projects.Where(p =>
                 p.ProjectID == projectID &&
-                    p.SupervisorID == userID)
+                    p.SupervisorID == userID && p.Status != "archived")
                 .FirstOrDefaultAsync()
                 ?? throw new UnauthorizedAccessException("Not Authorized or Project Not Found!");
 
@@ -178,15 +231,21 @@ public class ProjectService
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task AssignStudentToProject(long userID, long projectID, long studentID)
+    // Reserved for admin endpoints
+    public async Task RestoreProject(long projectID)
     {
         var project = await dbContext.Projects.Where(p =>
-            p.ProjectID == projectID &&
-                p.SupervisorID == userID)
-            .FirstOrDefaultAsync()
-            ?? throw new UnauthorizedAccessException("Not Authorized or Project Not Found!");
+                p.ProjectID == projectID)
+                .Include(p => p.Student)
+                .Include(p => p.Supervisor)
+                .FirstOrDefaultAsync()
+                ?? throw new UnauthorizedAccessException("Project Not Found!");
 
-        project.StudentID = studentID;
+        if ((project?.Supervisor != null && project.Supervisor.IsDeleted)
+            || (project?.Student != null && project.Student.IsDeleted))
+            throw new UnauthorizedAccessException("Cannot Restore Project With Deleted Users!");
+
+        project.Status = "active";
 
         await dbContext.SaveChangesAsync();
     }

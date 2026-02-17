@@ -58,67 +58,23 @@ TaskList.Header = ({ children }: { children?: ReactNode }) => (
   </header>
 );
 
-TaskList.Content = ({
-  isLoading,
-  projectID,
-  tasks,
-  menuEnabled,
-  handleEditTaskClick,
-  handleDeleteTaskClick,
-}: {
-  isLoading: boolean;
-  projectID: number | string | undefined;
-  tasks: Task[];
-  menuEnabled: boolean;
-  handleEditTaskClick: (data: TaskFormData) => void;
-  handleDeleteTaskClick: (data: TaskFormData) => void;
-}) => {
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-        <CircularProgress size={32} />
-      </Box>
-    );
-  }
+TaskList.Content = ({ children }: { children: ReactNode }) => (
+  <List disablePadding sx={{ overflow: "visible" }}>
+    {children}
+  </List>
+);
 
-  return (
-    <List disablePadding>
-      {tasks.map((task) => (
-        <TaskListEntry key={task.taskID}>
-          <TaskListEntry.Icon status={task.status} />
+TaskList.Loading = () => (
+  <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+    <CircularProgress size={32} />
+  </Box>
+);
 
-          <TaskListEntry.Link
-            title={task.title}
-            url={`/projects/${projectID}/tasks/${task.taskID}`}
-            dueDate={task.dueDate}
-            status={task.status}
-          />
-
-          {menuEnabled && (
-            <TaskListEntry.MenuButton
-              onEditButtonClick={() =>
-                handleEditTaskClick({
-                  taskID: task.taskID,
-                  title: task.title,
-                  description: task.description,
-                  dueDate: task.dueDate,
-                })
-              }
-              onDeleteButtonClick={() =>
-                handleDeleteTaskClick({
-                  taskID: task.taskID,
-                  title: task.title,
-                  description: task.description,
-                  dueDate: task.dueDate,
-                })
-              }
-            />
-          )}
-        </TaskListEntry>
-      ))}
-    </List>
-  );
-};
+TaskList.NotFound = ({ message }: { message: string }) => (
+  <Typography variant="body1" color="textSecondary" sx={{ py: 2 }}>
+    {message}
+  </Typography>
+);
 
 TaskList.CreateTaskButton = ({ onClick }: { onClick: () => void }) => (
   <Button variant="contained" startIcon={<AddIcon />} onClick={onClick} disableElevation>

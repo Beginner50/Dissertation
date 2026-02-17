@@ -15,9 +15,19 @@ import {
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { theme } from "../../lib/theme";
-import type { User } from "../../lib/types";
+import type { Project, User } from "../../lib/types";
 
-export default function ProjectListEntry({ children }: { children?: ReactNode }) {
+export default function ProjectListEntry({
+  project,
+  menuEnabled,
+  onEdit,
+  onArchive,
+}: {
+  project: Project;
+  menuEnabled: boolean;
+  onEdit: () => void;
+  onArchive: () => void;
+}) {
   return (
     <ListItem
       sx={{
@@ -31,15 +41,26 @@ export default function ProjectListEntry({ children }: { children?: ReactNode })
         borderRadius: 2,
         border: "1px solid",
         borderColor: theme.borderNormal || "divider",
-        boxShadow: theme.shadowMuted,
-
         transition: "all 0.2s ease-in-out",
         "&:hover": {
           borderColor: "primary.main",
           boxShadow: theme.shadowSoft || 2,
         },
       }}>
-      {children}
+      {/* Internal Composition */}
+      <ProjectListEntry.Link
+        title={project.title}
+        url={`/projects/${project.projectID}/tasks`}
+        student={project?.student}
+        supervisor={project?.supervisor}
+      />
+
+      {menuEnabled && (
+        <ProjectListEntry.MenuButton
+          onEditButtonClick={onEdit}
+          onArchiveButtonClick={onArchive}
+        />
+      )}
     </ListItem>
   );
 }

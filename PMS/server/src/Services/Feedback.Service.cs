@@ -53,7 +53,8 @@ public class FeedbackService
     {
         var task = await dbContext.Tasks.Where(t => t.ProjectTaskID == taskID &&
                                                 t.ProjectID == projectID &&
-                                                    t.AssignedByID == userID)
+                                                    t.AssignedByID == userID &&
+                                                    t.Project.Status != "archived")
                                         .Include(t => t.SubmittedDeliverable)
                                         .FirstOrDefaultAsync()
                                         ?? throw new UnauthorizedAccessException("Task Not Found!");
@@ -83,7 +84,9 @@ public class FeedbackService
         var task = await dbContext.Tasks.Where(t => t.ProjectTaskID == taskID &&
                                                 t.ProjectID == projectID &&
                                                     (t.AssignedByID == userID
-                                                    || bypassOwnershipCheck))
+                                                    || bypassOwnershipCheck) &&
+                                                t.Project.Status != "archived"
+                                        )
                                         .Include(t => t.FeedbackCriterias)
                                         .FirstOrDefaultAsync()
                                         ?? throw new UnauthorizedAccessException("Task Not Found!");
@@ -121,7 +124,8 @@ public class FeedbackService
     {
         var task = await dbContext.Tasks.Where(t => t.ProjectTaskID == taskID &&
                                                 t.ProjectID == projectID &&
-                                                    t.AssignedByID == userID)
+                                                    t.AssignedByID == userID &&
+                                                    t.Project.Status != "archived")
                                         .Include(t => t.FeedbackCriterias)
                                         .FirstOrDefaultAsync()
                                         ?? throw new UnauthorizedAccessException("Task Not Found!");
@@ -173,6 +177,7 @@ public class FeedbackService
                     t => t.ProjectTaskID == taskID
                         && t.ProjectID == projectID
                             && (t.Project.StudentID == userID || t.Project.SupervisorID == userID)
+                            && t.Project.Status != "archived"
                     )
                     .Include(t => t.SubmittedDeliverable)
                     .Include(t => t.StagedDeliverable)

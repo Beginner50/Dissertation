@@ -30,7 +30,7 @@ services:
       - MAIL_ACCOUNT=prashant.jatoo@umail.uom.ac.mu
       - MAIL_PASSWORD=wwuwkunxqhgfcxvb
       - JWT_SECRET_KEY=dPxKLDJnXNcd/m1mSf5IKBDpe98RNFHSu72izm9FQOs= # Generated using openssl rand -base64 32
-      - GOOGLE_API_KEY=never=gonna=give=you=up
+      - GOOGLE_API_KEY=AIzaSyDztbV8PPRLzplGAb03YO57m05dpvPNW8I
     depends_on:
       postgres:
         condition: service_healthy

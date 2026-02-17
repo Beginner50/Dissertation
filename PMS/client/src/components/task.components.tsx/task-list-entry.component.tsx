@@ -19,7 +19,19 @@ import {
 } from "../base.components/status-tags.component";
 import type { Task } from "../../lib/types";
 
-export default function TaskListEntry({ children }: { children?: ReactNode }) {
+export default function TaskListEntry({
+  task,
+  projectID,
+  menuEnabled,
+  onEdit,
+  onDelete,
+}: {
+  task: Task;
+  projectID: string | number | undefined;
+  menuEnabled: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
   return (
     <ListItem
       sx={{
@@ -40,7 +52,21 @@ export default function TaskListEntry({ children }: { children?: ReactNode }) {
           boxShadow: theme.shadowSoft,
         },
       }}>
-      {children}
+      <TaskListEntry.Icon status={task.status} />
+
+      <TaskListEntry.Link
+        title={task.title}
+        url={`/projects/${projectID}/tasks/${task.taskID}`}
+        dueDate={task.dueDate}
+        status={task.status}
+      />
+
+      {menuEnabled && (
+        <TaskListEntry.MenuButton
+          onEditButtonClick={onEdit}
+          onDeleteButtonClick={onDelete}
+        />
+      )}
     </ListItem>
   );
 }

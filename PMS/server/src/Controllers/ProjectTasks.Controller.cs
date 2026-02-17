@@ -69,12 +69,16 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> CreateProjectTask(
             [FromRoute] long userID,
             [FromRoute] long projectID,
-            [FromBody] CreateProjectTaskDTO createProjectTaskDTO
+            [FromBody] CreateProjectTaskDTO dto
         )
     {
         try
         {
-            await projectTaskService.CreateProjectTask(userID, projectID, createProjectTaskDTO);
+            await projectTaskService.CreateProjectTask(userID, projectID,
+                title: dto.Title,
+                description: dto.Description,
+                dueDate: dto.DueDate
+            );
             return NoContent();
         }
         catch (Exception e)
@@ -90,7 +94,7 @@ public class TasksController : ControllerBase
                 [FromRoute] long userID,
                 [FromRoute] long projectID,
                 [FromRoute] long taskID,
-                [FromBody] EditProjectTaskDTO editProjectTaskDTO
+                [FromBody] EditProjectTaskDTO dto
             )
     {
         try
@@ -99,7 +103,11 @@ public class TasksController : ControllerBase
                 userID: userID,
                 projectID: projectID,
                 taskID: taskID,
-                dto: editProjectTaskDTO);
+                title: dto.Title,
+                description: dto.Description,
+                dueDate: dto.DueDate,
+                isLocked: dto.IsLocked
+            );
             return NoContent();
         }
         catch (Exception e)

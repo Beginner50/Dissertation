@@ -54,7 +54,8 @@ public class ProjectTaskService
             {
                 UserID = task.AssignedBy.UserID,
                 Name = task.AssignedBy.Name,
-                Email = task.AssignedBy.Email
+                Email = task.AssignedBy.Email,
+                IsDeleted = task.AssignedBy.IsDeleted
             },
             FeedbackCriterias = task.FeedbackCriterias.Select(c =>
                 new GetFeedbackCriterionDTO
@@ -94,10 +95,14 @@ public class ProjectTaskService
         }), count);
     }
 
-    public async Task<ProjectTask> CreateProjectTask(long userID, long projectID, CreateProjectTaskDTO dto)
+    public async Task<ProjectTask> CreateProjectTask(
+        long userID, long projectID, string title, string? description,
+        DateTime dueDate
+    )
     {
         var project = await dbContext.Projects.Where(p =>
-                p.ProjectID == projectID && p.SupervisorID == userID)
+                p.ProjectID == projectID && p.SupervisorID == userID &&
+                p.Status != "archived")
             .Include(p => p.Student)
             .Include(p => p.Supervisor)
             .FirstOrDefaultAsync()
@@ -111,9 +116,9 @@ public class ProjectTaskService
             {
                 newTask = new ProjectTask
                 {
-                    Title = dto.Title,
-                    Description = dto.Description,
-                    DueDate = dto.DueDate,
+                    Title = title,
+                    Description = description ?? string.Empty,
+                    DueDate = dueDate,
                     AssignedByID = userID,
                     ProjectID = projectID,
                     Project = project,
@@ -142,10 +147,14 @@ public class ProjectTaskService
         return newTask;
     }
 
-    public async Task EditProjectTask(long userID, long projectID, long taskID, EditProjectTaskDTO dto)
+    public async Task EditProjectTask(
+        long userID, long projectID, long taskID, string? title,
+        string? description, DateTime? dueDate, bool? isLocked
+    )
     {
         var task = await dbContext.Tasks.Where(t =>
-            t.ProjectTaskID == taskID && t.ProjectID == projectID && t.Project.SupervisorID == userID)
+            t.ProjectTaskID == taskID && t.ProjectID == projectID &&
+            t.Project.SupervisorID == userID && t.Project.Status != "archived")
             .Include(t => t.Project)
                 .ThenInclude(p => p.Student)
             .Include(t => t.Project)
@@ -154,46 +163,46 @@ public class ProjectTaskService
             ?? throw new KeyNotFoundException("Unauthorized Access or Task Not Found.");
 
         bool dueDateUpdated = false;
-        using (var transaction = await dbContext.Database.BeginTransactionAsync())
+        using var transaction = await dbContext.Database.BeginTransactionAsync();
+        try
         {
-            try
+            task.Title = title ?? task.Title;
+            task.Description = description ?? task.Description;
+            if (dueDate != null && dueDate != task.DueDate)
             {
-                task.Title = dto.Title ?? task.Title;
-                task.Description = dto.Description ?? task.Description;
-                if (dto.DueDate != task.DueDate)
-                {
-                    task.DueDate = (DateTime)dto.DueDate;
-                    dueDateUpdated = true;
-                }
-                task.IsLocked = dto.IsLocked ?? task.IsLocked;
-
-                await dbContext.SaveChangesAsync();
-
-                if (task.Project.StudentID != null)
-                {
-                    await notificationService.CreateTaskNotification(task, NotificationType.TASK_UPDATED);
-
-                    if (dueDateUpdated)
-                    {
-                        await reminderService.UpdateTaskReminder(task);
-                        mailService.CreateAndEnqueueTaskMail(task, MailType.TASK_UPDATED);
-                    }
-                }
-
-                await transaction.CommitAsync();
+                task.DueDate = dueDate.Value;
+                dueDateUpdated = true;
             }
-            catch (Exception)
+            task.IsLocked = isLocked ?? task.IsLocked;
+
+            await dbContext.SaveChangesAsync();
+
+            if (task.Project.StudentID != null)
             {
-                await transaction.RollbackAsync();
-                throw;
+                await notificationService.CreateTaskNotification(task, NotificationType.TASK_UPDATED);
+
+                if (dueDateUpdated)
+                {
+                    await reminderService.UpdateTaskReminder(task);
+                    mailService.CreateAndEnqueueTaskMail(task, MailType.TASK_UPDATED);
+                }
             }
+
+            await transaction.CommitAsync();
+        }
+        catch (Exception)
+        {
+            await transaction.RollbackAsync();
+            throw;
         }
     }
+
 
     public async Task DeleteProjectTask(long userID, long projectID, long taskID)
     {
         var task = await dbContext.Tasks.Where(t =>
-            t.ProjectTaskID == taskID && t.ProjectID == projectID && t.Project.SupervisorID == userID)
+            t.ProjectTaskID == taskID && t.ProjectID == projectID &&
+             t.Project.SupervisorID == userID && t.Project.Status != "archived")
             .Include(t => t.Project)
                 .ThenInclude(p => p.Student)
             .Include(t => t.Project)

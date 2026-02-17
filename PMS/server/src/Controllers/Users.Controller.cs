@@ -34,15 +34,21 @@ public class UsersController : ControllerBase
         }
     }
 
-    [Route("api/users/unsupervised")]
-    [HttpGet]
-    [Authorize(Roles = "supervisor")]
-    public async Task<IActionResult> GetUnsupervisedStudents()
+
+    [Route("api/users")]
+    [HttpPost]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> CreateUser(CreateUserDTO dto)
     {
         try
         {
-            var unsupervisedStudents = await userService.GetAllUnsupervisedStudents();
-            return Ok(unsupervisedStudents);
+            await userService.CreateUser(
+                name: dto.Name,
+                email: dto.Email,
+                password: dto.Password,
+                role: dto.Role
+            );
+            return NoContent();
         }
         catch (Exception e)
         {
@@ -50,14 +56,34 @@ public class UsersController : ControllerBase
         }
     }
 
-    [Route("api/users")]
-    [HttpPost]
+    [Route("api/users/{userID}")]
+    [HttpPut]
     [Authorize(Roles = "admin")]
-    public async Task<IActionResult> CreateUser()
+    public async Task<IActionResult> EditUser(long userID, EditUserDTO dto)
     {
         try
         {
+            await userService.EditUser(userID,
+                name: dto.Name,
+                email: dto.Email,
+                role: dto.Role
+            );
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
+    }
 
+    [Route("api/users/{userID}")]
+    [HttpDelete]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> DeleteUser(long userID)
+    {
+        try
+        {
+            await userService.DeleteUser(userID);
             return NoContent();
         }
         catch (Exception e)

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Container, Typography, Button, Stack } from "@mui/material";
+import { Container, Typography, Button, Stack, Box, Paper } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { useAuth } from "../../providers/auth.provider";
 import type { User, UserFormData } from "../../lib/types";
@@ -7,11 +7,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import UserTable from "../../components/user.components/user-table.component";
 import UserModal from "../../components/user.components/user-modal.component";
 import type { ModalState as UserModalState } from "../../components/user.components/user-modal.component";
+import { theme } from "../../lib/theme";
+import TableLayout from "../../components/base.components/table-layout.component";
 
 export default function DashboardUsersRoute() {
   const { authorizedAPI } = useAuth();
 
-  const [userLimit, setUserLimit] = useState(10);
+  const [userLimit, setUserLimit] = useState(6);
   const [userOffset, setUserOffset] = useState(0);
 
   const [userModalState, setUserModalState] = useState<UserModalState>({
@@ -22,7 +24,8 @@ export default function DashboardUsersRoute() {
     userID: 0,
     name: "",
     email: "",
-    role: "",
+    password: "",
+    role: "student",
   });
 
   /* ---------------------------------------------------------------------------------- */
@@ -58,7 +61,7 @@ export default function DashboardUsersRoute() {
   };
 
   const handleAddUserClick = () => {
-    setUserModalData({ userID: 0, name: "", email: "", role: "" });
+    setUserModalData({ userID: 0, name: "", email: "", password: "", role: "student" });
     setUserModalState({ mode: "create", open: true });
   };
 
@@ -66,8 +69,13 @@ export default function DashboardUsersRoute() {
     setUserModalState({ ...userModalState, open: false });
   };
 
-  const handleDeleteUserClick = (userFormData: UserFormData) => {
-    setUserModalData(userFormData);
+  const handleEditUserClick = (selectedUser: User) => {
+    setUserModalData({ ...selectedUser, password: "" });
+    setUserModalState({ mode: "edit", open: true });
+  };
+
+  const handleDeleteUserClick = (selectedUser: User) => {
+    setUserModalData({ ...selectedUser, password: "" });
     setUserModalState({ mode: "delete", open: true });
   };
 
@@ -81,85 +89,125 @@ export default function DashboardUsersRoute() {
     setUserModalData({ ...userModalData, email });
   };
 
-  const handleRoleChange = (role: string) => {
+  const handlePasswordChange = (password: string) => {
+    setUserModalData({ ...userModalData, password });
+  };
+
+  const handleRoleChange = (role: User["role"]) => {
     setUserModalData({ ...userModalData, role });
   };
 
   /* ---------------------------------------------------------------------------------- */
 
   const handleCreateUser = () => {
-    setUserModalState({ ...userModalState, open: false });
+    mutation.mutate(
+      {
+        method: "post",
+        url: `api/users`,
+        data: userModalData,
+        invalidateQueryKeys: [["users"]],
+      },
+      {
+        onSettled: () => setUserModalState({ ...userModalState, open: false }),
+      },
+    );
+  };
+
+  const handleEditUser = () => {
+    mutation.mutate(
+      {
+        method: "put",
+        url: `api/users/${userModalData.userID}`,
+        data: userModalData,
+        invalidateQueryKeys: [["users"]],
+      },
+      {
+        onSettled: () => setUserModalState({ ...userModalState, open: false }),
+      },
+    );
   };
 
   const handleDeleteUser = () => {
-    setUserModalState({ ...userModalState, open: false });
+    mutation.mutate(
+      {
+        method: "delete",
+        url: `api/users/${userModalData.userID}`,
+        data: {},
+        invalidateQueryKeys: [["users"]],
+      },
+      {
+        onSettled: () => setUserModalState({ ...userModalState, open: false }),
+      },
+    );
   };
 
   /* ---------------------------------------------------------------------------------- */
 
   return (
     <>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Table Actions */}
-        <Stack spacing={4}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="h5" fontWeight="700">
-              Users
-            </Typography>
-            <Button
-              variant="contained"
-              disableElevation
-              startIcon={<AddIcon />}
-              sx={{ textTransform: "none", borderRadius: "8px" }}
-              onClick={handleAddUserClick}>
-              Add User
-            </Button>
-          </Stack>
+      <Paper
+        elevation={2}
+        sx={{
+          p: 3,
+          borderRadius: "12px",
+          border: `1px solid ${theme.borderSoft}`,
+          bgcolor: "white",
+        }}>
+        <TableLayout>
+          <TableLayout.Header title="Users">
+            <TableLayout.AddButton text={"Add User"} onClick={handleAddUserClick} />
+          </TableLayout.Header>
 
-          {/* Users */}
-          <UserTable
-            users={users ?? []}
-            isLoading={usersLoading}
-            totalCount={users?.length ?? 0}
-            limit={userLimit}
-            offset={userOffset}
-            onPageChange={handlePageChange}
-            handleDeleteUserClick={handleDeleteUserClick}
-          />
-        </Stack>
-      </Container>
+          <TableLayout.Content>
+            <UserTable
+              users={users ?? []}
+              isLoading={usersLoading}
+              totalCount={users?.length ?? 0}
+              limit={userLimit}
+              offset={userOffset}
+              onPageChange={handlePageChange}
+              handleEditUserClick={handleEditUserClick}
+              handleDeleteUserClick={handleDeleteUserClick}
+            />
+          </TableLayout.Content>
+        </TableLayout>
+      </Paper>
 
       <UserModal open={userModalState.open}>
         <UserModal.Header mode={userModalState.mode} />
-        <UserModal.Fields>
-          {userModalState.mode === "create" ? (
-            <>
-              <UserModal.Name
-                name={userModalData.name}
-                handleNameChange={handleNameChange}
+        {userModalState.mode != "delete" ? (
+          <UserModal.Fields>
+            {userModalState.mode == "edit" && (
+              <UserModal.UserID userID={userModalData.userID} />
+            )}
+            <UserModal.Name
+              name={userModalData.name}
+              handleNameChange={handleNameChange}
+            />
+            <UserModal.Email
+              email={userModalData.email}
+              handleEmailChange={handleEmailChange}
+            />
+            {userModalState.mode == "create" && (
+              <UserModal.Password
+                password={userModalData.password}
+                handlePasswordChange={handlePasswordChange}
               />
-              <UserModal.Email
-                email={userModalData.email}
-                handleEmailChange={handleEmailChange}
-              />
-              <UserModal.Role
-                role={userModalData.role}
-                handleRoleChange={handleRoleChange}
-              />
-            </>
-          ) : (
-            <UserModal.DeleteWarning userName={userModalData.name} />
-          )}
-        </UserModal.Fields>
+            )}
+            <UserModal.Role
+              role={userModalData.role}
+              handleRoleChange={handleRoleChange}
+            />
+          </UserModal.Fields>
+        ) : (
+          <UserModal.DeleteWarning />
+        )}
         <UserModal.Actions
           mode={userModalState.mode}
-          isValid={
-            userModalState.mode === "delete"
-              ? true
-              : !!(userModalData.name && userModalData.email)
-          }
+          isValid={!!(userModalData.name && userModalData.email)}
           handleCancelClick={handleCancelClick}
           handleCreateUser={handleCreateUser}
+          handleEditUser={handleEditUser}
           handleDeleteUser={handleDeleteUser}
         />
       </UserModal>

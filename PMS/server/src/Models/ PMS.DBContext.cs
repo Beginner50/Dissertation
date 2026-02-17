@@ -60,7 +60,24 @@ public class PMSDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        SeedData(modelBuilder);
+        SeedAdminUser(modelBuilder);
+        // SeedData(modelBuilder);
+    }
+
+    protected void SeedAdminUser(ModelBuilder modelBuilder)
+    {
+        string passwordHash = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m";
+
+        modelBuilder.Entity<User>().HasData(
+                    new User
+                    {
+                        UserID = 1,
+                        Name = "Admin",
+                        Email = "admin@uni.com",
+                        Password = passwordHash,
+                        RefreshToken = "",
+                        Role = "admin"
+                    });
     }
 
     protected void SeedData(ModelBuilder modelBuilder)
@@ -68,15 +85,6 @@ public class PMSDbContext : DbContext
         string passwordHash = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m";
 
         modelBuilder.Entity<User>().HasData(
-            new User
-            {
-                UserID = 1,
-                Name = "Admin",
-                Email = "admin@uni.com",
-                Password = passwordHash,
-                RefreshToken = "",
-                Role = "admin"
-            },
             new User
             {
                 UserID = 2,

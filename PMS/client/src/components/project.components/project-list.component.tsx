@@ -96,53 +96,20 @@ ProjectList.JoinProjectButton = ({
   );
 };
 
-ProjectList.Content = ({
-  isLoading,
-  projects,
-  menuEnabled,
-  handleEditProjectClick,
-  handleArchiveProjectClick,
-}: {
-  isLoading: boolean;
-  projects: Project[];
-  menuEnabled: boolean;
-  handleEditProjectClick: (project: Project) => void;
-  handleArchiveProjectClick: (project: Project) => void;
-}) => {
-  const activeProjects = projects.filter((p) => p.status === "active");
+ProjectList.Content = ({ children }: { children: ReactNode }) => (
+  <List disablePadding sx={{ overflow: "visible" }}>
+    {children}
+  </List>
+);
 
-  if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-        <CircularProgress size={32} />
-      </Box>
-    );
-  }
+ProjectList.Loading = () => (
+  <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+    <CircularProgress size={32} />
+  </Box>
+);
 
-  return (
-    <List disablePadding sx={{ overflow: "visible" }}>
-      {activeProjects.length > 0 ? (
-        activeProjects.map((project) => (
-          <ProjectListEntry key={project.projectID}>
-            <ProjectListEntry.Link
-              title={project.title}
-              url={`/projects/${project.projectID}/tasks`}
-              student={project?.student}
-              supervisor={project?.supervisor}
-            />
-            {menuEnabled && (
-              <ProjectListEntry.MenuButton
-                onEditButtonClick={() => handleEditProjectClick(project)}
-                onArchiveButtonClick={() => handleArchiveProjectClick(project)}
-              />
-            )}
-          </ProjectListEntry>
-        ))
-      ) : (
-        <Typography variant="body1" color="textSecondary" sx={{ py: 2 }}>
-          You are not a member of any projects yet.
-        </Typography>
-      )}
-    </List>
-  );
-};
+ProjectList.NotFound = ({ message }: { message: string }) => (
+  <Typography variant="body1" color="textSecondary" sx={{ py: 2 }}>
+    {message}
+  </Typography>
+);

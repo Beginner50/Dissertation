@@ -14,8 +14,9 @@ import {
   Typography,
 } from "@mui/material";
 import { theme } from "../../lib/theme";
+import type { User } from "../../lib/types";
 
-export type ModalMode = "create" | "delete";
+export type ModalMode = "create" | "edit" | "delete";
 export type ModalState = {
   mode: ModalMode;
   open: boolean;
@@ -45,6 +46,7 @@ export default function UserModal({
 UserModal.Header = ({ mode }: { mode: ModalMode }) => {
   const titles = {
     create: "Create New User",
+    edit: "Edit User",
     delete: "Delete User",
   };
   return (
@@ -60,6 +62,12 @@ UserModal.Fields = ({ children }: { children: ReactNode }) => (
       <Stack spacing={2.5}>{children}</Stack>
     </FormGroup>
   </DialogContent>
+);
+
+UserModal.UserID = ({ userID }: { userID: number }) => (
+  <FormControl fullWidth>
+    <TextField label="UserID" value={userID} size="small" disabled />
+  </FormControl>
 );
 
 UserModal.Name = ({
@@ -82,6 +90,32 @@ UserModal.Name = ({
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
         onBlur={() => handleNameChange(localValue)}
+        size="small"
+      />
+    </FormControl>
+  );
+};
+
+UserModal.Password = ({
+  password,
+  handlePasswordChange,
+}: {
+  password: string;
+  handlePasswordChange: (v: string) => void;
+}) => {
+  const [localValue, setLocalValue] = useState(password);
+  useEffect(() => setLocalValue(password), [password]);
+  useEffect(() => {
+    if (password == "") handlePasswordChange(localValue);
+  }, [localValue]);
+
+  return (
+    <FormControl fullWidth>
+      <TextField
+        label="Password"
+        value={localValue}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={() => handlePasswordChange(localValue)}
         size="small"
       />
     </FormControl>
@@ -119,15 +153,15 @@ UserModal.Role = ({
   role,
   handleRoleChange,
 }: {
-  role: string;
-  handleRoleChange: (v: string) => void;
+  role: User["role"];
+  handleRoleChange: (v: User["role"]) => void;
 }) => (
   <FormControl fullWidth>
     <TextField
       select
       label="User Role"
       value={role}
-      onChange={(e) => handleRoleChange(e.target.value)}
+      onChange={(e) => handleRoleChange(e.target.value as User["role"])}
       size="small">
       {/* <MenuItem value="admin">Admin</MenuItem> */}
       <MenuItem value="supervisor">Supervisor</MenuItem>
@@ -136,16 +170,13 @@ UserModal.Role = ({
   </FormControl>
 );
 
-UserModal.DeleteWarning = ({ userName }: { userName: string }) => (
-  <Stack spacing={2}>
-    <Alert severity="error" variant="outlined" sx={{ fontWeight: "medium" }}>
-      This action is permanent and cannot be undone.
-    </Alert>
-    <Typography sx={{ px: 1 }}>
-      Are you sure you want to delete the user <strong>{userName}</strong>? They will lose
-      all access to the system immediately.
-    </Typography>
-  </Stack>
+UserModal.DeleteWarning = () => (
+  <Alert
+    severity="error"
+    variant="outlined"
+    sx={{ fontWeight: "medium", marginLeft: "1rem", marginRight: "1rem" }}>
+    This action is permanent and cannot be undone.
+  </Alert>
 );
 
 UserModal.Actions = ({
@@ -153,21 +184,25 @@ UserModal.Actions = ({
   isValid,
   handleCancelClick,
   handleCreateUser,
+  handleEditUser,
   handleDeleteUser,
 }: {
   mode: ModalMode;
   isValid: boolean;
   handleCancelClick: () => void;
   handleCreateUser: () => void;
+  handleEditUser: () => void;
   handleDeleteUser: () => void;
 }) => {
   const labels = {
     create: "Create",
+    edit: "Edit",
     delete: "Delete",
   };
 
   const actions = {
     create: handleCreateUser,
+    edit: handleEditUser,
     delete: handleDeleteUser,
   };
 
@@ -180,9 +215,9 @@ UserModal.Actions = ({
       </Button>
       <Button
         variant="contained"
+        color={mode == "delete" ? "error" : "primary"}
         onClick={actions[mode]}
-        disabled={!isValid}
-        color={mode == "delete" ? "error" : "primary"}>
+        disabled={!isValid}>
         {labels[mode]}
       </Button>
     </DialogActions>

@@ -49,10 +49,8 @@ public class OwnershipHandler : AuthorizationHandler<OwnershipRequirement>
 
         var routeUserID = httpContext.GetRouteValue("userID")?.ToString();
         var tokenUserID = context.User.FindFirst("sub")?.Value;
-        var role = context.User.FindFirst("role")?.Value;
 
-
-        if ((!string.IsNullOrEmpty(routeUserID) && tokenUserID == routeUserID) || role == "admin")
+        if (!string.IsNullOrEmpty(routeUserID) && tokenUserID == routeUserID)
         {
             context.Succeed(requirement);
         }

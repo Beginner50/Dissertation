@@ -33,7 +33,8 @@ public class TaskDeliverableService
     public async Task<GetTaskDeliverablesDTO> GetStagedDeliverable(long userID, long projectID, long taskID)
     {
         var result = await dbContext.Tasks
-            .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID && t.Project.StudentID == userID)
+            .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID
+                    && t.Project.StudentID == userID)
             .Select(t => t.StagedDeliverable != null ? new GetTaskDeliverablesDTO
             {
                 DeliverableID = t.StagedDeliverable.DeliverableID,
@@ -43,7 +44,8 @@ public class TaskDeliverableService
                 {
                     UserID = t.StagedDeliverable.SubmittedBy.UserID,
                     Name = t.StagedDeliverable.SubmittedBy.Name,
-                    Email = t.StagedDeliverable.SubmittedBy.Email
+                    Email = t.StagedDeliverable.SubmittedBy.Email,
+                    IsDeleted = t.StagedDeliverable.SubmittedBy.IsDeleted
                 },
                 TaskID = t.ProjectTaskID,
             } : null)
@@ -58,7 +60,8 @@ public class TaskDeliverableService
         var result = await dbContext.Tasks.Where(t =>
                 t.ProjectTaskID == taskID &&
                     t.ProjectID == projectID &&
-                       (t.Project.StudentID == userID || t.Project.SupervisorID == userID))
+                       (t.Project.StudentID == userID || t.Project.SupervisorID == userID)
+            )
             .Select(t => t.SubmittedDeliverable != null ? new GetTaskDeliverablesDTO
             {
                 DeliverableID = t.SubmittedDeliverable.DeliverableID,
@@ -68,7 +71,8 @@ public class TaskDeliverableService
                 {
                     UserID = t.SubmittedDeliverable.SubmittedBy.UserID,
                     Name = t.SubmittedDeliverable.SubmittedBy.Name,
-                    Email = t.SubmittedDeliverable.SubmittedBy.Email
+                    Email = t.SubmittedDeliverable.SubmittedBy.Email,
+                    IsDeleted = t.SubmittedDeliverable.SubmittedBy.IsDeleted
                 },
                 TaskID = t.ProjectTaskID,
             } : null)
@@ -81,7 +85,8 @@ public class TaskDeliverableService
     public async Task<TaskDeliverableFileDTO> GetStagedDeliverableFile(long userID, long projectID, long taskID)
     {
         var result = await dbContext.Tasks
-            .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID && t.Project.StudentID == userID)
+            .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID &&
+                         t.Project.StudentID == userID)
             .Select(t => t.StagedDeliverable != null ? new TaskDeliverableFileDTO
             {
                 Filename = t.StagedDeliverable.Filename,
@@ -124,7 +129,8 @@ public class TaskDeliverableService
         var task = await dbContext.Tasks.Where(t =>
             t.ProjectTaskID == taskID &&
                 t.ProjectID == projectID &&
-                    t.Project.StudentID == userID)
+                    t.Project.StudentID == userID &&
+                        t.Project.Status != "archived")
             .Include(t => t.SubmittedDeliverable)
             .Include(t => t.FeedbackCriterias)
             .FirstOrDefaultAsync()
@@ -154,7 +160,8 @@ public class TaskDeliverableService
         var task = await dbContext.Tasks.Where(t =>
                 t.ProjectTaskID == taskID &&
                     t.ProjectID == projectID &&
-                         t.Project.StudentID == userID)
+                         t.Project.StudentID == userID &&
+                            t.Project.Status != "archived")
             .Include(t => t.StagedDeliverable)
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Task Not Found!");
@@ -183,7 +190,8 @@ public class TaskDeliverableService
                 .Where(t =>
                     t.ProjectTaskID == taskID &&
                         t.ProjectID == projectID &&
-                            t.Project.StudentID == userID)
+                            t.Project.StudentID == userID &&
+                            t.Project.Status != "archived")
                 .Include(t => t.Project)
                     .ThenInclude(p => p.Student)
                 .Include(t => t.Project)

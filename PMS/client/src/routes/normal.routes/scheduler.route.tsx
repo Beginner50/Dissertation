@@ -129,7 +129,7 @@ export default function SchedulerRoute() {
   };
 
   const handleTaskChange = (taskID: number) => {
-    setMeetingFormData(prev => ({ ...prev, taskID }));
+    setMeetingFormData((prev) => ({ ...prev, taskID }));
   };
 
   /* ---------------------------------------------------------------------------------- */
@@ -238,6 +238,7 @@ export default function SchedulerRoute() {
       spacing="2vw"
       sx={{
         flexGrow: 1,
+        mt: "3vh",
         ml: "4.5vw",
         mr: "3vw",
         mb: "2vh",

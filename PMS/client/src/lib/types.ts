@@ -16,24 +16,31 @@ export type AuthContextType = {
 
 export type User = {
   userID: number;
-  role: string;
+  role: "student" | "supervisor" | "admin";
   name: string;
   email: string;
+  isDeleted: boolean;
 };
 
-export type UserFormData = Pick<User, "userID" | "name" | "email" | "role">;
+export type UserFormData = Pick<User, "userID" | "name" | "email" | "role"> & {
+  password: string;
+};
 
 export type Project = {
   projectID: number;
   title: string;
   description?: string;
-  status: string;
+  status: "active" | "archived";
   student?: User;
   supervisor?: User;
   tasks?: Pick<Task, "taskID" | "title">[];
 };
 
 export type ProjectFormData = Pick<Project, "projectID" | "title" | "description">;
+export type ProjectSupervisionFormData = Pick<
+  Project,
+  "projectID" | "title" | "description" | "supervisor" | "student"
+>;
 
 export type Task = {
   taskID: number;

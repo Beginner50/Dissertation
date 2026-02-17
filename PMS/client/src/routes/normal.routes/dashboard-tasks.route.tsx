@@ -10,6 +10,7 @@ import { useAuth } from "../../providers/auth.provider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box } from "@mui/material";
 import Pagination from "../../components/base.components/pagination.component";
+import TaskListEntry from "../../components/task.components.tsx/task-list-entry.component";
 
 export default function DashboardTasksRoute() {
   const { authState, authorizedAPI } = useAuth();
@@ -264,14 +265,24 @@ export default function DashboardTasksRoute() {
             )}
           </TaskList.Header>
 
-          <TaskList.Content
-            isLoading={tasksLoading}
-            projectID={projectID}
-            tasks={tasks?.items ?? []}
-            menuEnabled={user.role === "supervisor"}
-            handleEditTaskClick={handleEditTaskClick}
-            handleDeleteTaskClick={handleDeleteTaskClick}
-          />
+          <TaskList.Content>
+            {tasksLoading ? (
+              <TaskList.Loading />
+            ) : tasks?.items.length === 0 ? (
+              <TaskList.NotFound message="No tasks have been created for this project yet." />
+            ) : (
+              tasks?.items.map((task) => (
+                <TaskListEntry
+                  key={task.taskID}
+                  task={task}
+                  projectID={projectID}
+                  menuEnabled={user.role === "supervisor"}
+                  onEdit={() => handleEditTaskClick(task)}
+                  onDelete={() => handleDeleteTaskClick(task)}
+                />
+              ))
+            )}
+          </TaskList.Content>
 
           <Pagination
             totalCount={tasks?.totalCount ?? 0}

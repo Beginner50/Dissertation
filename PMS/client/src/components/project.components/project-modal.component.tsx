@@ -10,9 +10,14 @@ import {
   Button,
   FormGroup,
   FormControl,
+  type SelectChangeEvent,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
+import type { Project, User } from "../../lib/types";
 
-export type ModalMode = "create" | "edit" | "archive";
+export type ModalMode = "create" | "edit" | "archive" | "restore";
 export type ModalState = {
   mode: ModalMode;
   open: boolean;
@@ -45,6 +50,7 @@ ProjectModal.Header = ({ mode }: { mode: ModalMode }) => {
     create: "Create New Project",
     edit: "Edit Project Details",
     archive: "Archive Project",
+    restore: "Restore Project",
   };
   return <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>;
 };
@@ -79,8 +85,7 @@ ProjectModal.ProjectTitle = ({
   }, [title]);
 
   useEffect(() => {
-    if (title == "" || (localValue == "" && title != ""))
-      handleTitleChange(localValue);
+    if (title == "" || (localValue == "" && title != "")) handleTitleChange(localValue);
   }, [localValue]);
 
   return (
@@ -128,12 +133,65 @@ ProjectModal.ProjectDescription = ({
   );
 };
 
+ProjectModal.UserSelect = ({
+  label,
+  selectedUser,
+  users,
+  handleUserChange,
+}: {
+  label: string;
+  selectedUser?: User;
+  users: User[];
+  handleUserChange: (selectedUser?: User) => void;
+}) => {
+  const handleChange = (e: SelectChangeEvent) => {
+    const value = e.target.value;
+
+    if (value === "") {
+      handleUserChange(undefined);
+      return;
+    }
+
+    const foundUser = users.find((u) => u.userID.toString() === value);
+    handleUserChange(foundUser);
+  };
+
+  return (
+    <FormControl fullWidth size="small" sx={{ mt: 2 }}>
+      <InputLabel id={`user-select-label-${label}`}>{label}</InputLabel>
+      <Select
+        labelId={`user-select-label-${label}`}
+        value={selectedUser?.userID?.toString() || ""}
+        label={label}
+        onChange={handleChange}>
+        <MenuItem value="">
+          <em>None</em>
+        </MenuItem>
+        {users.map((user) => (
+          <MenuItem key={user.userID} value={user.userID.toString()}>
+            {user.name} ({user.email})
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+};
+
 ProjectModal.ArchiveWarning = () => (
   <Alert
     severity="warning"
     variant="outlined"
     sx={{ fontWeight: "medium", marginLeft: "1rem", marginRight: "1rem" }}>
-    Archiving this project will remove it from the list.
+    This project will be archived. To revert this action, contact the administrator.
+  </Alert>
+);
+
+ProjectModal.RestoreWarning = () => (
+  <Alert
+    severity="warning"
+    variant="outlined"
+    sx={{ fontWeight: "medium", marginLeft: "1rem", marginRight: "1rem" }}>
+    This project will be restored from archive.
   </Alert>
 );
 
@@ -145,24 +203,28 @@ ProjectModal.Actions = ({
   handleCreateProject,
   handleEditProject,
   handleArchiveProject,
+  handleRestoreProject,
 }: {
   mode: ModalMode;
   isValid: boolean;
   isLoading: boolean;
   handleCancelClick: () => void;
-  handleCreateProject: () => void;
+  handleCreateProject?: () => void;
   handleEditProject: () => void;
-  handleArchiveProject: () => void;
+  handleArchiveProject?: () => void;
+  handleRestoreProject?: () => void;
 }) => {
   const labels = {
     create: "Create",
     edit: "Save",
     archive: "Archive",
+    restore: "Restore",
   };
   const actions = {
     create: handleCreateProject,
     edit: handleEditProject,
     archive: handleArchiveProject,
+    restore: handleRestoreProject,
   };
 
   return (

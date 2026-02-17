@@ -3,6 +3,7 @@ using System.Security.Authentication;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
 using PMS.DTOs;
+using PMS.Models;
 
 namespace PMS.Services;
 
@@ -21,36 +22,85 @@ public class UserService
     public async Task<IEnumerable<UserLookupDTO>> GetAllUsers()
     {
         return await dbContext.Users
-                    .Where(u => u.Role != "admin" && u.IsDeleted == false)
+                    .Where(u => u.Role != "admin")
                     .Select(u => new UserLookupDTO
                     {
                         UserID = u.UserID,
                         Name = u.Name,
                         Email = u.Email,
-                        Role = u.Role
+                        Role = u.Role,
+                        IsDeleted = u.IsDeleted
                     }).ToListAsync();
     }
 
-    public async Task<IEnumerable<UserLookupDTO>> GetAllUnsupervisedStudents()
+    public async Task CreateUser(string name, string email, string password, string role)
     {
-        return await dbContext.Users.Where(
-          u => u.ConductedProjects.All(p => p.Supervisor == null) &&
-                u.Role == "student"
-        )
-        .Select(u => new UserLookupDTO
+        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
+
+        var existingUser = await dbContext.Users.Where(
+            u => u.Email == email && !u.IsDeleted
+        ).FirstOrDefaultAsync();
+        if (existingUser != null)
+            throw new UnauthorizedAccessException("Email Already In Use!");
+
+        var newUser = new User
         {
-            UserID = u.UserID,
-            Name = u.Name,
-            Email = u.Email,
-            Role = u.Role
-        })
-        .ToListAsync();
+            Name = name,
+            Email = email,
+            Password = hashedPassword,
+            Role = role,
+        };
+
+        await dbContext.AddAsync(newUser);
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task EditUser(
+        long userID, string? name, string? email, string? role
+    )
+    {
+        var user = await dbContext.Users.Where(u => u.UserID == userID && !u.IsDeleted)
+                                        .FirstOrDefaultAsync()
+                                        ?? throw new UnauthorizedAccessException("User Not Found!");
+
+        user.Name = name ?? user.Name;
+        if (email != null && email != user.Email)
+        {
+            var existingUser = await dbContext.Users.Where(u => u.Email == email
+                                    && !u.IsDeleted
+                                ).FirstOrDefaultAsync();
+            if (existingUser != null)
+                throw new UnauthorizedAccessException("Email Already In Use!");
+        }
+        user.Email = email ?? user.Email;
+        user.Role = role ?? user.Role;
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task DeleteUser(long userID)
+    {
+        var user = await dbContext.Users.Where(u => u.UserID == userID && !u.IsDeleted)
+                                        .Include(u => u.SupervisedProjects)
+                                        .Include(u => u.ConductedProjects)
+                                        .FirstOrDefaultAsync()
+                                        ?? throw new UnauthorizedAccessException("User Not Found!");
+
+        user.IsDeleted = true;
+
+        foreach (var project in user.SupervisedProjects)
+            project.Status = "archived";
+        foreach (var project in user.ConductedProjects)
+            project.Status = "archived";
+
+        await dbContext.SaveChangesAsync();
+        await Logout(user.UserID);
     }
 
     public async Task<GetUserAuth> Login(string email, string password)
     {
         var user = await dbContext.Users
-                         .Where(u => u.Email == email)
+                         .Where(u => u.Email == email && !u.IsDeleted)
                          .FirstOrDefaultAsync()
                          ?? throw new AuthenticationException("Invalid Credentials");
 
@@ -91,11 +141,11 @@ public class UserService
         {
             var userId = long.Parse(refreshToken.Subject);
             var user = await dbContext.Users
-                            .Where(u => u.UserID == userId)
+                            .Where(u => u.UserID == userId && !u.IsDeleted)
                             .FirstOrDefaultAsync()
                             ?? throw new UnauthorizedAccessException("User Not Found!");
             if (user.RefreshToken != refreshTokenPayload)
-                throw new Exception("Invalid or revoked session");
+                throw new Exception("Invalid or Revoked Session!");
 
             var (accessToken, accessTokenExpiry) = tokenService.CreateAccessToken(user.UserID, user.Role);
 
@@ -107,7 +157,7 @@ public class UserService
         }
         catch (Exception)
         {
-            throw new AuthenticationException("Unauthorized: Session expired.");
+            throw new AuthenticationException("Session Expired!");
         }
     }
 

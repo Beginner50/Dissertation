@@ -1,11 +1,11 @@
 Pending Tasks
+  Ingest List Feature
+  Improve progress log report generation
+
   UI Fixes:
     Allow scrolling through reminder and notifications
-
-  Urgent:
-    Document AI Feedback Analysis
+    Add visual error states
 
   Update UML Diagrams
   Document Background Workers
 
-  Improve progress log report generation

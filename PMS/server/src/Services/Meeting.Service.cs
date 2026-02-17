@@ -44,13 +44,15 @@ public class MeetingService
             {
                 UserID = meeting.Organizer.UserID,
                 Name = meeting.Organizer.Name,
-                Email = meeting.Organizer.Email
+                Email = meeting.Organizer.Email,
+                IsDeleted = meeting.Organizer.IsDeleted
             },
             Attendee = new UserLookupDTO
             {
                 UserID = meeting.Attendee.UserID,
                 Name = meeting.Attendee.Name,
-                Email = meeting.Attendee.Email
+                Email = meeting.Attendee.Email,
+                IsDeleted = meeting.Organizer.IsDeleted
             },
             Task = new ProjectTaskLookupDTO
             {
@@ -91,13 +93,15 @@ public class MeetingService
             {
                 UserID = m.Organizer.UserID,
                 Name = m.Organizer.Name,
-                Email = m.Organizer.Email
+                Email = m.Organizer.Email,
+                IsDeleted = m.Organizer.IsDeleted
             },
             Attendee = new UserLookupDTO
             {
                 UserID = m.Attendee.UserID,
                 Name = m.Attendee.Name,
-                Email = m.Attendee.Email
+                Email = m.Attendee.Email,
+                IsDeleted = m.Attendee.IsDeleted
             },
             Status = GetMeetingStatus(m.IsAccepted, m.End)
         })
@@ -116,6 +120,7 @@ public class MeetingService
                                  && t.Project.SupervisorID == attendeeID)
                             || (t.Project.SupervisorID == organizerID
                                 && t.Project.StudentID == attendeeID))
+                            && t.Project.Status != "archived"
                     ).FirstOrDefaultAsync()
                     ?? throw new UnauthorizedAccessException("Unauthorized Access!");
 
@@ -168,8 +173,8 @@ public class MeetingService
     )
     {
         var meeting = await dbContext.Meetings.Where(m =>
-                m.MeetingID == meetingID && (m.AttendeeID == userID || m.OrganizerID == userID
-            )).FirstOrDefaultAsync()
+                m.MeetingID == meetingID && (m.AttendeeID == userID || m.OrganizerID == userID)
+            ).FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
 
         meeting.Description = description;

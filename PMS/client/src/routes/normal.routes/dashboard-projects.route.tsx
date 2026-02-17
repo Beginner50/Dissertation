@@ -12,13 +12,13 @@ import ProjectModal, {
   type ModalMode,
   type ModalState as ProjectModalState,
 } from "../../components/project.components/project-modal.component";
-import { Selector } from "../../components/base.components/selector.component";
 import { SlidingActivityCard } from "../../components/base.components/sliding-activity-card.component";
 import { NotificationList } from "../../components/notification-reminder.components/notification-list.component";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../providers/auth.provider";
 import { Box } from "@mui/material";
 import Pagination from "../../components/base.components/pagination.component";
+import ProjectListEntry from "../../components/project.components/project-list-entry.component";
 
 export default function DashboardProjectsRoute() {
   /* ------------------------------- React Hooks --------------------------------------- */
@@ -30,7 +30,8 @@ export default function DashboardProjectsRoute() {
   const [step, setStep] = useState(0);
 
   const [projectModalState, setProjectModalState] = useState<ProjectModalState>({
-    mode: "create",
+    // mode: "create",
+    mode: "edit",
     open: false,
   });
   const [projectModalData, setProjectModalData] = useState<ProjectFormData>({
@@ -130,9 +131,9 @@ export default function DashboardProjectsRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const handleCreateProjectClick = () => {
-    setProjectModalState((ms) => ({ ...ms, mode: "create", open: true }));
-  };
+  // const handleCreateProjectClick = () => {
+  //   setProjectModalState((ms) => ({ ...ms, mode: "create", open: true }));
+  // };
 
   const handleEditProjectClick = (projectData: ProjectFormData) => {
     setProjectModalData(projectData);
@@ -167,23 +168,23 @@ export default function DashboardProjectsRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const handleCreateProject = () => {
-    mutation.mutate(
-      {
-        method: "post",
-        url: `api/users/${user.userID}/projects`,
-        data: projectModalData,
-        invalidateQueryKeys: [
-          [user.userID, "projects", projectListLimit, projectListOffset],
-        ],
-      },
-      {
-        onSettled: () => {
-          setProjectModalState((p) => ({ ...p, open: false }));
-        },
-      },
-    );
-  };
+  // const handleCreateProject = () => {
+  //   mutation.mutate(
+  //     {
+  //       method: "post",
+  //       url: `api/users/${user.userID}/projects`,
+  //       data: projectModalData,
+  //       invalidateQueryKeys: [
+  //         [user.userID, "projects", projectListLimit, projectListOffset],
+  //       ],
+  //     },
+  //     {
+  //       onSettled: () => {
+  //         setProjectModalState((p) => ({ ...p, open: false }));
+  //       },
+  //     },
+  //   );
+  // };
 
   const handleEditProject = () => {
     mutation.mutate(
@@ -225,13 +226,15 @@ export default function DashboardProjectsRoute() {
 
   const formDataIncomplete = (() => {
     switch (projectModalState.mode) {
-      case "create":
+      // case "create":
       case "edit":
         return Number.isNaN(projectModalData.projectID) || projectModalData.title === "";
       case "archive":
         return false;
     }
   })();
+
+  const activeProjects = projects?.items.filter((p) => p.status === "active");
 
   return (
     <>
@@ -248,20 +251,30 @@ export default function DashboardProjectsRoute() {
         {/* Left Section - Projects */}
         <ProjectList>
           <ProjectList.Header>
-            {user.role == "supervisor" && (
+            {/* {user.role == "supervisor" && (
               <ProjectList.CreateProjectButton
                 handleCreateProjectClick={handleCreateProjectClick}
               />
-            )}
+            )} */}
           </ProjectList.Header>
 
-          <ProjectList.Content
-            isLoading={projectsLoading}
-            projects={projects?.items ?? []}
-            menuEnabled={user.role === "supervisor"}
-            handleEditProjectClick={handleEditProjectClick}
-            handleArchiveProjectClick={handleArchiveProjectClick}
-          />
+          <ProjectList.Content>
+            {projectsLoading ? (
+              <ProjectList.Loading />
+            ) : activeProjects?.length === 0 ? (
+              <ProjectList.NotFound message="You are not a member of any projects yet." />
+            ) : (
+              activeProjects?.map((project) => (
+                <ProjectListEntry
+                  key={project.projectID}
+                  project={project}
+                  menuEnabled={user.role === "supervisor"}
+                  onEdit={() => handleEditProjectClick(project)}
+                  onArchive={() => handleArchiveProjectClick(project)}
+                />
+              ))
+            )}
+          </ProjectList.Content>
 
           <Pagination
             totalCount={projects?.totalCount ?? 0}
@@ -291,30 +304,33 @@ export default function DashboardProjectsRoute() {
       <ProjectModal open={projectModalState.open}>
         <ProjectModal.Header mode={projectModalState.mode} />
 
-        {projectModalState.mode === "create" || projectModalState.mode === "edit" ? (
-          <ProjectModal.Fields>
-            {projectModalState.mode == "edit" && (
-              <ProjectModal.ProjectID projectID={projectModalData?.projectID ?? 0} />
-            )}
-            <ProjectModal.ProjectTitle
-              title={projectModalData?.title ?? ""}
-              handleTitleChange={handleTitleChange}
-            />
-            <ProjectModal.ProjectDescription
-              description={projectModalData?.description ?? ""}
-              handleDescriptionChange={handleDescriptionChange}
-            />
-          </ProjectModal.Fields>
-        ) : (
-          <ProjectModal.ArchiveWarning />
-        )}
+        {
+          // projectModalState.mode === "create" ||
+          projectModalState.mode === "edit" ? (
+            <ProjectModal.Fields>
+              {projectModalState.mode == "edit" && (
+                <ProjectModal.ProjectID projectID={projectModalData?.projectID ?? 0} />
+              )}
+              <ProjectModal.ProjectTitle
+                title={projectModalData?.title ?? ""}
+                handleTitleChange={handleTitleChange}
+              />
+              <ProjectModal.ProjectDescription
+                description={projectModalData?.description ?? ""}
+                handleDescriptionChange={handleDescriptionChange}
+              />
+            </ProjectModal.Fields>
+          ) : (
+            <ProjectModal.ArchiveWarning />
+          )
+        }
 
         <ProjectModal.Actions
           mode={projectModalState.mode}
           isLoading={mutation.status === "pending"}
           isValid={!formDataIncomplete}
           handleCancelClick={handleCancelClick}
-          handleCreateProject={handleCreateProject}
+          // handleCreateProject={handleCreateProject}
           handleEditProject={handleEditProject}
           handleArchiveProject={handleArchiveProject}
         />

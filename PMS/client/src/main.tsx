@@ -13,6 +13,7 @@ import SignInRoute from "./routes/sign-in.route";
 import NormalRoutesLayout from "./routes/normal.routes/ normal-routes.layout";
 import AdminRoutesLayout from "./routes/admin.routes/ admin-routes.layout";
 import DashboardUsersRoute from "./routes/admin.routes/dashboard-users.route";
+import DashboardSupervisionRoute from "./routes/admin.routes/dashboard-supervision.route";
 
 /*
   The purpose of main.tsx is to establish a global hierarchy for the React components
@@ -30,28 +31,32 @@ import DashboardUsersRoute from "./routes/admin.routes/dashboard-users.route";
 const queryClient = new QueryClient();
 createRoot(document.getElementById("root")!).render(
   // <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route index element={<IndexRoute />} />
-            <Route path="sign-in" element={<SignInRoute />} />
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route index element={<IndexRoute />} />
+          <Route path="sign-in" element={<SignInRoute />} />
 
-            {/* Normal Routes */}
-            <Route element={<NormalRoutesLayout />}>
-              <Route path="projects" element={<DashboardProjectsRoute />} />
-              <Route path="scheduler" element={<SchedulerRoute />} />
-              <Route path="projects/:projectID/tasks" element={<DashboardTasksRoute />} />
-              <Route path="projects/:projectID/tasks/:taskID" element={<TaskRoute />} />
-            </Route>
+          {/* Normal Routes */}
+          <Route element={<NormalRoutesLayout />}>
+            <Route path="projects" element={<DashboardProjectsRoute />} />
+            <Route path="scheduler" element={<SchedulerRoute />} />
+            <Route path="projects/:projectID/tasks" element={<DashboardTasksRoute />} />
+            <Route path="projects/:projectID/tasks/:taskID" element={<TaskRoute />} />
+          </Route>
 
-            {/* Admin Routes */}
-            <Route element={<AdminRoutesLayout />}>
-              <Route path="admin-dashboard/users" element={<DashboardUsersRoute />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </QueryClientProvider>
+          {/* Admin Routes */}
+          <Route element={<AdminRoutesLayout />}>
+            <Route path="admin-dashboard/users" element={<DashboardUsersRoute />} />
+            <Route
+              path="admin-dashboard/supervision-list"
+              element={<DashboardSupervisionRoute />}
+            />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  </QueryClientProvider>,
   // </StrictMode>
 );
