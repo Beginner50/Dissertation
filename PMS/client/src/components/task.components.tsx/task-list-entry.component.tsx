@@ -18,6 +18,7 @@ import {
   PendingVariant1,
 } from "../base.components/status-tags.component";
 import type { Task } from "../../lib/types";
+import MenuButton from "../base.components/menu-button.component";
 
 export default function TaskListEntry({
   task,
@@ -140,51 +141,25 @@ TaskListEntry.MenuButton = ({
   onEditButtonClick: () => void;
   onDeleteButtonClick: () => void;
 }) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-
-  const handleOpen = (e: React.MouseEvent<HTMLButtonElement>) =>
-    setAnchorEl(e.currentTarget);
-  const handleClose = () => setAnchorEl(null);
-
   return (
-    <>
-      <IconButton onClick={handleOpen} size="small">
-        <MoreVert />
-      </IconButton>
+    <MenuButton>
+      <MenuItem onClick={onEditButtonClick}>
+        <ListItemIcon>
+          <Edit fontSize="small" />
+        </ListItemIcon>
+        <Typography variant="body2">Edit</Typography>
+      </MenuItem>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}>
-        <MenuItem
-          onClick={() => {
-            onEditButtonClick();
-            handleClose();
-          }}
-          sx={{ minWidth: 120 }}>
-          <ListItemIcon>
-            <Edit fontSize="small" />
-          </ListItemIcon>
-          <Typography variant="body2">Edit</Typography>
-        </MenuItem>
+      <Divider />
 
-        <Divider />
-
-        <MenuItem
-          onClick={() => {
-            onDeleteButtonClick();
-            handleClose();
-          }}>
-          <ListItemIcon>
-            <Delete fontSize="small" color="error" />
-          </ListItemIcon>
-          <Typography variant="body2" color="error">
-            Delete
-          </Typography>
-        </MenuItem>
-      </Menu>
-    </>
+      <MenuItem onClick={onDeleteButtonClick}>
+        <ListItemIcon>
+          <Delete fontSize="small" color="error" />
+        </ListItemIcon>
+        <Typography variant="body2" color="error">
+          Delete
+        </Typography>
+      </MenuItem>
+    </MenuButton>
   );
 };

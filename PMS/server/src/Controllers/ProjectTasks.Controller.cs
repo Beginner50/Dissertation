@@ -120,10 +120,10 @@ public class TasksController : ControllerBase
     [HttpDelete]
     [Authorize(Policy = "Ownership", Roles = "supervisor")]
     public async Task<IActionResult> DeleteProjectTask(
-                    [FromRoute] long userID,
-                    [FromRoute] long projectID,
-                    [FromRoute] long taskID
-                )
+                   [FromRoute] long userID,
+                   [FromRoute] long projectID,
+                   [FromRoute] long taskID
+               )
     {
         try
         {

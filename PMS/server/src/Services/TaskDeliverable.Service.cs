@@ -12,19 +12,22 @@ namespace PMS.Services;
 
 public class TaskDeliverableService
 {
-    protected readonly PMSDbContext dbContext;
-    protected readonly NotificationService notificationService;
-    protected readonly ReminderService reminderService;
-    protected readonly ILogger<TaskDeliverableService> logger;
+    private readonly PMSDbContext dbContext;
+    private readonly FeedbackService feedbackService;
+    private readonly NotificationService notificationService;
+    private readonly ReminderService reminderService;
+    private readonly ILogger<TaskDeliverableService> logger;
 
     public TaskDeliverableService(
         PMSDbContext dbContext,
+        FeedbackService feedbackService,
         NotificationService notificationService,
         ReminderService reminderService,
         ILogger<TaskDeliverableService> logger
     )
     {
         this.dbContext = dbContext;
+        this.feedbackService = feedbackService;
         this.notificationService = notificationService;
         this.reminderService = reminderService;
         this.logger = logger;
@@ -82,12 +85,12 @@ public class TaskDeliverableService
         return result;
     }
 
-    public async Task<TaskDeliverableFileDTO> GetStagedDeliverableFile(long userID, long projectID, long taskID)
+    public async Task<FileDTO> GetStagedDeliverableFile(long userID, long projectID, long taskID)
     {
         var result = await dbContext.Tasks
             .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID &&
                          t.Project.StudentID == userID)
-            .Select(t => t.StagedDeliverable != null ? new TaskDeliverableFileDTO
+            .Select(t => t.StagedDeliverable != null ? new FileDTO
             {
                 Filename = t.StagedDeliverable.Filename,
                 File = t.StagedDeliverable.File,
@@ -98,13 +101,13 @@ public class TaskDeliverableService
         return result;
     }
 
-    public async Task<TaskDeliverableFileDTO> GetSubmittedDeliverableFile(long userID, long projectID, long taskID)
+    public async Task<FileDTO> GetSubmittedDeliverableFile(long userID, long projectID, long taskID)
     {
         var result = await dbContext.Tasks.Where(t =>
                 t.ProjectTaskID == taskID &&
                     t.ProjectID == projectID &&
                      (t.Project.StudentID == userID || t.Project.SupervisorID == userID))
-            .Select(t => t.SubmittedDeliverable != null ? new TaskDeliverableFileDTO
+            .Select(t => t.SubmittedDeliverable != null ? new FileDTO
             {
                 Filename = t.SubmittedDeliverable.Filename,
                 File = t.SubmittedDeliverable.File,
@@ -176,22 +179,14 @@ public class TaskDeliverableService
         await dbContext.SaveChangesAsync();
     }
 
-    /*
-        AsSplitQuery is used to avoid the cartesian explosion problem when including multiple
-        collections. For each included collection, EF Core generates a separate query to load
-        the related data, which helps to reduce the amount of redundant data being retrieved.
-        
-        More info: https://learn.microsoft.com/en-us/ef/core/querying/single-split-queries
-    */
     public async Task SubmitStagedDeliverable(long userID, long projectID, long taskID)
     {
         var task = await dbContext.Tasks
-                .AsSplitQuery()
                 .Where(t =>
-                    t.ProjectTaskID == taskID &&
+                        t.ProjectTaskID == taskID &&
                         t.ProjectID == projectID &&
-                            t.Project.StudentID == userID &&
-                            t.Project.Status != "archived")
+                        t.Project.StudentID == userID &&
+                        t.Project.Status != "archived")
                 .Include(t => t.Project)
                     .ThenInclude(p => p.Student)
                 .Include(t => t.Project)
@@ -203,26 +198,18 @@ public class TaskDeliverableService
                 ?? throw new UnauthorizedAccessException("Task Not Found.");
 
         if (task.IsLocked)
-            throw new InvalidOperationException("Task Submission disabled for Locked Task!");
+            throw new InvalidOperationException("Submission Disabled For Locked Task!");
         if (task.StagedDeliverable == null)
             throw new InvalidOperationException("Staged Deliverable Not Found!");
+        if (task.FeedbackCriterias.Any(c => c.Status == "overriden"))
+            throw new InvalidOperationException("Not All Feedback Criteria Met!");
 
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
             try
             {
-                if (task.FeedbackCriterias.Count > 0)
-                {
-                    var unmetFeedbackCriteria = task.FeedbackCriterias
-                                                    .Where(c => c.Status == "unmet")
-                                                    .ToList();
-                    foreach (var feedbackCriteria in unmetFeedbackCriteria)
-                        feedbackCriteria.Status = "overriden";
-                }
-
                 if (task.SubmittedDeliverable != null)
                     dbContext.Deliverables.Remove(task.SubmittedDeliverable);
-
                 task.SubmittedDeliverable = task.StagedDeliverable;
                 task.StagedDeliverable = null;
 

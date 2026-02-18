@@ -11,10 +11,21 @@ import {
   Typography,
   IconButton,
   Box,
+  FormGroup,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
 import type { FeedbackCriterion, FeedbackCriterionModal } from "../../lib/types";
+import { theme } from "../../lib/theme";
+import { Check, Close, SyncAlt } from "@mui/icons-material";
+
+export type ModalMode = "create" | "edit";
+export type ModalState = {
+  mode: ModalMode;
+  open: boolean;
+};
 
 export default function FeedbackModal({
   open,
@@ -38,166 +49,175 @@ export default function FeedbackModal({
   );
 }
 
-FeedbackModal.Header = () => (
-  <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>
-    Provide Deliverable Feedback
-  </DialogTitle>
-);
+FeedbackModal.Header = ({ mode }: { mode: ModalMode }) => {
+  const titles = {
+    create: "Create Criterion",
+    edit: "Edit Criterion",
+  };
 
-FeedbackModal.Content = ({ children }: { children: ReactNode }) => (
+  return <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>;
+};
+
+FeedbackModal.Fields = ({ children }: { children: ReactNode }) => (
   <DialogContent dividers>
-    <Stack spacing={3} sx={{ mt: 1 }}>
-      {children}
-    </Stack>
+    <FormGroup>
+      <Stack spacing={2.5} sx={{ mt: 1 }}>
+        {children}
+      </Stack>
+    </FormGroup>
   </DialogContent>
 );
 
-FeedbackModal.CriteriaList = ({
-  criteria,
-  onCriterionDescriptionChange,
-  onCriterionDelete,
+FeedbackModal.FeedbackCriterionID = ({
+  feedbackCriterionID,
 }: {
-  criteria: FeedbackCriterionModal[];
-  onCriterionDescriptionChange: (
-    updatedCriterion: Partial<FeedbackCriterionModal>,
-  ) => void;
-  onCriterionDelete: (deletedCriterion: Partial<FeedbackCriterionModal>) => void;
-}) => {
-  const handleDescriptionChange =
-    (criterion: Partial<FeedbackCriterionModal>) => (updatedDescription: string) => {
-      onCriterionDescriptionChange({ ...criterion, description: updatedDescription });
-    };
+  feedbackCriterionID: number;
+}) => (
+  <TextField
+    fullWidth
+    label="Criterion ID"
+    value={feedbackCriterionID}
+    disabled
+    variant="outlined"
+    margin="normal"
+    sx={{ "& .MuiInputBase-input": { fontFamily: "monospace" } }}
+  />
+);
 
-  return (
-    <Stack spacing={2}>
-      <Typography variant="subtitle2" color="textSecondary">
-        Required Changes / Criteria
-      </Typography>
-
-      {criteria.map((criterion, index) => (
-        <FeedbackModal.CriterionInput
-          key={criterion.feedbackCriterionID ?? index}
-          index={index}
-          description={criterion.description ?? ""}
-          updateStatus={criterion.updateStatus}
-          onDescriptionChange={handleDescriptionChange(criterion)}
-          onDelete={() => onCriterionDelete(criterion)}
-        />
-      ))}
-
-      {criteria.length === 0 && (
-        <Typography
-          variant="body2"
-          sx={{ fontStyle: "italic", color: "gray", textAlign: "center", py: 2 }}>
-          No feedback criteria added yet.
-        </Typography>
-      )}
-    </Stack>
-  );
-};
-
-FeedbackModal.CriterionInput = ({
-  index,
+FeedbackModal.Description = ({
   description,
-  updateStatus,
-  onDescriptionChange,
-  onDelete,
+  handleDescriptionChange,
 }: {
-  index: number;
   description: string;
-  updateStatus: FeedbackCriterionModal["updateStatus"];
-  onDescriptionChange: (updatedDescription: string) => void;
-  onDelete: () => void;
+  handleDescriptionChange: (val: string) => void;
 }) => {
-  const [localText, setLocalText] = useState(description ?? "");
+  const [localValue, setLocalValue] = useState(description);
 
   useEffect(() => {
-    setLocalText(description);
+    setLocalValue(description);
   }, [description]);
 
+  useEffect(() => {
+    if (description == "") handleDescriptionChange(localValue);
+  }, [localValue]);
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 1.5,
-        opacity: updateStatus == "deleted" ? 0.4 : 1,
-        transition: "opacity 0.2s ease",
-      }}>
-      <Typography
-        sx={{
-          mt: 1,
-          fontWeight: "bold",
-          minWidth: "20px",
-          color: updateStatus == "deleted" ? "text.disabled" : "text.primary",
-        }}>
-        {index + 1}.
-      </Typography>
-
-      <FormControl fullWidth>
-        <TextField
-          fullWidth
-          multiline
-          size="small"
-          disabled={updateStatus == "deleted"}
-          value={localText}
-          onChange={(e) => setLocalText(e.target.value)}
-          onBlur={() => {
-            if (localText !== description) onDescriptionChange(localText);
-          }}
-          sx={{
-            "& .MuiInputBase-input": {
-              textDecoration: updateStatus == "deleted" ? "line-through" : "none",
-            },
-            "& .MuiOutlinedInput-root": {
-              backgroundColor: updateStatus == "deleted" ? "action.hover" : "transparent",
-            },
-          }}
-        />
-      </FormControl>
-
-      <IconButton
-        color="error"
-        onClick={onDelete}
-        disabled={updateStatus == "deleted"}
-        sx={{
-          mt: 0.5,
-          visibility: updateStatus == "deleted" ? "hidden" : "visible",
-        }}>
-        <DeleteOutlineIcon fontSize="small" />
-      </IconButton>
-    </Box>
+    <TextField
+      fullWidth
+      label="Description"
+      multiline
+      rows={3}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={() => handleDescriptionChange(localValue)}
+      variant="outlined"
+      margin="normal"
+      placeholder="Enter the feedback requirement..."
+    />
   );
 };
 
-FeedbackModal.AddButton = ({ onAdd }: { onAdd: () => void }) => (
-  <Button
-    startIcon={<AddIcon />}
+FeedbackModal.Status = ({
+  status,
+  handleStatusChange,
+}: {
+  status: "met" | "unmet" | "overridden";
+  handleStatusChange: (val: "met" | "unmet" | "overridden") => void;
+}) => (
+  <Box sx={{ my: 2 }}>
+    <Typography
+      variant="caption"
+      sx={{ color: "text.secondary", mb: 1, display: "block", fontWeight: 600 }}>
+      Criterion Status
+    </Typography>
+    <ToggleButtonGroup
+      value={status}
+      exclusive
+      onChange={(_, newValue) => newValue && handleStatusChange(newValue)}
+      fullWidth
+      size="small"
+      sx={{ height: "40px" }}>
+      <ToggleButton
+        value="met"
+        sx={{
+          gap: 1,
+          "&.Mui-selected": { color: theme.status.completed, bgcolor: "#e8f5e9" },
+        }}>
+        <Check fontSize="small" /> Met
+      </ToggleButton>
+
+      <ToggleButton
+        value="unmet"
+        sx={{
+          gap: 1,
+          "&.Mui-selected": { color: theme.status.missing, bgcolor: "#ffebee" },
+        }}>
+        <Close fontSize="small" /> Unmet
+      </ToggleButton>
+
+      <ToggleButton
+        value="overridden"
+        sx={{
+          gap: 1,
+          "&.Mui-selected": { color: theme.link, bgcolor: "#e3f2fd" },
+        }}>
+        <SyncAlt fontSize="small" /> Overridden
+      </ToggleButton>
+    </ToggleButtonGroup>
+  </Box>
+);
+
+FeedbackModal.ChangeObserved = ({ changeObserved }: { changeObserved: string }) => (
+  <TextField
+    fullWidth
+    label="AI Analysis / Observation"
+    multiline
+    rows={changeObserved == "" ? 1 : 4}
+    value={changeObserved}
+    disabled
     variant="outlined"
-    size="small"
-    onClick={onAdd}
-    sx={{ alignSelf: "flex-start", ml: 4 }}>
-    Add Criterion
-  </Button>
+    margin="normal"
+  />
 );
 
 FeedbackModal.Actions = ({
-  hasPreviousCriteria,
-  onCancel,
-  onSubmit,
+  mode,
+  loading,
   disabled,
+  handleCancelClick,
+  handleCreate,
+  handleEdit,
 }: {
-  hasPreviousCriteria: boolean;
-  onCancel: () => void;
-  onSubmit: () => void;
-  disabled?: boolean;
-}) => (
-  <DialogActions sx={{ p: 2, px: 3 }}>
-    <Button onClick={onCancel} color="inherit">
-      Cancel
-    </Button>
-    <Button variant="contained" onClick={onSubmit} disabled={disabled} color="primary">
-      {hasPreviousCriteria ? "Update" : "Submit"}
-    </Button>
-  </DialogActions>
-);
+  mode: ModalMode;
+  loading: boolean;
+  disabled: boolean;
+  handleCancelClick: () => void;
+  handleCreate: () => void;
+  handleEdit: () => void;
+}) => {
+  const labels = {
+    create: "Create",
+    edit: "Save",
+  } as const;
+
+  const actions: Record<Extract<ModalMode, "create" | "edit">, () => void> = {
+    create: handleCreate,
+    edit: handleEdit,
+  };
+
+  return (
+    <DialogActions sx={{ p: 2, px: 3 }}>
+      <Button onClick={handleCancelClick} color="inherit">
+        Cancel
+      </Button>
+      <Button
+        variant="contained"
+        onClick={actions[mode]}
+        color="primary"
+        loading={loading}
+        disabled={disabled}>
+        {labels[mode]}
+      </Button>
+    </DialogActions>
+  );
+};

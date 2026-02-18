@@ -11,6 +11,7 @@ using PMS.Models;
 
 namespace PMS.Services;
 
+
 public class FeedbackService
 {
     protected readonly PMSDbContext dbContext;
@@ -46,128 +47,86 @@ public class FeedbackService
                     .ToListAsync();
     }
 
-    public async Task CreateFeedbackCriteria(
-        long userID, long projectID, long taskID,
-        List<CreateFeedbackCriterionDTO> feedbackCriteriaToCreate
-    )
+    public async Task CreateFeedbackCriterion
+        (long userID, long projectID, long taskID, string description, string? status)
     {
         var task = await dbContext.Tasks.Where(t => t.ProjectTaskID == taskID &&
-                                                t.ProjectID == projectID &&
-                                                    t.AssignedByID == userID &&
-                                                    t.Project.Status != "archived")
-                                        .Include(t => t.SubmittedDeliverable)
-                                        .FirstOrDefaultAsync()
-                                        ?? throw new UnauthorizedAccessException("Task Not Found!");
-
+                                                     t.ProjectID == projectID &&
+                                                         t.AssignedByID == userID &&
+                                                         t.Project.Status != "archived")
+                                             .Include(t => t.SubmittedDeliverable)
+                                             .Include(t => t.FeedbackCriterias)
+                                             .FirstOrDefaultAsync()
+                                             ?? throw new UnauthorizedAccessException("Task Not Found!");
         if (task.SubmittedDeliverable == null)
             throw new UnauthorizedAccessException("Feedback Provision Not Allowed For Task Without Deliverable Submission!");
 
-        var newFeedbackCriteria = feedbackCriteriaToCreate.Select(c => new FeedbackCriterion
+        var newCriterion = new FeedbackCriterion
         {
-            Description = c.Description,
-            Status = "unmet",
-            ChangeObserved = "",
-            TaskID = task.ProjectTaskID,
-            ProvidedByID = task.AssignedByID
-        });
+            Description = description,
+            Status = status ?? "unmet",
+            ProvidedByID = userID,
+            TaskID = taskID,
+        };
 
-        await dbContext.FeedbackCriterias.AddRangeAsync(newFeedbackCriteria);
+        await dbContext.AddAsync(newCriterion);
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task UpdateFeedbackCriteria(
-        long userID, long projectID, long taskID,
-        List<UpdateFeedbackCriterionDTO> feedbackCriteriaToUpdate,
-        bool bypassOwnershipCheck = false
-    )
+    public async Task EditFeedbackCriterion
+        (long userID, long projectID, long taskID, long feedbackCriterionID
+            , string? description = null, string? status = null)
     {
-        var task = await dbContext.Tasks.Where(t => t.ProjectTaskID == taskID &&
-                                                t.ProjectID == projectID &&
-                                                    (t.AssignedByID == userID
-                                                    || bypassOwnershipCheck) &&
-                                                t.Project.Status != "archived"
-                                        )
-                                        .Include(t => t.FeedbackCriterias)
-                                        .FirstOrDefaultAsync()
-                                        ?? throw new UnauthorizedAccessException("Task Not Found!");
+        var feedbackCriterion = await dbContext.FeedbackCriterias.Where(f =>
+                    f.FeedbackCriterionID == feedbackCriterionID &&
+                    f.Task.ProjectTaskID == taskID &&
+                    f.Task.ProjectID == projectID &&
+                    f.Task.AssignedByID == userID &&
+                    f.Task.Project.Status != "archived"
+                )
+               .FirstOrDefaultAsync()
+               ?? throw new UnauthorizedAccessException("Feedback Criterion Not Found!");
 
-        if (task.FeedbackCriterias == null || task.FeedbackCriterias.Count == 0)
-            throw new UnauthorizedAccessException("Prior Feedback Criteria Not Found!");
-
-        var feedbackCriterionIDs = feedbackCriteriaToUpdate.Select(c => c.FeedbackCriterionID);
-
-        var prevFeedbackCriteria = task.FeedbackCriterias.Where(c =>
-                         feedbackCriterionIDs.Contains(c.FeedbackCriterionID))
-                        .OrderBy(c => c.FeedbackCriterionID).ToList();
-
-        var newCriteriaValues = feedbackCriteriaToUpdate.OrderBy(c => c.FeedbackCriterionID).ToList();
-
-        if (prevFeedbackCriteria.Count != newCriteriaValues.Count)
-            throw new Exception("Invalid Criteria Found In Criteria To Update!");
-
-        for (int i = 0; i < prevFeedbackCriteria.Count; i++)
-        {
-            prevFeedbackCriteria[i].Description = newCriteriaValues[i].Description ?? prevFeedbackCriteria[i].Description;
-            prevFeedbackCriteria[i].Status = newCriteriaValues[i].Status
-                                ?? prevFeedbackCriteria[i].Status;
-            prevFeedbackCriteria[i].ChangeObserved = newCriteriaValues[i].ChangeObserved
-                                ?? prevFeedbackCriteria[i].ChangeObserved;
-        }
+        feedbackCriterion.Description = description ?? feedbackCriterion.Description;
+        feedbackCriterion.Status = status ?? feedbackCriterion.Status;
 
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task DeleteFeedbackCriteria(
-        long userID, long projectID, long taskID,
-        List<DeleteFeedbackCriterionDTO> feedbackCriteriaToDelete
-    )
+    public async Task OverrideFeedbackCriterion
+            (long userID, long projectID, long taskID, long feedbackCriterionID, string? status)
     {
-        var task = await dbContext.Tasks.Where(t => t.ProjectTaskID == taskID &&
-                                                t.ProjectID == projectID &&
-                                                    t.AssignedByID == userID &&
-                                                    t.Project.Status != "archived")
-                                        .Include(t => t.FeedbackCriterias)
-                                        .FirstOrDefaultAsync()
-                                        ?? throw new UnauthorizedAccessException("Task Not Found!");
+        var feedbackCriterion = await dbContext.FeedbackCriterias.Where(f =>
+                    f.FeedbackCriterionID == feedbackCriterionID &&
+                    f.Task.ProjectTaskID == taskID &&
+                    f.Task.ProjectID == projectID &&
+                    f.Task.Project.StudentID == userID &&
+                    f.Task.Project.Status != "archived"
+                )
+               .FirstOrDefaultAsync()
+               ?? throw new UnauthorizedAccessException("Feedback Criterion Not Found!");
 
-        if (task.FeedbackCriterias == null || task.FeedbackCriterias.Count == 0)
-            throw new UnauthorizedAccessException("Prior Feedback Criteria Not Found!");
+        feedbackCriterion.Status = status ?? "overridden";
 
-
-        var feedbackCriterionIDs = feedbackCriteriaToDelete.Select(c => c.FeedbackCriterionID);
-
-        var criteriaToDelete = task.FeedbackCriterias.Where(c =>
-                         feedbackCriterionIDs.Contains(c.FeedbackCriterionID)).ToList();
-
-        dbContext.FeedbackCriterias.RemoveRange(criteriaToDelete);
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task ProvideFeedbackCriteria(
-        long userID, long projectID, long taskID,
-        List<CreateFeedbackCriterionDTO> feedbackCriteriaToCreate,
-        List<UpdateFeedbackCriterionDTO> feedbackCriteriaToUpdate,
-        List<DeleteFeedbackCriterionDTO> feedbackCriteriaToDelete
-    )
+    public async Task DeleteFeedbackCriterion
+         (long userID, long projectID, long taskID, long feedbackCriterionID)
     {
-        using (var transaction = await dbContext.Database.BeginTransactionAsync())
-        {
-            try
-            {
-                await CreateFeedbackCriteria(userID, projectID, taskID, feedbackCriteriaToCreate);
-                await UpdateFeedbackCriteria(userID, projectID, taskID, feedbackCriteriaToUpdate);
-                await DeleteFeedbackCriteria(userID, projectID, taskID, feedbackCriteriaToDelete);
+        var feedbackCriterion = await dbContext.FeedbackCriterias.Where(f =>
+                    f.FeedbackCriterionID == feedbackCriterionID &&
+                    f.Task.ProjectTaskID == taskID &&
+                    f.Task.ProjectID == projectID &&
+                    f.Task.AssignedByID == userID &&
+                    f.Task.Project.Status != "archived"
+                )
+               .FirstOrDefaultAsync()
+               ?? throw new UnauthorizedAccessException("Feedback Criterion Not Found!");
 
-                await transaction.CommitAsync();
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
+        dbContext.Remove(feedbackCriterion);
+        await dbContext.SaveChangesAsync();
     }
-
 
     public async Task AIFeedbackComplianceCheck(
         long userID, long projectID, long taskID
@@ -184,20 +143,28 @@ public class FeedbackService
                     .Include(t => t.FeedbackCriterias)
                     .FirstOrDefaultAsync()
                     ?? throw new UnauthorizedAccessException("Task Not Found!");
-
+        if (task.StagedDeliverable == null || task.SubmittedDeliverable == null)
+            throw new Exception("Staged Or Submitted Deliverable Not Found!");
         if (task.FeedbackCriterias == null || task.FeedbackCriterias.Count == 0)
             throw new UnauthorizedAccessException("Prior Feedback Criteria Not Found!");
 
-        if (task.StagedDeliverable == null || task.SubmittedDeliverable == null)
-            throw new Exception("Staged Or Submitted Deliverable Not Found!");
 
-        var newFeedbackCriteria = await AIService.EvaluateFeedbackCriteria(
+        var newFeedbackCriteriaMap = (await AIService.EvaluateFeedbackCriteria(
                     task,
                     previousDeliverable: task.SubmittedDeliverable.File,
                     newDeliverable: task.StagedDeliverable.File,
-                    previousCriteria: task.FeedbackCriterias.Where(c => c.Status == "unmet").ToList()
-            );
+                    previousCriteria: task.FeedbackCriterias.Where(c => c.Status == "unmet")
+                                      .ToList()
+            )).ToDictionary(c => c.FeedbackCriterionID);
 
-        await UpdateFeedbackCriteria(userID, projectID, taskID, newFeedbackCriteria, bypassOwnershipCheck: true);
+        task.FeedbackCriterias.ForEach(c =>
+        {
+            var updatedCriterion = newFeedbackCriteriaMap[c.FeedbackCriterionID];
+
+            c.ChangeObserved = updatedCriterion.ChangeObserved;
+            c.Status = updatedCriterion.Status ?? c.Status;
+        });
+
+        await dbContext.SaveChangesAsync();
     }
 }

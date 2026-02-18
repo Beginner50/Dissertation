@@ -3,8 +3,6 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  IconButton,
-  Menu,
   MenuItem,
   Typography,
   Divider,
@@ -16,6 +14,7 @@ import { useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { theme } from "../../lib/theme";
 import type { Project, User } from "../../lib/types";
+import MenuButton from "../base.components/menu-button.component";
 
 export default function ProjectListEntry({
   project,
@@ -47,7 +46,6 @@ export default function ProjectListEntry({
           boxShadow: theme.shadowSoft || 2,
         },
       }}>
-      {/* Internal Composition */}
       <ProjectListEntry.Link
         title={project.title}
         url={`/projects/${project.projectID}/tasks`}
@@ -158,51 +156,25 @@ ProjectListEntry.MenuButton = ({
   onEditButtonClick: () => void;
   onArchiveButtonClick: () => void;
 }) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-
-  const handleOpen = (e: React.MouseEvent<HTMLButtonElement>) =>
-    setAnchorEl(e.currentTarget);
-  const handleClose = () => setAnchorEl(null);
-
   return (
-    <>
-      <IconButton onClick={handleOpen} size="small">
-        <MoreVert />
-      </IconButton>
+    <MenuButton>
+      <MenuItem onClick={onEditButtonClick}>
+        <ListItemIcon>
+          <Edit fontSize="small" />
+        </ListItemIcon>
+        <Typography variant="body2">Edit</Typography>
+      </MenuItem>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}>
-        <MenuItem
-          onClick={() => {
-            onEditButtonClick();
-            handleClose();
-          }}
-          sx={{ minWidth: 120 }}>
-          <ListItemIcon>
-            <Edit fontSize="small" />
-          </ListItemIcon>
-          <Typography variant="body2">Edit</Typography>
-        </MenuItem>
+      <Divider />
 
-        <Divider />
-
-        <MenuItem
-          onClick={() => {
-            onArchiveButtonClick();
-            handleClose();
-          }}>
-          <ListItemIcon>
-            <Archive fontSize="small" color="error" />
-          </ListItemIcon>
-          <Typography variant="body2" color="error">
-            Archive
-          </Typography>
-        </MenuItem>
-      </Menu>
-    </>
+      <MenuItem onClick={onArchiveButtonClick}>
+        <ListItemIcon>
+          <Archive fontSize="small" color="error" />
+        </ListItemIcon>
+        <Typography variant="body2" color="error">
+          Archive
+        </Typography>
+      </MenuItem>
+    </MenuButton>
   );
 };

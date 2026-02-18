@@ -1,9 +1,13 @@
 Pending Tasks
   Ingest List Feature
+  Modularise ALL table components (including feedback)
+  Add Pagination for fetching Users
   Improve progress log report generation
 
   UI Fixes:
-    Allow scrolling through reminder and notifications
+    Modularise and make sign-in page consistent with the rest of the codebase
+
+    Add pagination to notifications
     Add visual error states
 
   Update UML Diagrams

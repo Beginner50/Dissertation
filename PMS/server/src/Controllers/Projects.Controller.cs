@@ -252,4 +252,20 @@ public class ProjectsController : ControllerBase
             return BadRequest(e.Message);
         }
     }
+
+    [Route("api/projects/ingest-list")]
+    [HttpPost]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> IngestProjectList([FromBody] FileDTO dto)
+    {
+        try
+        {
+            await projectService.IngestProjectSupervisionList(dto.Filename, dto.File, dto.ContentType);
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
 }

@@ -2,12 +2,13 @@ import { useState } from "react";
 import { Container, Typography, Button, Stack, Box, Paper } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { useAuth } from "../../providers/auth.provider";
-import type { User, UserFormData } from "../../lib/types";
+import type { DeliverableFile, User, UserFormData } from "../../lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import UserTable from "../../components/user.components/user-table.component";
 import UserModal from "../../components/user.components/user-modal.component";
 import type { ModalState as UserModalState } from "../../components/user.components/user-modal.component";
 import { theme } from "../../lib/theme";
+import base64js from "base64-js";
 import TableLayout from "../../components/base.components/table-layout.component";
 
 export default function DashboardUsersRoute() {
@@ -141,6 +142,24 @@ export default function DashboardUsersRoute() {
     );
   };
 
+  const handleUserListIngest = async (file: File) => {
+    const fileBytes = new Uint8Array(await file.arrayBuffer());
+    const base64File = base64js.fromByteArray(fileBytes);
+
+    const deliverableFile: DeliverableFile = {
+      filename: file.name,
+      file: base64File,
+      contentType: file.type,
+    };
+
+    mutation.mutate({
+      method: "post",
+      url: `api/users/ingest-list`,
+      data: deliverableFile,
+      invalidateQueryKeys: [["users"]],
+    });
+  };
+
   /* ---------------------------------------------------------------------------------- */
 
   return (
@@ -156,11 +175,16 @@ export default function DashboardUsersRoute() {
         <TableLayout>
           <TableLayout.Header title="Users">
             <TableLayout.AddButton text={"Add User"} onClick={handleAddUserClick} />
+            <TableLayout.IngestButton
+              text="Ingest User List"
+              onIngest={handleUserListIngest}
+              isPending={mutation.status == "pending"}
+            />
           </TableLayout.Header>
 
           <TableLayout.Content>
             <UserTable
-              users={users ?? []}
+              users={users?.sort((u1, u2) => u1.userID - u2.userID) ?? []}
               isLoading={usersLoading}
               totalCount={users?.length ?? 0}
               limit={userLimit}

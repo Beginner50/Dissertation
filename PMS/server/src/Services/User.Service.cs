@@ -3,6 +3,7 @@ using System.Security.Authentication;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
 using PMS.DTOs;
+using PMS.Lib;
 using PMS.Models;
 
 namespace PMS.Services;
@@ -95,6 +96,26 @@ public class UserService
 
         await dbContext.SaveChangesAsync();
         await Logout(user.UserID);
+    }
+
+    // Reserved for admin endpoints
+    public async Task IngestUserList(string filename, byte[] fileData, string contentType)
+    {
+        if (!Sanitization.IsValidExcel(fileData))
+            throw new Exception("File Is Not Valid Excel!");
+
+        var extractedUsers = PDFUtils.IngestUserList(filename, fileData, contentType);
+        var extractedUserEmails = extractedUsers.Select(e => e.Email).ToList();
+
+        var existingUsers = await dbContext.Users
+                                .Where(u => extractedUserEmails.Contains(u.Email) && !u.IsDeleted)
+                                .ToListAsync();
+        var newUsers = extractedUsers.ExceptBy(existingUsers.Select(u => u.Email), u => u.Email).ToList();
+
+        if (newUsers.Count > 0)
+            dbContext.Users.AddRange(newUsers);
+
+        await dbContext.SaveChangesAsync();
     }
 
     public async Task<GetUserAuth> Login(string email, string password)

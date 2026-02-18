@@ -2,13 +2,19 @@ import { Paper } from "@mui/material";
 import { ProjectList } from "../../components/project.components/project-list.component";
 import ProjectSupervisionTable from "../../components/project.components/project-supervision-table.component";
 import { theme } from "../../lib/theme";
-import type { Project, ProjectSupervisionFormData, User } from "../../lib/types";
+import type {
+  DeliverableFile,
+  Project,
+  ProjectSupervisionFormData,
+  User,
+} from "../../lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { useAuth } from "../../providers/auth.provider";
 import ProjectModal, {
   type ModalState as ProjectModalState,
 } from "../../components/project.components/project-modal.component";
+import base64js from "base64-js";
 import TableLayout from "../../components/base.components/table-layout.component";
 
 export default function DashboardSupervisionRoute() {
@@ -218,6 +224,25 @@ export default function DashboardSupervisionRoute() {
       },
     );
   };
+
+  const handleProjectListIngest = async (file: File) => {
+    const fileBytes = new Uint8Array(await file.arrayBuffer());
+    const base64File = base64js.fromByteArray(fileBytes);
+
+    const deliverableFile: DeliverableFile = {
+      filename: file.name,
+      file: base64File,
+      contentType: file.type,
+    };
+
+    mutation.mutate({
+      method: "post",
+      url: `api/projects/ingest-list`,
+      data: deliverableFile,
+      invalidateQueryKeys: [["projects", limit, offset]],
+    });
+  };
+
   /* ---------------------------------------------------------------------------------- */
 
   const students = users?.filter((u) => u.role == "student" && !u.isDeleted) ?? [];
@@ -250,6 +275,11 @@ export default function DashboardSupervisionRoute() {
       <TableLayout>
         <TableLayout.Header title="Project Supervision List">
           <TableLayout.AddButton text="Add Project" onClick={handleCreateProjectClick} />
+          <TableLayout.IngestButton
+            text="Ingest Project List"
+            onIngest={handleProjectListIngest}
+            isPending={mutation.status == "pending"}
+          />
         </TableLayout.Header>
 
         <ProjectList.Content>

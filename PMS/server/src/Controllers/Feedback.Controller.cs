@@ -38,27 +38,93 @@ public class FeedbackController : ControllerBase
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback")]
     [HttpPost]
     [Authorize(Policy = "Ownership", Roles = "supervisor")]
-    public async Task<IActionResult> ProvideFeedbackCriteria(
+    public async Task<IActionResult> CreateFeedbackCriterion(
            [FromRoute] long userID,
            [FromRoute] long projectID,
            [FromRoute] long taskID,
-           [FromBody] ProvideFeedbackCriteriaDTO provideFeedbackCriteriaDTO
+           [FromBody] CreateFeedbackCriterionDTO dto
        )
     {
         try
         {
-            await feedbackService.ProvideFeedbackCriteria(userID, projectID, taskID,
-                feedbackCriteriaToCreate: provideFeedbackCriteriaDTO.FeedbackCriteriaToCreate,
-                feedbackCriteriaToUpdate: provideFeedbackCriteriaDTO.FeedbackCriteriaToUpdate,
-                feedbackCriteriaToDelete: provideFeedbackCriteriaDTO.FeedbackCriteriaToDelete
-            );
-
+            await feedbackService.CreateFeedbackCriterion(userID, projectID, taskID, description: dto.Description, status: dto.Status);
             return NoContent();
         }
         catch (Exception e)
         {
             return BadRequest(e.Message);
-            // return BadRequest("Failed to provide feedback criteria.");
+        }
+    }
+
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback/{feedbackCriterionID}")]
+    [HttpPut]
+    [Authorize(Policy = "Ownership", Roles = "supervisor")]
+    public async Task<IActionResult> EditFeedbackCriterion(
+           [FromRoute] long userID,
+           [FromRoute] long projectID,
+           [FromRoute] long taskID,
+           [FromRoute] long feedbackCriterionID,
+           [FromBody] UpdateFeedbackCriterionDTO dto
+       )
+    {
+        try
+        {
+            await feedbackService.EditFeedbackCriterion(userID, projectID, taskID,
+                feedbackCriterionID,
+                description: dto.Description,
+                status: dto.Status
+            );
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback/{feedbackCriterionID}/override")]
+    [HttpPut]
+    [Authorize(Policy = "Ownership", Roles = "student")]
+    public async Task<IActionResult> OverrideFeedbackCriterion(
+              [FromRoute] long userID,
+              [FromRoute] long projectID,
+              [FromRoute] long taskID,
+              [FromRoute] long feedbackCriterionID,
+              [FromBody] UpdateFeedbackCriterionDTO dto
+          )
+    {
+        try
+        {
+            await feedbackService.OverrideFeedbackCriterion(userID, projectID, taskID,
+                feedbackCriterionID,
+                status: dto.Status
+            );
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback/{feedbackCriterionID}")]
+    [HttpDelete]
+    [Authorize(Policy = "Ownership", Roles = "supervisor")]
+    public async Task<IActionResult> DeleteFeedbackCriterion(
+           [FromRoute] long userID,
+           [FromRoute] long projectID,
+           [FromRoute] long taskID,
+           [FromRoute] long feedbackCriterionID
+       )
+    {
+        try
+        {
+            await feedbackService.DeleteFeedbackCriterion(userID, projectID, taskID, feedbackCriterionID);
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
         }
     }
 

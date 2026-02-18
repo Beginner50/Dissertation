@@ -1,4 +1,5 @@
 using System.CodeDom;
+using System.Collections.Immutable;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
@@ -250,7 +251,48 @@ public class ProjectService
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task<TaskDeliverableFileDTO> GenerateProgressLogReport(long userID, long projectID)
+    // Reserved for admin endpoints
+    public async Task IngestProjectSupervisionList(string filename, byte[] fileData, string contentType)
+    {
+        if (!Sanitization.IsValidExcel(fileData))
+            throw new Exception("File Is Not Valid Excel!");
+
+        var extractedProjects = PDFUtils.IngestProjectSupervisionList(filename, fileData, contentType);
+        var extractedProjectEmails = extractedProjects.Select(d => d.StudentEmail)
+            .Union(extractedProjects.Select(d => d.SupervisorEmail))
+            .Distinct()
+            .ToList();
+        var extractedProjectTitles = extractedProjects.Select(d => d.Title).ToList();
+
+        var emailUserIDMap = await dbContext.Users
+            .Where(u => extractedProjectEmails.Contains(u.Email))
+            .ToDictionaryAsync(u => u.Email, u => u.UserID);
+        if (emailUserIDMap.Count < extractedProjectEmails.Count)
+            throw new Exception("Not All Users In The List Exist!");
+
+        var existingProjects = await dbContext.Projects
+            .Where(p => extractedProjectTitles.Contains(p.Title))
+            .ToListAsync();
+        var newProjects = extractedProjects
+            .ExceptBy(existingProjects.Select(p => p.Title), p => p.Title)
+            .Select(d => new Project
+            {
+                Title = d.Title,
+                Description = d.Description,
+                Status = "active",
+                StudentID = emailUserIDMap[d.StudentEmail],
+                SupervisorID = emailUserIDMap[d.SupervisorEmail]
+            })
+            .ToList();
+
+        if (newProjects.Count > 0)
+        {
+            await dbContext.Projects.AddRangeAsync(newProjects);
+            await dbContext.SaveChangesAsync();
+        }
+    }
+
+    public async Task<FileDTO> GenerateProgressLogReport(long userID, long projectID)
     {
         var tasksWithMeetings = await dbContext.Tasks
                                     .Include(t => t.Project)
@@ -269,7 +311,7 @@ public class ProjectService
         var project = tasksWithMeetings[0].Project;
 
         var pdfData = PDFUtils.GenerateProgressLogReport(project, tasksWithMeetings);
-        return new TaskDeliverableFileDTO
+        return new FileDTO
         {
             Filename = Sanitization.SanitizeFilename($"{project.Title}_ProgressLog_{DateTime.UtcNow:dd/MM/yyyy}"),
             File = pdfData,

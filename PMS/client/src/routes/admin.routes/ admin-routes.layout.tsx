@@ -37,10 +37,6 @@ export default function AdminRoutesLayout() {
               label="Supervision List"
             />
           </AdminBar.Navigation>
-
-          <AdminBar.Actions>
-            <AdminBar.IngestButton />
-          </AdminBar.Actions>
         </AdminBar>
 
         <Box component="main">

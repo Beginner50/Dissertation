@@ -2,32 +2,39 @@ import FeedbackCriteriaTable from "../../components/feedback.components/feedback
 import * as base64js from "base64-js";
 import TaskActions from "../../components/task.components.tsx/task-actions.component";
 import { TaskDetails } from "../../components/task.components.tsx/task-details.component";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DeliverableCard from "../../components/task.components.tsx/deliverable-card.component";
 import type {
   Deliverable,
   DeliverableFile,
   FeedbackCriterion,
-  FeedbackCriterionModal,
   Task,
   User,
 } from "../../lib/types";
 import { useParams } from "react-router";
 import FeedbackModal from "../../components/feedback.components/feedback-criteria-modal.component";
+import type { ModalState as FeedbackModalState } from "../../components/feedback.components/feedback-criteria-modal.component";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box } from "@mui/material";
 import { useAuth } from "../../providers/auth.provider";
+import TableLayout from "../../components/base.components/table-layout.component";
+import type { ModalMode } from "../../components/project.components/project-modal.component";
+import { preventContextMenu } from "@fullcalendar/core/internal";
 
 export default function TaskRoute() {
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
 
-  const [feedbackModalOpen, setFeedbackModalOpen] = useState<boolean>(false);
-  const [feedbackComplianceLoading, setFeedbackComplianceLoading] =
-    useState<boolean>(false);
-
-  const [tableCriteria, setTableCriteria] = useState<FeedbackCriterion[]>([]);
-  const [modalCriteria, setModalCriteria] = useState<FeedbackCriterionModal[]>([]);
+  const [feedbackModalState, setFeedbackModalState] = useState<FeedbackModalState>({
+    mode: "create",
+    open: false,
+  });
+  const [feedbackModalData, setFeedbackModalData] = useState<FeedbackCriterion>({
+    feedbackCriterionID: 0,
+    description: "",
+    status: "unmet",
+    changeObserved: "",
+  });
 
   const { projectID, taskID } = useParams();
 
@@ -122,78 +129,35 @@ export default function TaskRoute() {
     enabled: user.role != "supervisor",
   });
 
-  useEffect(() => {
-    const criteria = task?.feedbackCriterias ?? [];
-    setModalCriteria(
-      criteria.map((c: FeedbackCriterion) => ({
-        feedbackCriterionID: c.feedbackCriterionID,
-        description: c.description,
-        updateStatus: "unchanged",
-      })),
-    );
-    setTableCriteria(criteria);
-  }, [task]);
-
   /* ---------------------------------------------------------------------------------- */
 
-  const handleOverrideToggle = (id: number) => {
-    setTableCriteria((prev) =>
-      prev.map((criterion) => {
-        if (criterion.feedbackCriterionID !== id) return criterion;
-
-        return {
-          ...criterion,
-          status: criterion.status === "unmet" ? "overridden" : "unmet",
-        };
-      }),
-    );
+  const handleCreateCriterionClick = () => {
+    setFeedbackModalData({
+      feedbackCriterionID: 0,
+      description: "",
+      status: "unmet",
+      changeObserved: "",
+    });
+    setFeedbackModalState({ mode: "create", open: true });
   };
 
-  const handleAddCriterion = () => {
-    setModalCriteria((prev) => [
-      ...prev,
-      {
-        feedbackCriterionID: (prev[prev.length - 1]?.feedbackCriterionID ?? 0) + 1,
-        description: "",
-        updateStatus: "created",
-      },
-    ]);
-  };
-
-  const handleCriterionDescriptionChange = (
-    updatedCriterion: Partial<FeedbackCriterion>,
-  ) => {
-    setModalCriteria((prev) =>
-      prev.map((c) =>
-        c.feedbackCriterionID == updatedCriterion.feedbackCriterionID
-          ? {
-              ...c,
-              description: updatedCriterion.description ?? "",
-              updateStatus: c.updateStatus == "created" ? "created" : "updated",
-            }
-          : c,
-      ),
-    );
-  };
-
-  const handleCriterionDelete = (deletedCriterion: Partial<FeedbackCriterion>) => {
-    setModalCriteria((prev) =>
-      prev.map((c) =>
-        c.feedbackCriterionID == deletedCriterion.feedbackCriterionID
-          ? {
-              ...c,
-              updateStatus: "deleted",
-            }
-          : c,
-      ),
-    );
+  const handleEditCriterionClick = (selectedCriterion: FeedbackCriterion) => {
+    setFeedbackModalData(selectedCriterion);
+    setFeedbackModalState({ mode: "edit", open: true });
   };
 
   const handleCancelClick = () => {
-    setFeedbackModalOpen(false);
+    setFeedbackModalState((prev) => ({ ...prev, open: false }));
   };
-  const handleProvideFeedbackClick = () => {
-    setFeedbackModalOpen(true);
+
+  /* ---------------------------------------------------------------------------------- */
+
+  const handleCriterionDescriptionChange = (newDesc: string) => {
+    setFeedbackModalData((prev) => ({ ...prev, description: newDesc }));
+  };
+
+  const handleCriterionStatusChange = (newStatus: FeedbackCriterion["status"]) => {
+    setFeedbackModalData((prev) => ({ ...prev, status: newStatus }));
   };
 
   /* ---------------------------------------------------------------------------------- */
@@ -302,45 +266,57 @@ export default function TaskRoute() {
     });
   };
 
-  const handleSubmitFeedback = () => {
-    const existingIDs = new Set(
-      task?.feedbackCriterias?.map((f: FeedbackCriterion) => f.feedbackCriterionID),
-    );
-
-    const toCreate = modalCriteria
-      .filter((c) => c.updateStatus === "created")
-      .map((c) => ({
-        description: c.description,
-      }));
-
-    const toUpdate = modalCriteria.filter((c) => c.updateStatus === "updated");
-
-    const toDelete = modalCriteria
-      .filter(
-        (c) => c.updateStatus === "deleted" && existingIDs.has(c.feedbackCriterionID),
-      )
-      .map((c) => ({
-        feedbackCriterionID: c.feedbackCriterionID,
-      }));
-
+  const handleCreateCriterion = () => {
     mutation.mutate(
       {
         method: "post",
         url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback`,
-        data: {
-          feedbackCriteriaToCreate: toCreate,
-          feedbackCriteriaToUpdate: toUpdate,
-          feedbackCriteriaToDelete: toDelete,
-        },
+        data: feedbackModalData,
         invalidateQueryKeys: [["tasks", taskID]],
       },
       {
         onSettled: () => {
-          setFeedbackModalOpen(false);
-          setModalCriteria((prev) => prev.filter((c) => c.updateStatus != "deleted"));
+          setFeedbackModalState((prev) => ({ ...prev, open: false }));
         },
       },
     );
+  };
+
+  const handleEditCriterion = () => {
+    mutation.mutate(
+      {
+        method: "put",
+        url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/${feedbackModalData.feedbackCriterionID}`,
+        data: feedbackModalData,
+        invalidateQueryKeys: [["tasks", taskID]],
+      },
+      {
+        onSettled: () => {
+          setFeedbackModalState((prev) => ({ ...prev, open: false }));
+        },
+      },
+    );
+  };
+
+  const handleOverrideCriterion = (
+    criterion: FeedbackCriterion,
+    action: "override" | "restore",
+  ) => {
+    mutation.mutate({
+      method: "put",
+      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/${criterion.feedbackCriterionID}/override`,
+      data: { ...criterion, status: action == "override" ? "overridden" : "unmet" },
+      invalidateQueryKeys: [["tasks", taskID]],
+    });
+  };
+
+  const handleDeleteCriterion = (criterion: FeedbackCriterion) => {
+    mutation.mutate({
+      method: "delete",
+      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/${criterion.feedbackCriterionID}`,
+      data: {},
+      invalidateQueryKeys: [["tasks", taskID]],
+    });
   };
 
   const handleLockTask = () => {
@@ -353,23 +329,15 @@ export default function TaskRoute() {
   };
 
   const handleCheckFeedbackCompliance = () => {
-    if (!feedbackComplianceLoading) {
-      setFeedbackComplianceLoading(true);
-      mutation.mutate(
-        {
-          method: "post",
-          url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/compliance-check`,
-          data: {},
-          timeout: 1000 * 60,
-          invalidateQueryKeys: [["tasks", taskID]],
-        },
-        {
-          onSuccess: () => setFeedbackComplianceLoading(false),
-          onError: () => setFeedbackComplianceLoading(false),
-        },
-      );
-    }
+    mutation.mutate({
+      method: "post",
+      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/compliance-check`,
+      data: {},
+      timeout: 1000 * 60,
+      invalidateQueryKeys: [["tasks", taskID]],
+    });
   };
+
   /* ---------------------------------------------------------------------------------- */
 
   return (
@@ -393,15 +361,35 @@ export default function TaskRoute() {
           />
 
           <TaskDetails.Content>
-            <TaskDetails.Description>{task?.description}</TaskDetails.Description>
+            <TaskDetails.Description description={task?.description ?? ""} />
           </TaskDetails.Content>
 
-          {tableCriteria.length > 0 && (
-            <FeedbackCriteriaTable
-              criteria={tableCriteria}
-              overrideToggleEnabled={user.role === "student"}
-              onOverrideToggle={handleOverrideToggle}
-            />
+          {((user.role == "student" && (task?.feedbackCriterias ?? []).length > 0) ||
+            user.role == "supervisor") && (
+            <TableLayout spacing={0}>
+              <TableLayout.Toolbar title="Feedback Criteria">
+                {user.role === "supervisor" && (
+                  <TableLayout.AddButton
+                    text="Add Criterion"
+                    onClick={handleCreateCriterionClick}
+                  />
+                )}
+              </TableLayout.Toolbar>
+
+              <TableLayout.Content>
+                <FeedbackCriteriaTable
+                  criteria={
+                    task?.feedbackCriterias?.sort(
+                      (c1, c2) => c1.feedbackCriterionID - c2.feedbackCriterionID,
+                    ) ?? []
+                  }
+                  role={user.role}
+                  handleOverrideCriterion={handleOverrideCriterion}
+                  handleEditCriterionClick={handleEditCriterionClick}
+                  handleDeleteCriterion={handleDeleteCriterion}
+                />
+              </TableLayout.Content>
+            </TableLayout>
           )}
         </TaskDetails>
 
@@ -421,7 +409,7 @@ export default function TaskRoute() {
               onOpenDeliverable={handleOpenSubmittedDeliverable}
             />
           )}
-          {!task?.isLocked && stagedDeliverable ? (
+          {!task?.isLocked && user.role != "supervisor" && stagedDeliverable ? (
             <DeliverableCard
               cardDescription="Staged Deliverable"
               deliverable={stagedDeliverable}
@@ -439,13 +427,6 @@ export default function TaskRoute() {
 
           <TaskActions.Actions>
             {user.role == "supervisor" && (
-              <TaskActions.ProvideFeedbackButton
-                disabled={!submittedDeliverable}
-                hasPreviousCriteria={(task?.feedbackCriterias ?? [])?.length > 0}
-                onClick={handleProvideFeedbackClick}
-              />
-            )}
-            {user.role == "supervisor" && (
               <TaskActions.LockTaskButton
                 isLocked={task?.isLocked ?? false}
                 onLockTaskClick={handleLockTask}
@@ -455,10 +436,10 @@ export default function TaskRoute() {
               <TaskActions.CheckComplianceButton
                 disabled={
                   !stagedDeliverable ||
-                  tableCriteria.filter((c) => c.status == "unmet").length == 0
+                  task?.feedbackCriterias?.filter((c) => c.status == "unmet").length == 0
                 }
                 onClick={handleCheckFeedbackCompliance}
-                isLoading={feedbackComplianceLoading}
+                isLoading={mutation.status == "pending"}
               />
             )}
             {user.role == "student" && (
@@ -466,7 +447,7 @@ export default function TaskRoute() {
                 disabled={
                   task?.isLocked ||
                   !stagedDeliverable ||
-                  tableCriteria.some((c) => c.status === "unmet")
+                  task?.feedbackCriterias?.some((c) => c.status === "unmet")
                 }
                 onClick={handleSubmitDeliverable}
               />
@@ -476,22 +457,34 @@ export default function TaskRoute() {
       </Box>
 
       {/* Feedback Modal */}
-      <FeedbackModal open={feedbackModalOpen}>
-        <FeedbackModal.Header />
+      <FeedbackModal open={feedbackModalState.open}>
+        <FeedbackModal.Header mode={feedbackModalState.mode} />
 
-        <FeedbackModal.Content>
-          <FeedbackModal.CriteriaList
-            criteria={modalCriteria}
-            onCriterionDescriptionChange={handleCriterionDescriptionChange}
-            onCriterionDelete={handleCriterionDelete}
-          />
-          <FeedbackModal.AddButton onAdd={handleAddCriterion} />
-        </FeedbackModal.Content>
+        {(feedbackModalState.mode == "create" || feedbackModalState.mode == "edit") && (
+          <FeedbackModal.Fields>
+            <FeedbackModal.Description
+              description={feedbackModalData.description}
+              handleDescriptionChange={handleCriterionDescriptionChange}
+            />
+            <FeedbackModal.Status
+              status={feedbackModalData.status}
+              handleStatusChange={handleCriterionStatusChange}
+            />
+            {feedbackModalState.mode == "edit" && (
+              <FeedbackModal.ChangeObserved
+                changeObserved={feedbackModalData.changeObserved ?? ""}
+              />
+            )}
+          </FeedbackModal.Fields>
+        )}
 
         <FeedbackModal.Actions
-          hasPreviousCriteria={(task?.feedbackCriterias ?? [])?.length > 0}
-          onCancel={handleCancelClick}
-          onSubmit={handleSubmitFeedback}
+          mode={feedbackModalState.mode}
+          loading={mutation.status === "pending"}
+          disabled={mutation.isPending}
+          handleCancelClick={handleCancelClick}
+          handleCreate={handleCreateCriterion}
+          handleEdit={handleEditCriterion}
         />
       </FeedbackModal>
     </>

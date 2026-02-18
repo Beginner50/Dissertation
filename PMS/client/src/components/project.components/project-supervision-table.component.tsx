@@ -22,6 +22,7 @@ import { Edit, Archive, RestorePage, Info } from "@mui/icons-material";
 import { useState } from "react";
 import { theme } from "../../lib/theme";
 import type { Project, User } from "../../lib/types";
+import MenuButton from "../base.components/menu-button.component";
 
 export default function ProjectSupervisionTable({
   projects,
@@ -208,74 +209,33 @@ ProjectSupervisionTable.MenuButton = ({
   onEdit: () => void;
   onArchive: () => void;
   onRestore: () => void;
-}) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-
-  const handleClose = () => setAnchorEl(null);
-
-  return (
-    <>
-      <IconButton
-        size="small"
-        onClick={(e) => setAnchorEl(e.currentTarget)}
-        sx={{ color: theme.textStrong }}>
-        <MoreVertIcon sx={{ fontSize: "1.4rem" }} />
-      </IconButton>
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
-        slotProps={{
-          paper: {
-            sx: {
-              border: `1px solid ${theme.borderSoft}`,
-              boxShadow: "0px 4px 12px rgba(0,0,0,0.05)",
-            },
-          },
-        }}>
-        <MenuItem
-          onClick={() => {
-            onEdit();
-            handleClose();
-          }}>
-          <ListItemIcon>
-            <Edit fontSize="small" />
-          </ListItemIcon>
-          <Typography variant="body2">Edit Project</Typography>
-        </MenuItem>
-
-        <Divider sx={{ my: 1 }} />
-
-        {status === "active" ? (
-          <MenuItem
-            onClick={() => {
-              onArchive();
-              handleClose();
-            }}>
-            <ListItemIcon>
-              <Archive fontSize="small" color="error" />
-            </ListItemIcon>
-            <Typography variant="body2" color="error">
-              Archive Project
-            </Typography>
-          </MenuItem>
-        ) : (
-          <MenuItem
-            onClick={() => {
-              onRestore();
-              handleClose();
-            }}>
-            <ListItemIcon>
-              <RestorePage fontSize="small" color="primary" />
-            </ListItemIcon>
-            <Typography variant="body2" color="primary">
-              Restore Project
-            </Typography>
-          </MenuItem>
-        )}
-      </Menu>
-    </>
-  );
-};
+}) => (
+  <MenuButton>
+    <MenuItem onClick={onEdit}>
+      <ListItemIcon>
+        <Edit fontSize="small" />
+      </ListItemIcon>
+      <Typography variant="body2">Edit Project</Typography>
+    </MenuItem>
+    <Divider sx={{ my: 1 }} />
+    {status === "active" ? (
+      <MenuItem onClick={onArchive}>
+        <ListItemIcon>
+          <Archive fontSize="small" color="error" />
+        </ListItemIcon>
+        <Typography variant="body2" color="error">
+          Archive Project
+        </Typography>
+      </MenuItem>
+    ) : (
+      <MenuItem onClick={onRestore}>
+        <ListItemIcon>
+          <RestorePage fontSize="small" color="primary" />
+        </ListItemIcon>
+        <Typography variant="body2" color="primary">
+          Restore Project
+        </Typography>
+      </MenuItem>
+    )}
+  </MenuButton>
+);

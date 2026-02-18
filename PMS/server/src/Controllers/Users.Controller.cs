@@ -92,6 +92,22 @@ public class UsersController : ControllerBase
         }
     }
 
+    [Route("api/users/ingest-list")]
+    [HttpPost]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> IngestUserList([FromBody] FileDTO dto)
+    {
+        try
+        {
+            await userService.IngestUserList(dto.Filename, dto.File, dto.ContentType);
+            return NoContent();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
     /*
         When the server sends a Set-Cookie header in the response, the browser will then
         read that header and save the refresh token.

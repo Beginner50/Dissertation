@@ -11,105 +11,154 @@ import {
   Collapse,
   type SxProps,
   Tooltip,
+  MenuItem,
+  ListItemIcon,
+  Divider,
+  Stack,
 } from "@mui/material";
 import {
-  Check as CheckIcon,
-  Close as CloseIcon,
-  ToggleOff as ToggleOffIcon,
-  ToggleOn,
+  Check,
+  Close,
   KeyboardArrowDown,
   KeyboardArrowUp,
   InfoOutlined,
+  Edit,
+  Delete,
+  ToggleOn,
+  ToggleOff,
 } from "@mui/icons-material";
 import { theme } from "../../lib/theme";
-import type { FeedbackCriterion } from "../../lib/types";
+import type { FeedbackCriterion, User } from "../../lib/types";
 import type { Theme } from "@emotion/react";
+import MenuButton from "../base.components/menu-button.component";
 
 export default function FeedbackCriteriaTable({
   sx,
   criteria,
-  overrideToggleEnabled,
-  onOverrideToggle,
+  role,
+  handleOverrideCriterion,
+  handleEditCriterionClick,
+  handleDeleteCriterion,
 }: {
   sx?: SxProps<Theme>;
   criteria: FeedbackCriterion[];
-  overrideToggleEnabled: boolean;
-  onOverrideToggle?: (id: number) => void;
+  role: "student" | "supervisor" | "admin";
+  handleOverrideCriterion: (c: FeedbackCriterion, action: "override" | "restore") => void;
+  handleEditCriterionClick: (c: FeedbackCriterion) => void;
+  handleDeleteCriterion: (c: FeedbackCriterion) => void;
 }) {
   return (
-    <Box sx={{ marginTop: "20px", overflowX: "auto", ...sx }}>
+    <Box sx={{ marginTop: "0px", overflowX: "auto", ...sx }}>
       <Table
         size="small"
         sx={{
           tableLayout: "fixed",
           border: `1px solid ${theme.borderSoft}`,
+          borderTop: "none",
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
           borderRadius: "6px",
           "th, td": { fontSize: "0.95rem", paddingY: "12px" },
+          ".MuiTableHead-root .MuiTableRow-root": {
+            backgroundColor: "#fcfcfc",
+          },
         }}>
-        <TableHead>
-          <TableRow sx={{ backgroundColor: "#f8f8f8" }}>
-            {/* Cell Reserved for Collapse Button */}
-            <TableCell sx={{ width: "2vw" }} />
-
-            <TableCell sx={{ fontWeight: 600, color: theme.textStrong, width: "33vw" }}>
-              Criteria
-            </TableCell>
-            <TableCell
-              align="center"
-              sx={{ fontWeight: 600, color: theme.status.completed }}>
-              Met
-            </TableCell>
-            <TableCell
-              align="center"
-              sx={{ fontWeight: 600, color: theme.status.missing }}>
-              Unmet
-            </TableCell>
-            <TableCell align="center" sx={{ fontWeight: 600 }}>
-              Override
-            </TableCell>
-          </TableRow>
-        </TableHead>
+        <FeedbackCriteriaTable.Header />
         <TableBody>
-          {criteria.map((c) => (
-            <FeedbackCriteriaTable.Row
-              key={c.feedbackCriterionID}
-              criterion={c}
-              overrideToggleEnabled={overrideToggleEnabled}
-              onOverrideToggle={onOverrideToggle}
-            />
-          ))}
+          {criteria.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                <Box sx={{ opacity: 0.3, mb: 1 }}>
+                  <InfoOutlined fontSize="large" />
+                </Box>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontStyle: "italic" }}>
+                  No feedback criteria have been added to this task yet.
+                </Typography>
+              </TableCell>
+            </TableRow>
+          ) : (
+            criteria.map((c) => (
+              <FeedbackCriteriaTable.Row
+                key={c.feedbackCriterionID}
+                criterion={c}
+                role={role}
+                handleOverrideToggle={() =>
+                  handleOverrideCriterion(
+                    c,
+                    c.status === "overridden" ? "restore" : "override",
+                  )
+                }
+                handleEditCriterion={() => handleEditCriterionClick(c)}
+                handleDeleteCriterion={() => handleDeleteCriterion(c)}
+              />
+            ))
+          )}
         </TableBody>
       </Table>
     </Box>
   );
 }
 
+FeedbackCriteriaTable.Header = () => (
+  <TableHead>
+    <TableRow sx={{ backgroundColor: "#f8f8f8" }}>
+      <TableCell sx={{ width: "2vw" }} />
+      <TableCell sx={{ fontWeight: 600, color: theme.textStrong }}>Criteria</TableCell>
+      <TableCell
+        align="center"
+        sx={{ fontWeight: 600, color: theme.status.completed, width: "5vw" }}>
+        Met
+      </TableCell>
+      <TableCell
+        align="center"
+        sx={{ fontWeight: 600, color: theme.status.missing, width: "5vw" }}>
+        Unmet
+      </TableCell>
+      <TableCell align="center" sx={{ fontWeight: 600, color: theme.link, width: "6vw" }}>
+        Overridden
+      </TableCell>
+      <TableCell align="right" sx={{ fontWeight: 600, width: "6vw" }}>
+        Actions
+      </TableCell>
+    </TableRow>
+  </TableHead>
+);
+
 FeedbackCriteriaTable.Row = ({
   criterion: c,
-  overrideToggleEnabled,
-  onOverrideToggle,
+  role,
+  handleOverrideToggle,
+  handleEditCriterion,
+  handleDeleteCriterion,
 }: {
   criterion: FeedbackCriterion;
-  overrideToggleEnabled: boolean;
-  onOverrideToggle?: (id: number) => void;
+  role: User["role"];
+  handleOverrideToggle: () => void;
+  handleEditCriterion: () => void;
+  handleDeleteCriterion: () => void;
 }) => {
   const [open, setOpen] = useState(false);
   const hasObservation = Boolean(c.changeObserved);
 
   return (
     <>
-      <TableRow>
+      <TableRow
+        hover
+        sx={{
+          backgroundColor: c.status === "met" ? "rgba(76, 175, 80, 0.02)" : "inherit",
+          borderBottom: "unset",
+        }}>
         <TableCell>
           {hasObservation ? (
             <IconButton size="small" onClick={() => setOpen(!open)}>
               {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
             </IconButton>
           ) : (
-            <Tooltip
-              title="This feedback criterion has not been analyzed by AI."
-              arrow
-              placement="top">
-              <IconButton size="small" sx={{ cursor: "help", color: "text.disabled" }}>
+            <Tooltip title="No AI analysis available" arrow>
+              <IconButton size="small" sx={{ color: "text.disabled" }}>
                 <InfoOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -118,55 +167,54 @@ FeedbackCriteriaTable.Row = ({
 
         <TableCell
           sx={{
-            fontWeight: c.status !== "met" ? 700 : 500,
-            color:
-              c.status === "met"
-                ? theme.textStrong
-                : c.status === "unmet"
-                  ? theme.status.missing
-                  : theme.link,
+            fontWeight: c.status === "unmet" ? 700 : 500,
+            color: c.status === "unmet" ? theme.status.missing : theme.textStrong,
           }}>
           {c.description}
         </TableCell>
 
+        {/* Met Column */}
         <TableCell align="center">
-          {c.status === "met" && <CheckIcon sx={{ color: theme.status.completed }} />}
+          {c.status === "met" && <Check sx={{ color: theme.status.completed }} />}
         </TableCell>
 
+        {/* Unmet Column */}
         <TableCell align="center">
-          {c.status === "unmet" && <CloseIcon sx={{ color: theme.status.missing }} />}
+          {c.status === "unmet" && <Close sx={{ color: theme.status.missing }} />}
         </TableCell>
 
+        {/* Overridden Column */}
         <TableCell align="center">
-          {overrideToggleEnabled &&
-            (c.status === "unmet" || c.status === "overridden") &&
-            onOverrideToggle && (
-              <FeedbackCriteriaTable.OverrideToggleButton
-                isToggled={c.status === "overridden"}
-                onClick={() => onOverrideToggle(c.feedbackCriterionID)}
-              />
-            )}
+          {c.status === "overridden" && <Check sx={{ color: theme.link }} />}
+        </TableCell>
+
+        <TableCell align="right">
+          {((role == "student" && c.status != "met") || role == "supervisor") && (
+            <FeedbackCriteriaTable.MenuButton
+              role={role}
+              criterion={c}
+              onOverrideButtonClick={handleOverrideToggle}
+              onEditButtonClick={handleEditCriterion}
+              onDeleteButtonClick={handleDeleteCriterion}
+            />
+          )}
         </TableCell>
       </TableRow>
 
-      {/* Collapsible Nested Row */}
       <TableRow>
         <TableCell
-          colSpan={5}
-          sx={{
-            paddingTop: "0 !important",
-            paddingBottom: "0 !important",
-            verticalAlign: "top",
-            border: "none",
-          }}>
-          <Collapse in={open} timeout="auto" unmountOnExit collapsedSize={0}>
-            <Box sx={{ py: 2 }}>
-              <Typography
-                variant="subtitle2"
-                gutterBottom
-                component="div"
-                sx={{ color: theme.link }}>
-                Change Observed
+          colSpan={6}
+          style={{ paddingTop: 0, paddingBottom: 0, border: "none" }}>
+          <Collapse in={open} timeout="auto" unmountOnExit>
+            <Box
+              sx={{
+                py: 2,
+                px: 7,
+                bgcolor: "#fafafa",
+                borderBottom: `1px solid ${theme.borderSoft}`,
+              }}>
+              <Typography variant="subtitle2" sx={{ color: theme.link, fontWeight: 700 }}>
+                AI Observation
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {c.changeObserved}
@@ -179,18 +227,54 @@ FeedbackCriteriaTable.Row = ({
   );
 };
 
-FeedbackCriteriaTable.OverrideToggleButton = ({
-  isToggled,
-  onClick,
+FeedbackCriteriaTable.MenuButton = ({
+  criterion,
+  role,
+  onOverrideButtonClick,
+  onEditButtonClick,
+  onDeleteButtonClick,
 }: {
-  isToggled: boolean;
-  onClick: () => void;
+  criterion: FeedbackCriterion;
+  role: User["role"];
+  onOverrideButtonClick: () => void;
+  onEditButtonClick: () => void;
+  onDeleteButtonClick: () => void;
 }) => (
-  <IconButton size="small" onClick={onClick} sx={{ padding: 0 }}>
-    {isToggled ? (
-      <ToggleOn sx={{ fontSize: "1.6rem", color: theme.link }} />
-    ) : (
-      <ToggleOffIcon sx={{ fontSize: "1.6rem" }} />
-    )}
-  </IconButton>
+  <MenuButton>
+    {/* Student Actions */}
+    {role === "student" &&
+      (criterion.status === "unmet" || criterion.status === "overridden") && (
+        <MenuItem onClick={onOverrideButtonClick}>
+          <ListItemIcon>
+            {criterion.status === "overridden" ? (
+              <ToggleOn color="primary" />
+            ) : (
+              <ToggleOff />
+            )}
+          </ListItemIcon>
+          <Typography variant="body2">
+            {criterion.status === "overridden" ? "Restore Override" : "Override Status"}
+          </Typography>
+        </MenuItem>
+      )}
+
+    {/* Supervisor Actions */}
+    {role === "supervisor" && [
+      <MenuItem onClick={onEditButtonClick} key={1}>
+        <ListItemIcon>
+          <Edit fontSize="small" />
+        </ListItemIcon>
+        <Typography variant="body2">Edit Criterion</Typography>
+      </MenuItem>,
+      <Divider key={2} />,
+      <MenuItem onClick={onDeleteButtonClick} key={3}>
+        <ListItemIcon>
+          <Delete fontSize="small" color="error" />
+        </ListItemIcon>
+        <Typography variant="body2" color="error">
+          Delete Criterion
+        </Typography>
+      </MenuItem>,
+    ]}
+  </MenuButton>
 );

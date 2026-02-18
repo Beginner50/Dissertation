@@ -108,11 +108,19 @@ TaskDetails.Content = ({ children }: { children?: ReactNode }) => {
   );
 };
 
-TaskDetails.Description = ({ children: description }: { children: ReactNode }) => {
+TaskDetails.Description = ({ description }: { description: string }) => {
+  const isEmpty = description === "";
+
   return (
-    <Box sx={{ flex: 1, minWidth: 0 }}>
+    <Box sx={{ flex: 1, minWidth: 0, marginBottom: isEmpty ? "2rem" : undefined }}>
       <Typography component="p" sx={{ color: theme.textNormal, lineHeight: 1.6 }}>
-        {description}
+        {isEmpty ? (
+          <Box component="span" sx={{ fontStyle: "italic", color: theme.textMuted }}>
+            No task description provided.
+          </Box>
+        ) : (
+          description
+        )}
       </Typography>
     </Box>
   );

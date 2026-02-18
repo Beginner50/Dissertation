@@ -75,7 +75,7 @@ public class TaskDeliverablesController : ControllerBase
         [FromRoute] long userID,
         [FromRoute] long projectID,
         [FromRoute] long taskID,
-        [FromBody] TaskDeliverableFileDTO taskDeliverableFileDTO
+        [FromBody] FileDTO taskDeliverableFileDTO
     )
     {
         try

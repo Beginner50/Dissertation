@@ -1,6 +1,6 @@
 namespace PMS.DTOs;
 
-public class TaskDeliverableFileDTO
+public class FileDTO
 {
     public required string Filename { get; set; }
     public required byte[] File { get; set; }

@@ -1,11 +1,12 @@
 using System.Reflection.PortableExecutable;
 using System.Text;
+using ClosedXML.Excel;
+using PMS.DTOs;
 using PMS.Models;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.Fonts.Standard14Fonts;
-using UglyToad.PdfPig.Graphics.Colors;
 using UglyToad.PdfPig.Writer;
 
 namespace PMS.Lib;
@@ -62,5 +63,87 @@ public class PDFUtils
         }
 
         return builder.Build();
+    }
+
+    public static List<User> IngestUserList(string filename, byte[] fileData, string contentType)
+    {
+        var users = new List<User>();
+
+        using (var stream = new MemoryStream(fileData))
+        {
+            using (var workbook = new XLWorkbook(stream))
+            {
+                var worksheet = workbook.Worksheets.First();
+                var firstRow = worksheet.Row(1);
+
+                var expectedHeaders = new[] { "Name", "Email", "Password", "Role" };
+                var columnMap = GetColumnMap(worksheet.Row(1), expectedHeaders);
+
+                foreach (var row in worksheet.RowsUsed().Skip(1))
+                {
+                    users.Add(new User
+                    {
+                        Name = row.Cell(columnMap["Name"]).GetValue<string>(),
+                        Email = row.Cell(columnMap["Email"]).GetValue<string>(),
+                        Password = BCrypt.Net.BCrypt.HashPassword(row.Cell(columnMap["Password"]).GetValue<string>()),
+                        Role = row.Cell(columnMap["Role"]).GetValue<string>()
+                    });
+                }
+            }
+        }
+
+        return users;
+    }
+
+    public static List<ExtractProjectDTO> IngestProjectSupervisionList(string filename, byte[] fileData, string contentType)
+    {
+        var extractedProjects = new List<ExtractProjectDTO>();
+
+        using (var stream = new MemoryStream(fileData))
+        {
+            using (var workbook = new XLWorkbook(stream))
+            {
+                var worksheet = workbook.Worksheets.First();
+                var firstRow = worksheet.Row(1);
+
+                var expectedHeaders = new[] { "Title", "Description", "Student Email", "Supervisor Email" };
+                var columnMap = GetColumnMap(worksheet.Row(1), expectedHeaders);
+
+                foreach (var row in worksheet.RowsUsed().Skip(1))
+                {
+                    extractedProjects.Add(new ExtractProjectDTO
+                    {
+                        Title = row.Cell(columnMap["Title"]).GetValue<string>(),
+                        Description = row.Cell(columnMap["Description"]).GetValue<string>(),
+                        StudentEmail = row.Cell(columnMap["Student Email"]).GetValue<string>(),
+                        SupervisorEmail = row.Cell(columnMap["Supervisor Email"]).GetValue<string>()
+                    });
+                }
+            }
+        }
+
+        return extractedProjects;
+    }
+
+    private static Dictionary<string, int> GetColumnMap(IXLRow firstRow, string[] expectedHeaders)
+    {
+        var columnMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var cell in firstRow.CellsUsed())
+        {
+            string headerText = cell.GetValue<string>().Trim();
+            if (expectedHeaders.Contains(headerText, StringComparer.OrdinalIgnoreCase))
+            {
+                columnMap[headerText] = cell.Address.ColumnNumber;
+            }
+        }
+
+        if (columnMap.Count < expectedHeaders.Length)
+        {
+            var missing = expectedHeaders.Where(h => !columnMap.ContainsKey(h));
+            throw new Exception($"Excel is missing required columns: {string.Join(", ", missing)}");
+        }
+
+        return columnMap;
     }
 }

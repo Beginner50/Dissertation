@@ -34,7 +34,7 @@ public class AIService
         this.logger = logger;
     }
 
-    public async Task<List<UpdateFeedbackCriterionDTO>> EvaluateFeedbackCriteria(
+    public async Task<IEnumerable<UpdateFeedbackCriterionDTO>> EvaluateFeedbackCriteria(
        ProjectTask task,
        byte[] previousDeliverable, byte[] newDeliverable,
        List<FeedbackCriterion> previousCriteria

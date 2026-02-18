@@ -21,6 +21,7 @@ import { Delete, Edit } from "@mui/icons-material";
 import { useState } from "react";
 import { theme } from "../../lib/theme";
 import type { User, UserFormData } from "../../lib/types";
+import MenuButton from "../base.components/menu-button.component";
 
 export default function UserTable({
   users,
@@ -41,12 +42,6 @@ export default function UserTable({
   handleEditUserClick: (user: User) => void;
   handleDeleteUserClick: (user: User) => void;
 }) {
-  const page = Math.floor(offset / limit);
-
-  const handleMuiPageChange = (_: unknown, newPage: number) => {
-    onPageChange(newPage * limit);
-  };
-
   return (
     <Paper
       variant="outlined"
@@ -57,116 +52,21 @@ export default function UserTable({
       }}>
       <Box sx={{ overflowX: "auto" }}>
         <Table size="small">
-          <TableHead>
-            <TableRow>
-              {["UserID", "Name", "Email", "Role", "Status"].map((head) => (
-                <TableCell
-                  key={head}
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: "0.95rem",
-                    backgroundColor: "#f8f8f8",
-                    borderBottom: `2px solid ${theme.borderSoft}`,
-                    padding: "10px 16px",
-                    color: theme.textStrong,
-                  }}>
-                  {head}
-                </TableCell>
-              ))}
-              <TableCell
-                sx={{
-                  fontWeight: 600,
-                  fontSize: "0.95rem",
-                  backgroundColor: "#f8f8f8",
-                  borderBottom: `2px solid ${theme.borderSoft}`,
-                  padding: "10px 16px",
-                  color: theme.textStrong,
-                  textAlign: "right",
-                }}>
-                Actions
-              </TableCell>
-            </TableRow>
-          </TableHead>
+          <UserTable.Header />
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 5 }}>
-                  <CircularProgress size={24} sx={{ color: theme.link }} />
-                </TableCell>
-              </TableRow>
+              <UserTable.LoadingState />
             ) : users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 5 }}>
-                  <Typography variant="body2" sx={{ color: theme.textStrong }}>
-                    No users found.
-                  </Typography>
-                </TableCell>
-              </TableRow>
+              <UserTable.EmptyState />
             ) : (
-              users.map((user) => {
-                const isDeleted = !!user.isDeleted;
-                return (
-                  <TableRow
-                    key={user.userID}
-                    hover={!isDeleted}
-                    sx={{
-                      opacity: isDeleted ? 0.5 : 1,
-                      bgcolor: isDeleted ? "rgba(0,0,0,0.03)" : "inherit",
-                    }}>
-                    <TableCell
-                      sx={{
-                        fontFamily: "monospace",
-                        color: isDeleted ? "text.disabled" : theme.link,
-                      }}>
-                      {user.userID}
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        fontSize: "0.95rem",
-                        padding: "10px 16px",
-                        fontWeight: 500,
-                        color: theme.textStrong,
-                        textDecoration: isDeleted ? "line-through" : "none",
-                      }}>
-                      {user.name}
-                    </TableCell>
-                    <TableCell
-                      sx={{ textDecoration: isDeleted ? "line-through" : "none" }}>
-                      {user.email}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={user.role}
-                        size="small"
-                        sx={{
-                          fontWeight: 700,
-                          fontSize: "0.75rem",
-                          borderRadius: "6px",
-                          backgroundColor: user.role === "admin" ? "#f0f7ff" : "#f5f5f5",
-                          color: user.role === "admin" ? theme.link : theme.textStrong,
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={isDeleted ? "Deleted" : "Active"}
-                        size="small"
-                        variant={isDeleted ? "outlined" : "filled"}
-                        color={isDeleted ? "error" : "success"}
-                        sx={{ fontWeight: 600, fontSize: "0.7rem" }}
-                      />
-                    </TableCell>
-                    <TableCell sx={{ textAlign: "right" }}>
-                      {!isDeleted && (
-                        <UserTable.MenuButton
-                          onEdit={() => handleEditUserClick(user)}
-                          onDelete={() => handleDeleteUserClick(user)}
-                        />
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+              users.map((user) => (
+                <UserTable.Row
+                  key={user.userID}
+                  user={user}
+                  onEdit={() => handleEditUserClick(user)}
+                  onDelete={() => handleDeleteUserClick(user)}
+                />
+              ))
             )}
           </TableBody>
         </Table>
@@ -174,18 +74,106 @@ export default function UserTable({
       <TablePagination
         component="div"
         count={totalCount}
-        page={page}
+        page={Math.floor(offset / limit)}
         rowsPerPage={limit}
         rowsPerPageOptions={[]}
-        onPageChange={handleMuiPageChange}
-        sx={{
-          borderTop: `1px solid ${theme.borderSoft}`,
-          backgroundColor: "#f8f8f8",
-        }}
+        onPageChange={(_, page) => onPageChange(page * limit)}
+        sx={{ borderTop: `1px solid ${theme.borderSoft}`, backgroundColor: "#f8f8f8" }}
       />
     </Paper>
   );
 }
+
+UserTable.Header = () => (
+  <TableHead>
+    <TableRow>
+      {["UserID", "Name", "Email", "Role", "Status", "Actions"].map((head) => (
+        <TableCell
+          key={head}
+          align={head === "Actions" ? "right" : "left"}
+          sx={{
+            fontWeight: 600,
+            backgroundColor: "#f8f8f8",
+            borderBottom: `2px solid ${theme.borderSoft}`,
+            padding: "10px 16px",
+            color: theme.textStrong,
+          }}>
+          {head}
+        </TableCell>
+      ))}
+    </TableRow>
+  </TableHead>
+);
+
+UserTable.Row = ({
+  user,
+  onEdit,
+  onDelete,
+}: {
+  user: User;
+  onEdit: () => void;
+  onDelete: () => void;
+}) => {
+  const isDeleted = !!user.isDeleted;
+  return (
+    <TableRow
+      hover={!isDeleted}
+      sx={{
+        opacity: isDeleted ? 0.5 : 1,
+        bgcolor: isDeleted ? "rgba(0,0,0,0.03)" : "inherit",
+      }}>
+      <TableCell
+        sx={{ fontFamily: "monospace", color: isDeleted ? "text.disabled" : theme.link }}>
+        {user.userID}
+      </TableCell>
+      <TableCell
+        sx={{ fontWeight: 500, textDecoration: isDeleted ? "line-through" : "none" }}>
+        {user.name}
+      </TableCell>
+      <TableCell sx={{ textDecoration: isDeleted ? "line-through" : "none" }}>
+        {user.email}
+      </TableCell>
+      <TableCell>
+        <Chip
+          label={user.role}
+          size="small"
+          sx={{
+            fontWeight: 700,
+            backgroundColor: user.role === "admin" ? "#f0f7ff" : "#f5f5f5",
+            color: user.role === "admin" ? theme.link : theme.textStrong,
+          }}
+        />
+      </TableCell>
+      <TableCell>
+        <Chip
+          label={isDeleted ? "Deleted" : "Active"}
+          size="small"
+          color={isDeleted ? "error" : "success"}
+          variant={isDeleted ? "outlined" : "filled"}
+        />
+      </TableCell>
+      <TableCell align="right">
+        {!isDeleted && <UserTable.MenuButton onEdit={onEdit} onDelete={onDelete} />}
+      </TableCell>
+    </TableRow>
+  );
+};
+
+UserTable.LoadingState = () => (
+  <TableRow>
+    <TableCell colSpan={6} align="center" sx={{ py: 5 }}>
+      <CircularProgress size={24} sx={{ color: theme.link }} />
+    </TableCell>
+  </TableRow>
+);
+
+UserTable.EmptyState = () => (
+  <TableRow>
+    <TableCell colSpan={6} align="center" sx={{ py: 5 }}>
+      <Typography variant="body2">No users found.</Typography>
+    </TableCell>
+  </TableRow>
+);
 
 UserTable.MenuButton = ({
   onEdit,
@@ -193,59 +181,22 @@ UserTable.MenuButton = ({
 }: {
   onEdit: () => void;
   onDelete: () => void;
-}) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-
-  const handleClose = () => setAnchorEl(null);
-
-  return (
-    <>
-      <IconButton
-        size="small"
-        onClick={(e) => setAnchorEl(e.currentTarget)}
-        sx={{ color: theme.textStrong }}>
-        <MoreVertIcon sx={{ fontSize: "1.4rem" }} />
-      </IconButton>
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
-        slotProps={{
-          paper: {
-            sx: {
-              border: `1px solid ${theme.borderSoft}`,
-              boxShadow: "0px 4px 12px rgba(0,0,0,0.05)",
-            },
-          },
-        }}>
-        <MenuItem
-          onClick={() => {
-            onEdit();
-            handleClose();
-          }}>
-          <ListItemIcon>
-            <Edit fontSize="small" />
-          </ListItemIcon>
-          <Typography variant="body2">Edit User</Typography>
-        </MenuItem>
-
-        <Divider sx={{ my: 1 }} />
-
-        <MenuItem
-          onClick={() => {
-            onDelete();
-            handleClose();
-          }}>
-          <ListItemIcon>
-            <Delete fontSize="small" color="error" />
-          </ListItemIcon>
-          <Typography variant="body2" color="error" sx={{ fontWeight: 500 }}>
-            Delete User
-          </Typography>
-        </MenuItem>
-      </Menu>
-    </>
-  );
-};
+}) => (
+  <MenuButton>
+    <MenuItem onClick={onEdit}>
+      <ListItemIcon>
+        <Edit fontSize="small" />
+      </ListItemIcon>
+      <Typography variant="body2">Edit User</Typography>
+    </MenuItem>
+    <Divider sx={{ my: 1 }} />
+    <MenuItem onClick={onDelete}>
+      <ListItemIcon>
+        <Delete fontSize="small" color="error" />
+      </ListItemIcon>
+      <Typography variant="body2" color="error" sx={{ fontWeight: 500 }}>
+        Delete User
+      </Typography>
+    </MenuItem>
+  </MenuButton>
+);
