@@ -97,13 +97,13 @@ public class MailService
         this.mailPassword = mailPassword;
     }
 
-    public void CreateAndEnqueueMeetingMail(Meeting meeting, MailType mailType)
+    public void CreateAndEnqueueMeetingMail(User organizer, User attendee, Meeting meeting, MailType mailType)
     {
         var mail = new MimeMessage();
 
         var sanitizedMeetingDescription = Sanitization.SanitizeString(meeting.Description);
-        var sanitizedAttendeeName = Sanitization.SanitizeString(meeting.Attendee.Name);
-        var sanitizedOrganizerName = Sanitization.SanitizeString(meeting.Organizer.Name);
+        var sanitizedAttendeeName = Sanitization.SanitizeString(attendee.Name);
+        var sanitizedOrganizerName = Sanitization.SanitizeString(organizer.Name);
 
         mail.From.Add(new MailboxAddress("Project Management System", "noreply@pms.com"));
 
@@ -187,17 +187,17 @@ public class MailService
     }
 
 
-    public void CreateAndEnqueueTaskMail(ProjectTask task, MailType mailType)
+    public void CreateAndEnqueueTaskMail(User supervisor, User student, ProjectTask task, MailType mailType)
     {
         var mail = new MimeMessage();
 
         var sanitizedTaskDescription = Sanitization.SanitizeString(task.Description);
-        var sanitizedStudentName = Sanitization.SanitizeString(task.Project.Student.Name);
-        var sanitizedSupervisorName = Sanitization.SanitizeString(task.Project.Supervisor.Name);
+        var sanitizedStudentName = Sanitization.SanitizeString(student.Name);
+        var sanitizedSupervisorName = Sanitization.SanitizeString(supervisor.Name);
         var sanitizedTaskTitle = Sanitization.SanitizeString(task.Title);
 
         mail.From.Add(new MailboxAddress("Project Management System", "noreply@pms.com"));
-        mail.To.Add(new MailboxAddress("", task.Project.Student.Email));
+        mail.To.Add(new MailboxAddress("", student.Email));
 
         switch (mailType)
         {

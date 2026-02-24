@@ -204,3 +204,11 @@
 /home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/BouncyCastle.Cryptography.dll
 /home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/MailKit.dll
 /home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/MimeKit.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/ClosedXML.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/ClosedXML.Parser.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/DocumentFormat.OpenXml.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/DocumentFormat.OpenXml.Framework.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/ExcelNumberFormat.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/RBush.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/SixLabors.Fonts.dll
+/home/jatooUOM/Desktop/Dissertation/PMS/server/bin/Debug/net10.0/System.IO.Packaging.dll

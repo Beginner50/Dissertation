@@ -75,9 +75,6 @@ namespace PMS.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<long>("ProvidedByID")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -86,8 +83,6 @@ namespace PMS.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("FeedbackCriterionID");
-
-                    b.HasIndex("ProvidedByID");
 
                     b.HasIndex("TaskID");
 
@@ -175,9 +170,8 @@ namespace PMS.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
 
                     b.Property<long?>("StudentID")
                         .HasColumnType("bigint");
@@ -357,19 +351,11 @@ namespace PMS.Migrations
 
             modelBuilder.Entity("PMS.Models.FeedbackCriterion", b =>
                 {
-                    b.HasOne("PMS.Models.User", "ProvidedBy")
-                        .WithMany("ProvidedFeedbackCriterias")
-                        .HasForeignKey("ProvidedByID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("PMS.Models.ProjectTask", "Task")
                         .WithMany("FeedbackCriterias")
                         .HasForeignKey("TaskID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ProvidedBy");
 
                     b.Navigation("Task");
                 });
@@ -462,7 +448,8 @@ namespace PMS.Migrations
                 {
                     b.HasOne("PMS.Models.Meeting", "Meeting")
                         .WithMany()
-                        .HasForeignKey("MeetingID");
+                        .HasForeignKey("MeetingID")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("PMS.Models.User", "Recipient")
                         .WithMany("Reminders")
@@ -472,7 +459,8 @@ namespace PMS.Migrations
 
                     b.HasOne("PMS.Models.ProjectTask", "Task")
                         .WithMany("Reminders")
-                        .HasForeignKey("TaskID");
+                        .HasForeignKey("TaskID")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Meeting");
 
@@ -508,8 +496,6 @@ namespace PMS.Migrations
                     b.Navigation("Notifications");
 
                     b.Navigation("OrganizedMeetings");
-
-                    b.Navigation("ProvidedFeedbackCriterias");
 
                     b.Navigation("Reminders");
 

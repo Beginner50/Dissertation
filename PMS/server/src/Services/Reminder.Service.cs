@@ -39,23 +39,23 @@ public class ReminderService
                         .ToList();
     }
 
-    public async Task CreateMeetingReminders(Meeting meeting)
+    public async Task CreateMeetingReminders(User organizer, User attendee, Meeting meeting)
     {
         var attendeeReminder = new Reminder
         {
-            Message = $"{meeting.Organizer.Name} has booked a meeting with you.",
+            Message = $"{organizer.Name} has booked a meeting with you.",
             RemindAt = meeting.Start,
             Type = "meeting",
-            RecipientID = meeting.AttendeeID,
+            RecipientID = attendee.UserID,
             MeetingID = meeting.MeetingID,
         };
 
         var organizerReminder = new Reminder
         {
-            Message = $"You have booked a meeting with {meeting.Attendee.Name}.",
+            Message = $"You have booked a meeting with {attendee.Name}.",
             RemindAt = meeting.Start,
             Type = "meeting",
-            RecipientID = meeting.OrganizerID,
+            RecipientID = organizer.UserID,
             MeetingID = meeting.MeetingID,
         };
 
@@ -89,15 +89,15 @@ public class ReminderService
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task CreateTaskReminder(ProjectTask task)
+    public async Task CreateTaskReminder(User supervisor, User student, ProjectTask task)
     {
 
         var taskReminder = new Reminder
         {
-            Message = $"{task.Project.Supervisor.Name} has created a new task: {task.Title}",
+            Message = $"{supervisor.Name} has created a new task: {task.Title}",
             RemindAt = task.DueDate,
             Type = "task",
-            RecipientID = (long)task.Project.StudentID,
+            RecipientID = (long)student.UserID,
             TaskID = task.ProjectTaskID,
         };
 
@@ -119,11 +119,7 @@ public class ReminderService
 
     public async Task DeleteTaskReminder(ProjectTask task)
     {
-        var reminder = await dbContext.Reminders.Where(r => r.TaskID == task.ProjectTaskID)
-                                                .FirstOrDefaultAsync()
-                                                ?? throw new Exception("Reminder Not Found");
-        dbContext.Remove(reminder);
-
-        await dbContext.SaveChangesAsync();
+        await dbContext.Reminders.Where(r => r.TaskID == task.ProjectTaskID)
+                                 .ExecuteDeleteAsync();
     }
 }

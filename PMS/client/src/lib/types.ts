@@ -30,7 +30,7 @@ export type Project = {
   projectID: number;
   title: string;
   description?: string;
-  status: "active" | "archived";
+  isArchived: boolean;
   student?: User;
   supervisor?: User;
   tasks?: Pick<Task, "taskID" | "title">[];

@@ -27,7 +27,36 @@ public class MeetingsController : ControllerBase
     {
         try
         {
-            var meetings = await meetingService.GetSupervisorMeetings(userID);
+            var meetings = await meetingService.GetSupervisorMeetings(
+                userID,
+                selector: m => new GetMeetingsDTO
+                {
+                    MeetingID = m.MeetingID,
+                    Start = m.Start,
+                    End = m.End,
+                    Description = m.Description,
+                    Task = new ProjectTaskLookupDTO
+                    {
+                        TaskID = m.Task.ProjectID,
+                        Title = m.Task.Title
+                    },
+                    Organizer = new UserLookupDTO
+                    {
+                        UserID = m.Organizer.UserID,
+                        Name = m.Organizer.Name,
+                        Email = m.Organizer.Email,
+                        IsDeleted = m.Organizer.IsDeleted
+                    },
+                    Attendee = new UserLookupDTO
+                    {
+                        UserID = m.Attendee.UserID,
+                        Name = m.Attendee.Name,
+                        Email = m.Attendee.Email,
+                        IsDeleted = m.Attendee.IsDeleted
+                    },
+                    Status = MeetingService.GetMeetingStatus(m.IsAccepted, m.End)
+                }
+            );
             return Ok(meetings);
         }
         catch (Exception e)
@@ -36,14 +65,47 @@ public class MeetingsController : ControllerBase
         }
     }
 
-    [Route("api/meetings/{meetingID}")]
+    [Route("api/users/{userID}/meetings/{meetingID}")]
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> GetMeeting([FromRoute] long meetingID)
+    public async Task<IActionResult> GetMeeting(
+        [FromRoute] long meetingID
+    )
     {
         try
         {
-            var meeting = await meetingService.GetMeeting(meetingID);
+            var meeting = await meetingService.GetSupervisorMeeting(
+                meetingID,
+                selector: m => new GetMeetingsDTO
+                {
+                    MeetingID = m.MeetingID,
+                    Description = m.Description,
+                    Start = m.Start,
+                    End = m.End,
+                    Organizer = new UserLookupDTO
+                    {
+                        UserID = m.Organizer.UserID,
+                        Name = m.Organizer.Name,
+                        Email = m.Organizer.Email,
+                        IsDeleted = m.Organizer.IsDeleted
+                    },
+                    Attendee = new UserLookupDTO
+                    {
+                        UserID = m.Attendee.UserID,
+                        Name = m.Attendee.Name,
+                        Email = m.Attendee.Email,
+                        IsDeleted = m.Organizer.IsDeleted
+                    },
+                    Task = new ProjectTaskLookupDTO
+                    {
+                        TaskID = m.Task.ProjectTaskID,
+                        Title = m.Task.Title
+                    },
+                    Status = MeetingService.GetMeetingStatus(
+                        isAccepted: m.IsAccepted,
+                        end: m.End
+                    )
+                });
             return Ok(meeting);
         }
         catch (Exception e)
@@ -52,17 +114,20 @@ public class MeetingsController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/meetings")]
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/meetings")]
     [HttpPost]
     [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> BookMeeting(
         [FromRoute] long userID,
+        [FromRoute] long projectID,
+        [FromRoute] long taskID,
         [FromBody] BookMeetingDTO bookMeetingDTO)
     {
         try
         {
             await meetingService.BookMeeting(
-                taskID: bookMeetingDTO.TaskID,
+                projectID: projectID,
+                taskID: taskID,
                 organizerID: userID,
                 attendeeID: bookMeetingDTO.AttendeeID,
                 description: bookMeetingDTO.Description,
@@ -78,7 +143,7 @@ public class MeetingsController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/meetings/{meetingID}/edit-description")]
+    [Route("api/users/{userID}/meetings/{meetingID}")]
     [HttpPut]
     [Authorize(Policy = "Ownership")]
     public async Task<IActionResult> EditMeetingDescription(

@@ -234,7 +234,7 @@ export default function DashboardProjectsRoute() {
     }
   })();
 
-  const activeProjects = projects?.items.filter((p) => p.status === "active");
+  const activeProjects = projects?.items.filter((p) => !p.isArchived);
 
   return (
     <>

@@ -48,6 +48,4 @@ public class User
 
     [InverseProperty("SubmittedBy")]
     public List<Deliverable> SubmittedDeliverables { get; } = [];
-    [InverseProperty("ProvidedBy")]
-    public List<FeedbackCriterion> ProvidedFeedbackCriterias { get; } = [];
 }

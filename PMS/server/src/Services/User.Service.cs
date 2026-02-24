@@ -1,12 +1,24 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq.Expressions;
 using System.Security.Authentication;
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using PMS.DatabaseContext;
 using PMS.DTOs;
 using PMS.Lib;
 using PMS.Models;
 
 namespace PMS.Services;
+
+public static class UserQueryExtensions
+{
+    public static IQueryable<User> NotDeleted(this IQueryable<User> query)
+    {
+        return query.Where(u => !u.IsDeleted);
+    }
+}
 
 public class UserService
 {
@@ -20,27 +32,71 @@ public class UserService
         this.logger = logger;
     }
 
-    public async Task<IEnumerable<UserLookupDTO>> GetAllUsers()
+    public async Task<T> GetUser<T>(
+        long userID,
+        Expression<Func<User, T>> selector,
+        Func<IQueryable<User>, IQueryable<User>>? queryExtension = null
+    )
     {
-        return await dbContext.Users
-                    .Where(u => u.Role != "admin")
-                    .Select(u => new UserLookupDTO
-                    {
-                        UserID = u.UserID,
-                        Name = u.Name,
-                        Email = u.Email,
-                        Role = u.Role,
-                        IsDeleted = u.IsDeleted
-                    }).ToListAsync();
+        IQueryable<User> query = dbContext.Users
+                                    .NotDeleted();
+        query = queryExtension?.Invoke(query) ?? query;
+
+        return await query.Where(u => u.UserID == userID)
+                          .Select(selector)
+                          .FirstOrDefaultAsync()
+                          ?? throw new UnauthorizedAccessException("User Not Found!");
+    }
+
+    public async Task<T?> GetUserByEmail<T>(
+        string email,
+        Expression<Func<User, T>> selector,
+        Func<IQueryable<User>, IQueryable<User>>? queryExtension = null
+    )
+    {
+        IQueryable<User> query = dbContext.Users
+                                    .NotDeleted();
+        query = queryExtension?.Invoke(query) ?? query;
+
+        return await query.Where(u => u.Email == email)
+                          .Select(selector)
+                          .FirstOrDefaultAsync();
+    }
+
+    public async Task<(IEnumerable<T> users, long count)>
+         GetAllUsersWithCount<T>(
+            Expression<Func<User, T>> selector,
+            Func<IQueryable<User>, IQueryable<User>>? queryExtension = null,
+            long limit = 5,
+            long offset = 0
+         )
+    {
+        IQueryable<User> usersQuery = dbContext.Users
+                    .Where(u => u.Role != "admin");
+        usersQuery = queryExtension?.Invoke(usersQuery) ?? usersQuery;
+
+        var count = await usersQuery.LongCountAsync();
+
+        var users = await usersQuery
+                        .Select(selector)
+                        .Skip((int)offset)
+                        .Take((int)limit)
+                        .ToListAsync();
+
+        return (users, count);
+    }
+
+    public async Task<IEnumerable<User>> GetUsersByIds(List<long> userIDs)
+    {
+        return await dbContext.Users.Where(u => userIDs.Contains(u.UserID))
+                    .ToListAsync();
     }
 
     public async Task CreateUser(string name, string email, string password, string role)
     {
         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
 
-        var existingUser = await dbContext.Users.Where(
-            u => u.Email == email && !u.IsDeleted
-        ).FirstOrDefaultAsync();
+        var existingUser = await GetUserByEmail(email, selector: u => u);
         if (existingUser != null)
             throw new UnauthorizedAccessException("Email Already In Use!");
 
@@ -60,16 +116,15 @@ public class UserService
         long userID, string? name, string? email, string? role
     )
     {
-        var user = await dbContext.Users.Where(u => u.UserID == userID && !u.IsDeleted)
+        var user = await dbContext.Users.Where(u => u.UserID == userID)
+                                        .NotDeleted()
                                         .FirstOrDefaultAsync()
                                         ?? throw new UnauthorizedAccessException("User Not Found!");
 
         user.Name = name ?? user.Name;
         if (email != null && email != user.Email)
         {
-            var existingUser = await dbContext.Users.Where(u => u.Email == email
-                                    && !u.IsDeleted
-                                ).FirstOrDefaultAsync();
+            var existingUser = await GetUserByEmail(email, selector: u => u);
             if (existingUser != null)
                 throw new UnauthorizedAccessException("Email Already In Use!");
         }
@@ -81,49 +136,25 @@ public class UserService
 
     public async Task DeleteUser(long userID)
     {
-        var user = await dbContext.Users.Where(u => u.UserID == userID && !u.IsDeleted)
-                                        .Include(u => u.SupervisedProjects)
-                                        .Include(u => u.ConductedProjects)
-                                        .FirstOrDefaultAsync()
-                                        ?? throw new UnauthorizedAccessException("User Not Found!");
+        var user = await GetUser(
+            userID,
+            selector: u => u,
+            queryExtension: u => u.Include(u => u.SupervisedProjects)
+                                  .Include(u => u.ConductedProjects)
+        );
 
         user.IsDeleted = true;
-
-        foreach (var project in user.SupervisedProjects)
-            project.Status = "archived";
-        foreach (var project in user.ConductedProjects)
-            project.Status = "archived";
+        foreach (var project in user.SupervisedProjects.Concat(user.ConductedProjects))
+            project.IsArchived = true;
 
         await dbContext.SaveChangesAsync();
         await Logout(user.UserID);
     }
 
-    // Reserved for admin endpoints
-    public async Task IngestUserList(string filename, byte[] fileData, string contentType)
-    {
-        if (!Sanitization.IsValidExcel(fileData))
-            throw new Exception("File Is Not Valid Excel!");
-
-        var extractedUsers = PDFUtils.IngestUserList(filename, fileData, contentType);
-        var extractedUserEmails = extractedUsers.Select(e => e.Email).ToList();
-
-        var existingUsers = await dbContext.Users
-                                .Where(u => extractedUserEmails.Contains(u.Email) && !u.IsDeleted)
-                                .ToListAsync();
-        var newUsers = extractedUsers.ExceptBy(existingUsers.Select(u => u.Email), u => u.Email).ToList();
-
-        if (newUsers.Count > 0)
-            dbContext.Users.AddRange(newUsers);
-
-        await dbContext.SaveChangesAsync();
-    }
-
     public async Task<GetUserAuth> Login(string email, string password)
     {
-        var user = await dbContext.Users
-                         .Where(u => u.Email == email && !u.IsDeleted)
-                         .FirstOrDefaultAsync()
-                         ?? throw new AuthenticationException("Invalid Credentials");
+        var user = await GetUserByEmail(email, selector: u => u)
+                    ?? throw new AuthenticationException("Invalid User Details!");
 
         if (!BCrypt.Net.BCrypt.Verify(password, user.Password))
             throw new AuthenticationException("Invalid Credentials!");
@@ -160,11 +191,9 @@ public class UserService
     {
         try
         {
-            var userId = long.Parse(refreshToken.Subject);
-            var user = await dbContext.Users
-                            .Where(u => u.UserID == userId && !u.IsDeleted)
-                            .FirstOrDefaultAsync()
-                            ?? throw new UnauthorizedAccessException("User Not Found!");
+            var userID = long.Parse(refreshToken.Subject);
+            var user = await GetUser(userID, selector: u => u);
+
             if (user.RefreshToken != refreshTokenPayload)
                 throw new Exception("Invalid or Revoked Session!");
 
@@ -182,9 +211,9 @@ public class UserService
         }
     }
 
-    public async Task Logout(long userId)
+    public async Task Logout(long userID)
     {
-        var user = await dbContext.Users.FindAsync(userId);
+        var user = await dbContext.Users.FindAsync(userID);
         if (user != null)
         {
             user.RefreshToken = null;

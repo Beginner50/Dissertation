@@ -1,9 +1,13 @@
 using System.ComponentModel;
+using System.Linq.Expressions;
 using System.Text.Json;
+using Google.GenAI.Types;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PMS.DTOs;
+using PMS.Models;
 using PMS.Services;
 
 namespace PMS.Controllers;
@@ -12,10 +16,41 @@ namespace PMS.Controllers;
 public class ProjectsController : ControllerBase
 {
     private readonly ProjectService projectService;
+    private readonly ReportService reportService;
+    private readonly Expression<Func<Project, GetProjectDTO>> projectSelector = p => new GetProjectDTO
+    {
+        ProjectID = p.ProjectID,
+        Title = p.Title,
+        IsArchived = p.IsArchived,
+        Description = p.Description,
+        Supervisor = p.Supervisor != null ? new UserLookupDTO
+        {
+            UserID = p.Supervisor.UserID,
+            Name = p.Supervisor.Name,
+            Email = p.Supervisor.Email,
+            IsDeleted = p.Supervisor.IsDeleted
+        } : null,
+        Student = p.Student != null ? new UserLookupDTO
+        {
+            UserID = p.Student.UserID,
+            Name = p.Student.Name,
+            Email = p.Student.Email,
+            IsDeleted = p.Student.IsDeleted
+        } : null,
+        Tasks = p.Tasks
+                    .OrderByDescending(t => t.AssignedDate)
+                    .Select(t => new ProjectTaskLookupDTO
+                    {
+                        TaskID = t.ProjectTaskID,
+                        Title = t.Title
+                    })
+                    .ToList()
+    };
 
-    public ProjectsController(ProjectService projectService)
+    public ProjectsController(ProjectService projectService, ReportService reportService)
     {
         this.projectService = projectService;
+        this.reportService = reportService;
     }
 
     [Route("/api/projects")]
@@ -30,8 +65,13 @@ public class ProjectsController : ControllerBase
         {
             if (limit > 100) limit = 100;
 
-            var (projects, count) = await projectService.GetAllProjectsWithCount(limit, offset);
-            return Ok(new { Items = projects, TotalCount = count });
+            var (items, totalCount) = await projectService.GetProjectsWithCount(
+                selector: projectSelector,
+                queryExtension: p => p.AsSplitQuery(),
+                limit: limit,
+                offset: offset
+            );
+            return Ok(new { Items = items, TotalCount = totalCount });
         }
         catch (Exception e)
         {
@@ -42,7 +82,7 @@ public class ProjectsController : ControllerBase
     [Route("api/users/{userID}/projects")]
     [HttpGet]
     [Authorize(Policy = "Ownership")]
-    public async Task<IActionResult> GetProjectsByUser(
+    public async Task<IActionResult> GetUserProjects(
         [FromRoute] long userID,
         [FromQuery] long limit = 5,
         [FromQuery] long offset = 0
@@ -51,12 +91,17 @@ public class ProjectsController : ControllerBase
         try
         {
             if (limit > 100) limit = 100;
-            var (projects, count) = await projectService.GetUserProjectsWithCount(userID, limit, offset);
+            var (items, totalCount) = await projectService.GetProjectsWithCount(
+                selector: projectSelector,
+                queryExtension: p => p.AsSplitQuery().NotArchived().ContainsMember(userID),
+                limit: limit,
+                offset: offset
+            );
 
             return Ok(new
             {
-                Items = projects,
-                TotalCount = count
+                Items = items,
+                TotalCount = totalCount
             });
         }
         catch (Exception e)
@@ -75,7 +120,11 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            var project = await projectService.GetProject(userID, projectID);
+            var project = await projectService.GetProject(
+                projectID,
+                selector: projectSelector,
+                queryExtension: p => p.AsSplitQuery().ContainsMember(userID)
+            );
             return Ok(project);
         }
         catch (Exception e)
@@ -87,7 +136,7 @@ public class ProjectsController : ControllerBase
     [Route("api/projects")]
     [HttpPost]
     [Authorize(Roles = "admin")]
-    public async Task<IActionResult> CreateProject(
+    public async Task<IActionResult> CreateProjectAdmin(
         [FromBody] CreateProjectDTO createProjectDTO
     )
     {
@@ -144,12 +193,13 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            await projectService.EditProject(projectID,
+            await projectService.EditProject(
+                projectID,
                 title: editProjectDTO.Title,
                 description: editProjectDTO.Description,
                 studentID: editProjectDTO.StudentID,
                 supervisorID: editProjectDTO.SupervisorID,
-                status: editProjectDTO.Status
+                isArchived: editProjectDTO.IsArchived
             );
             return NoContent();
         }
@@ -169,7 +219,9 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            await projectService.EditProject(userID, projectID,
+            await projectService.EditProject(
+                userID,
+                projectID,
                 title: editProjectDTO.Title,
                 description: editProjectDTO.Description
             );
@@ -198,7 +250,6 @@ public class ProjectsController : ControllerBase
         }
     }
 
-
     [Route("api/users/{userID}/projects/{projectID}")]
     [HttpDelete]
     [Authorize(Policy = "Ownership", Roles = "supervisor")]
@@ -208,7 +259,10 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            await projectService.ArchiveProject(userID, projectID);
+            await projectService.ArchiveProject(
+                userID,
+                projectID
+            );
             return NoContent();
         }
         catch (Exception e)
@@ -244,7 +298,7 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            var progressLogReport = await projectService.GenerateProgressLogReport(userID, projectID);
+            var progressLogReport = await reportService.GenerateProgressLogReport(userID, projectID);
             return File(progressLogReport.File, progressLogReport.ContentType, progressLogReport.Filename);
         }
         catch (Exception e)
@@ -260,7 +314,7 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            await projectService.IngestProjectSupervisionList(dto.Filename, dto.File, dto.ContentType);
+            await reportService.IngestProjectSupervisionList(dto.Filename, dto.File, dto.ContentType);
             return NoContent();
         }
         catch (Exception e)

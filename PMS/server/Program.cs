@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using PMS.DatabaseContext;
 using PMS.Services;
 using Google.GenAI;
 using PMS.Lib;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 
 /*
@@ -141,6 +143,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.MapInboundClaims = false;
+        options.IncludeErrorDetails = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             NameClaimType = "sub",
@@ -219,6 +222,7 @@ builder.Services.AddSingleton<TokenService>(new TokenService(symmetricKey));
 builder.Services.AddSingleton<AIService>();
 builder.Services.AddSingleton<MailService>(new MailService(new MailQueue(), mailAccount, mailPassword));
 
+builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ProjectService>();
 builder.Services.AddScoped<ProjectTaskService>();

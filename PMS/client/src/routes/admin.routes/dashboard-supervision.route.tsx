@@ -59,7 +59,8 @@ export default function DashboardSupervisionRoute() {
 
   const { data: users, isLoading: usersLoading } = useQuery({
     queryKey: ["users"],
-    queryFn: async (): Promise<User[]> => await authorizedAPI.get(`api/users`).json(),
+    queryFn: async (): Promise<{ items: User[]; totalCount: number }> =>
+      await authorizedAPI.get(`api/users`).json(),
     retry: 1,
   });
 
@@ -245,8 +246,9 @@ export default function DashboardSupervisionRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const students = users?.filter((u) => u.role == "student" && !u.isDeleted) ?? [];
-  const supervisors = users?.filter((u) => u.role == "supervisor" && !u.isDeleted) ?? [];
+  const students = users?.items.filter((u) => u.role == "student" && !u.isDeleted) ?? [];
+  const supervisors =
+    users?.items.filter((u) => u.role == "supervisor" && !u.isDeleted) ?? [];
 
   const formDataIncomplete = (() => {
     switch (projectSupervisionModalState.mode) {

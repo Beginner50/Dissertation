@@ -8,25 +8,45 @@ namespace PMS.Controllers;
 [ApiController]
 public class UsersController : ControllerBase
 {
-    protected readonly TokenService tokenService;
-    protected readonly UserService userService;
+    private readonly TokenService tokenService;
+    private readonly UserService userService;
+    private readonly ReportService reportService;
     private readonly IWebHostEnvironment environment;
-    public UsersController(UserService userService, TokenService tokenService, IWebHostEnvironment environment)
+    public UsersController(UserService userService, TokenService tokenService, ReportService reportService, IWebHostEnvironment environment)
     {
         this.tokenService = tokenService;
         this.userService = userService;
+        this.reportService = reportService;
         this.environment = environment;
     }
 
     [Route("api/users")]
     [HttpGet]
     [Authorize(Roles = "admin")]
-    public async Task<IActionResult> GetAllUsers()
+    public async Task<IActionResult> GetAllUsers(
+        [FromQuery] long limit = 5,
+        [FromQuery] long offset = 0
+    )
     {
         try
         {
-            var users = await userService.GetAllUsers();
-            return Ok(users);
+            var (users, count) = await userService.GetAllUsersWithCount(
+                selector: u => new UserLookupDTO
+                {
+                    UserID = u.UserID,
+                    Name = u.Name,
+                    Email = u.Email,
+                    Role = u.Role,
+                    IsDeleted = u.IsDeleted
+                },
+                limit: limit,
+                offset: offset
+            );
+            return Ok(new
+            {
+                Items = users,
+                TotalCount = count
+            });
         }
         catch (Exception e)
         {
@@ -99,7 +119,7 @@ public class UsersController : ControllerBase
     {
         try
         {
-            await userService.IngestUserList(dto.Filename, dto.File, dto.ContentType);
+            await reportService.IngestUserList(dto.Filename, dto.File, dto.ContentType);
             return NoContent();
         }
         catch (Exception e)
@@ -135,7 +155,7 @@ public class UsersController : ControllerBase
             return Ok(new
             {
                 User = userAuth.User,
-                Token = userAuth.AccessToken,
+                Token = userAuth.AccessToken.Payload,
                 TokenExpiry = userAuth.AccessToken.Expiry
             });
         }

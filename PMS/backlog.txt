@@ -1,15 +1,20 @@
 Pending Tasks
-  Ingest List Feature
-  Modularise ALL table components (including feedback)
+  Change select component to email inputs for manual student-supervisor assignment
+  Delete Organized and Attended meetings when deleting Users.
   Add Pagination for fetching Users
   Improve progress log report generation
 
   UI Fixes:
     Modularise and make sign-in page consistent with the rest of the codebase
-
+    Replace menu button with info icon in the event that a supervisor is not owner of a task.
     Add pagination to notifications
     Add visual error states
 
   Update UML Diagrams
   Document Background Workers
 
+Suggested Improvements (Not Required)
+  One-to-One supervision -> Many-to-one supervision
+    - Change supervisorID to supervisorIDs in Project
+      (Justify unormalized form due to sparse co-supervised projects)
+    - Modify every report section (Time Consuming)

@@ -14,7 +14,7 @@ import TableLayout from "../../components/base.components/table-layout.component
 export default function DashboardUsersRoute() {
   const { authorizedAPI } = useAuth();
 
-  const [userLimit, setUserLimit] = useState(6);
+  const [userLimit, setUserLimit] = useState(5);
   const [userOffset, setUserOffset] = useState(0);
 
   const [userModalState, setUserModalState] = useState<UserModalState>({
@@ -50,8 +50,16 @@ export default function DashboardUsersRoute() {
   });
 
   const { data: users, isLoading: usersLoading } = useQuery({
-    queryKey: ["users"],
-    queryFn: async (): Promise<User[]> => await authorizedAPI.get(`api/users`).json(),
+    queryKey: ["users", userLimit, userOffset],
+    queryFn: async (): Promise<{ items: User[]; totalCount: number }> =>
+      await authorizedAPI
+        .get(`api/users`, {
+          searchParams: {
+            limit: userLimit,
+            offset: userOffset,
+          },
+        })
+        .json(),
     retry: 1,
   });
 
@@ -184,9 +192,9 @@ export default function DashboardUsersRoute() {
 
           <TableLayout.Content>
             <UserTable
-              users={users?.sort((u1, u2) => u1.userID - u2.userID) ?? []}
+              users={users?.items?.sort((u1, u2) => u1.userID - u2.userID) ?? []}
               isLoading={usersLoading}
-              totalCount={users?.length ?? 0}
+              totalCount={users?.totalCount ?? 0}
               limit={userLimit}
               offset={userOffset}
               onPageChange={handlePageChange}

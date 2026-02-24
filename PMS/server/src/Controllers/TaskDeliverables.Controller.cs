@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using PMS.DTOs;
 using PMS.Lib;
 using PMS.Services;
@@ -29,10 +30,36 @@ public class TaskDeliverablesController : ControllerBase
         {
             if (file)
             {
-                var result = await taskDeliverableService.GetStagedDeliverableFile(userID, projectID, taskID);
+                var result = await taskDeliverableService.GetStagedDeliverable(
+                    userID,
+                    projectID,
+                    taskID,
+                    selector: s => new FileDTO
+                    {
+                        Filename = s.Filename,
+                        File = s.File,
+                        ContentType = s.ContentType
+                    });
                 return File(result.File, result.ContentType, result.Filename);
             }
-            var stagedDeliverable = await taskDeliverableService.GetStagedDeliverable(userID, projectID, taskID);
+            var stagedDeliverable = await taskDeliverableService.GetStagedDeliverable(
+                userID,
+                projectID,
+                taskID,
+                selector: s => new GetTaskDeliverablesDTO
+                {
+                    DeliverableID = s.DeliverableID,
+                    Filename = s.Filename,
+                    SubmissionTimestamp = s.SubmissionTimestamp,
+                    SubmittedBy = new UserLookupDTO
+                    {
+                        UserID = s.SubmittedBy.UserID,
+                        Name = s.SubmittedBy.Name,
+                        Email = s.SubmittedBy.Email,
+                        IsDeleted = s.SubmittedBy.IsDeleted
+                    },
+                    TaskID = s.TaskID,
+                });
             return Ok(stagedDeliverable);
         }
         catch (Exception e)
@@ -55,10 +82,37 @@ public class TaskDeliverablesController : ControllerBase
         {
             if (file)
             {
-                var result = await taskDeliverableService.GetSubmittedDeliverableFile(userID, projectID, taskID);
+                var result = await taskDeliverableService.GetSubmittedDeliverable(
+                    userID,
+                    projectID,
+                    taskID,
+                    selector: s => new FileDTO
+                    {
+                        Filename = s.Filename,
+                        File = s.File,
+                        ContentType = s.ContentType
+                    });
+
                 return File(result.File, result.ContentType, result.Filename);
             }
-            var submittedDeliverable = await taskDeliverableService.GetSubmittedDeliverable(userID, projectID, taskID);
+            var submittedDeliverable = await taskDeliverableService.GetSubmittedDeliverable(
+                userID,
+                projectID,
+                taskID,
+                selector: s => new GetTaskDeliverablesDTO
+                {
+                    DeliverableID = s.DeliverableID,
+                    Filename = s.Filename,
+                    SubmissionTimestamp = s.SubmissionTimestamp,
+                    SubmittedBy = new UserLookupDTO
+                    {
+                        UserID = s.SubmittedBy.UserID,
+                        Name = s.SubmittedBy.Name,
+                        Email = s.SubmittedBy.Email,
+                        IsDeleted = s.SubmittedBy.IsDeleted
+                    },
+                    TaskID = s.TaskID,
+                });
             return Ok(submittedDeliverable);
         }
         catch (Exception e)

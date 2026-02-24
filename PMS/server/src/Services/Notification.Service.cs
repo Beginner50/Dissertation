@@ -44,7 +44,7 @@ public class NotificationService
                                 .ToListAsync();
     }
 
-    public async Task CreateMeetingNotification(Meeting meeting, NotificationType notificationType)
+    public async Task CreateMeetingNotification(User organizer, User attendee, Meeting meeting, NotificationType notificationType)
     {
         Notification notification;
         switch (notificationType)
@@ -53,8 +53,8 @@ public class NotificationService
                 notification = new Notification
                 {
                     Type = "meeting",
-                    Description = $"{meeting.Organizer.Name} has booked a meeting with you.",
-                    RecipientID = meeting.AttendeeID,
+                    Description = $"{organizer.Name} has booked a meeting with you.",
+                    RecipientID = attendee.UserID,
                 };
                 await dbContext.AddAsync(notification);
                 break;
@@ -62,8 +62,8 @@ public class NotificationService
                 notification = new Notification
                 {
                     Type = "meeting",
-                    Description = $"{meeting.Organizer.Name} has cancelled a meeting with you.",
-                    RecipientID = meeting.AttendeeID,
+                    Description = $"{organizer.Name} has cancelled a meeting with you.",
+                    RecipientID = attendee.UserID,
                 };
                 await dbContext.AddAsync(notification);
                 break;
@@ -71,8 +71,8 @@ public class NotificationService
                 notification = new Notification
                 {
                     Type = "meeting",
-                    Description = $"{meeting.Attendee.Name} has accepted your meeting.",
-                    RecipientID = meeting.OrganizerID,
+                    Description = $"{attendee.Name} has accepted your meeting.",
+                    RecipientID = organizer.UserID,
                 };
                 await dbContext.AddAsync(notification);
                 break;
@@ -80,8 +80,8 @@ public class NotificationService
                 notification = new Notification
                 {
                     Type = "meeting",
-                    Description = $"{meeting.Attendee.Name} has rejected your meeting.",
-                    RecipientID = meeting.OrganizerID,
+                    Description = $"{attendee.Name} has rejected your meeting.",
+                    RecipientID = organizer.UserID,
                 };
                 await dbContext.AddAsync(notification);
                 break;
@@ -92,7 +92,12 @@ public class NotificationService
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task CreateTaskNotification(ProjectTask task, NotificationType notificationType)
+    public async Task CreateTaskNotification(
+        User supervisor,
+        User student,
+        ProjectTask task,
+        NotificationType notificationType
+        )
     {
         Notification notification;
         switch (notificationType)
@@ -104,8 +109,8 @@ public class NotificationService
                     notification = new Notification
                     {
                         Type = "task",
-                        Description = $"{task.Project.Supervisor.Name} has created a new task: {task.Title}",
-                        RecipientID = (long)task.Project.StudentID,
+                        Description = $"{supervisor.Name} has created a new task: {task.Title}",
+                        RecipientID = (long)student.UserID,
                     };
                     await dbContext.AddAsync(notification);
                 }
@@ -116,8 +121,8 @@ public class NotificationService
                     notification = new Notification
                     {
                         Type = "task",
-                        Description = $"{task.Project.Supervisor.Name} has updated task: {task.Title}",
-                        RecipientID = (long)task.Project.StudentID,
+                        Description = $"{supervisor.Name} has updated task: {task.Title}",
+                        RecipientID = (long)student.UserID,
                     };
                     await dbContext.AddAsync(notification);
                 }
@@ -128,8 +133,8 @@ public class NotificationService
                     notification = new Notification
                     {
                         Type = "task",
-                        Description = $"{task.Project.Supervisor.Name} has deleted task: {task.Title}",
-                        RecipientID = (long)task.Project.StudentID,
+                        Description = $"{supervisor.Name} has deleted task: {task.Title}",
+                        RecipientID = (long)student.UserID,
                     };
                     await dbContext.AddAsync(notification);
                 }
@@ -138,8 +143,8 @@ public class NotificationService
                 notification = new Notification
                 {
                     Type = "task",
-                    Description = $"{task.Project.Student.Name} has submitted a deliverable for task: {task.Title}",
-                    RecipientID = (long)task.Project.SupervisorID,
+                    Description = $"{student.Name} has submitted a deliverable for task: {task.Title}",
+                    RecipientID = (long)supervisor.UserID,
                 };
                 await dbContext.AddAsync(notification);
                 break;
@@ -147,8 +152,8 @@ public class NotificationService
                 notification = new Notification
                 {
                     Type = "task",
-                    Description = $"{task.Project.Supervisor.Name} provided feedback for task: {task.Title}",
-                    RecipientID = (long)task.Project.StudentID,
+                    Description = $"{supervisor.Name} provided feedback for task: {task.Title}",
+                    RecipientID = (long)student.UserID,
                 };
                 await dbContext.AddAsync(notification);
                 break;
@@ -156,8 +161,8 @@ public class NotificationService
                 notification = new Notification
                 {
                     Type = "task",
-                    Description = $"{task.Project.Supervisor.Name} updated feedback for task: {task.Title}",
-                    RecipientID = (long)task.Project.StudentID,
+                    Description = $"{supervisor.Name} updated feedback for task: {task.Title}",
+                    RecipientID = (long)student.UserID
                 };
                 await dbContext.AddAsync(notification);
                 break;

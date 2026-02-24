@@ -26,7 +26,40 @@ public class TasksController : ControllerBase
     {
         try
         {
-            var task = await projectTaskService.GetProjectTask(userID, projectID, taskID);
+            var task = await projectTaskService.GetProjectTask(
+            userID,
+            projectID,
+            taskID,
+            selector: t => new GetProjectTaskDTO
+            {
+                TaskID = t.ProjectTaskID,
+                Title = t.Title,
+                Description = t.Description,
+                AssignedDate = t.AssignedDate,
+                DueDate = t.DueDate,
+                Status = ProjectTaskService.GetProjectTaskStatus(
+                            hasSubmission: t.SubmittedDeliverableID != null,
+                            dueDate: t.DueDate
+                        ),
+                IsLocked = t.IsLocked,
+                StagedDeliverableID = t.StagedDeliverableID,
+                SubmittedDeliverableID = t.SubmittedDeliverableID,
+                AssignedBy = new UserLookupDTO
+                {
+                    UserID = t.AssignedBy.UserID,
+                    Name = t.AssignedBy.Name,
+                    Email = t.AssignedBy.Email,
+                    IsDeleted = t.AssignedBy.IsDeleted
+                },
+                FeedbackCriterias = t.FeedbackCriterias.Select(c =>
+                    new GetFeedbackCriterionDTO
+                    {
+                        FeedbackCriterionID = c.FeedbackCriterionID,
+                        Description = c.Description,
+                        Status = c.Status,
+                        ChangeObserved = c.ChangeObserved
+                    }).ToList()
+            });
             return Ok(task);
         }
         catch (Exception e)
@@ -48,8 +81,22 @@ public class TasksController : ControllerBase
         try
         {
             if (limit > 100) limit = 100;
-            var (tasks, count) = await projectTaskService
-                    .GetProjectTasksWithCount(userID, projectID, limit, offset);
+            var (tasks, count) = await projectTaskService.GetProjectTasksWithCount(
+                    userID,
+                    projectID,
+                    selector: t => new GetProjectTaskDTO
+                    {
+                        TaskID = t.ProjectTaskID,
+                        Title = t.Title,
+                        Description = t.Description,
+                        AssignedDate = t.AssignedDate,
+                        DueDate = t.DueDate,
+                        Status = ProjectTaskService.GetProjectTaskStatus(
+                                hasSubmission: t.SubmittedDeliverableID != null,
+                                dueDate: t.DueDate
+                            ),
+                    }, limit, offset
+                );
 
             return Ok(new
             {

@@ -60,6 +60,18 @@ public class PMSDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<Reminder>()
+                .HasOne(r => r.Meeting)
+                .WithMany()
+                .HasForeignKey(r => r.MeetingID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Reminder>()
+            .HasOne(r => r.Task)
+            .WithMany(t => t.Reminders)
+            .HasForeignKey(r => r.TaskID)
+            .OnDelete(DeleteBehavior.Cascade);
+
         SeedAdminUser(modelBuilder);
         // SeedData(modelBuilder);
     }
@@ -88,7 +100,7 @@ public class PMSDbContext : DbContext
             new User
             {
                 UserID = 2,
-                Name = "Dr. Smith",
+                Name = "Mr. Pile",
                 Email = "jatooprashant099@gmail.com",
                 Password = passwordHash,
                 RefreshToken = "",
@@ -97,7 +109,7 @@ public class PMSDbContext : DbContext
             new User
             {
                 UserID = 3,
-                Name = "Roland",
+                Name = "Bob",
                 Email = "prashant_pms@outlook.com",
                 Password = passwordHash,
                 RefreshToken = "",
@@ -106,60 +118,11 @@ public class PMSDbContext : DbContext
             new User
             {
                 UserID = 4,
-                Name = "Rebellius",
-                Email = "prashant.jatoo@umail.uom.ac.mu",
+                Name = "Mrs. Alice",
+                Email = "test@outlook.com",
                 Password = passwordHash,
                 RefreshToken = "",
-                Role = "student"
-            }
-        );
-
-        modelBuilder.Entity<Project>().HasData(
-            new Project
-            {
-                ProjectID = 1,
-                Title = "AI Research",
-                Description = "Research on AI algorithms",
-                Status = "active",
-                StudentID = 3,
-                SupervisorID = 2,
-            }
-        );
-
-        modelBuilder.Entity<ProjectTask>().HasData(
-            new ProjectTask
-            {
-                ProjectTaskID = 1,
-                ProjectID = 1,
-                Title = "Literature Review",
-                Description = "Review current papers on Transformer models.",
-                AssignedDate = new DateTime(2025, 11, 1, 0, 0, 0, DateTimeKind.Utc),
-                AssignedByID = 2,
-                DueDate = new DateTime(2025, 11, 15, 0, 0, 0, DateTimeKind.Utc),
-                IsLocked = false,
-            },
-            new ProjectTask
-            {
-                ProjectTaskID = 2,
-                ProjectID = 1,
-                Title = "Dataset Collection",
-                Description = "Gather and clean the training dataset.",
-                AssignedDate = new DateTime(2025, 12, 21, 0, 0, 0, DateTimeKind.Utc),
-                AssignedByID = 2,
-                DueDate = new DateTime(2026, 01, 31, 0, 0, 0, DateTimeKind.Utc),
-                IsLocked = false
-            },
-            new ProjectTask
-            {
-                ProjectTaskID = 3,
-                ProjectID = 1,
-                Title = "Proposal Submission",
-                Description = "Submit the formal research proposal.",
-                AssignedDate = new DateTime(2025, 10, 1, 0, 0, 0, DateTimeKind.Utc),
-                AssignedByID = 2,
-                DueDate = new DateTime(2025, 10, 15, 0, 0, 0, DateTimeKind.Utc),
-                IsLocked = false
-            }
-        );
+                Role = "supervisor"
+            });
     }
 }

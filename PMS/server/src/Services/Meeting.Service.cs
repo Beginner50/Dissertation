@@ -1,136 +1,107 @@
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
+using System.Linq.Expressions;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using MimeKit;
 using PMS.DatabaseContext;
-using PMS.DTOs;
 using PMS.Models;
 
 namespace PMS.Services;
 
+public static class MeetingQueryExtensions
+{
+    public static IQueryable<Meeting> IsParticipant(this IQueryable<Meeting> query, long userID)
+    {
+        return query.Where(m => m.AttendeeID == userID || m.OrganizerID == userID);
+    }
+
+    public static IQueryable<Meeting> IsOrganizer(this IQueryable<Meeting> query, long userID)
+    {
+        return query.Where(m => m.OrganizerID == userID);
+    }
+
+    public static IQueryable<Meeting> IsAttendee(this IQueryable<Meeting> query, long userID)
+    {
+        return query.Where(m => m.AttendeeID == userID);
+    }
+}
+
 public class MeetingService
 {
-    protected readonly PMSDbContext dbContext;
-    protected readonly MailService mailService;
-    protected readonly NotificationService notificationService;
-    protected readonly ReminderService reminderService;
-    protected readonly ILogger<MeetingService> logger;
+    private readonly PMSDbContext dbContext;
+    private readonly ProjectService projectService;
+    private readonly ProjectTaskService projectTaskService;
+    private readonly MailService mailService;
+    private readonly NotificationService notificationService;
+    private readonly ReminderService reminderService;
+    private readonly ILogger<MeetingService> logger;
     public MeetingService(
         PMSDbContext dbContext,
+        ProjectService projectService,
+        ProjectTaskService projectTaskService,
         MailService mailService,
         NotificationService notificationService,
         ReminderService reminderService,
         ILogger<MeetingService> logger)
     {
         this.dbContext = dbContext;
+        this.projectService = projectService;
+        this.projectTaskService = projectTaskService;
         this.mailService = mailService;
         this.notificationService = notificationService;
         this.reminderService = reminderService;
         this.logger = logger;
     }
 
-    public async Task<GetMeetingsDTO> GetMeeting(long meetingID)
+    public async Task<T> GetSupervisorMeeting<T>(
+        long meetingID,
+        Expression<Func<Meeting, T>> selector,
+        Func<IQueryable<Meeting>, IQueryable<Meeting>>? queryExtension = null
+    )
     {
-        var meeting = await dbContext.Meetings.FindAsync(meetingID) ?? throw new
-                            UnauthorizedAccessException("Meeting Not Found!");
+        var query = dbContext.Meetings.Where(m => m.MeetingID == meetingID);
 
-        return new GetMeetingsDTO
-        {
-            MeetingID = meeting.MeetingID,
-            Description = meeting.Description,
-            Start = meeting.Start,
-            End = meeting.End,
-            Organizer = new UserLookupDTO
-            {
-                UserID = meeting.Organizer.UserID,
-                Name = meeting.Organizer.Name,
-                Email = meeting.Organizer.Email,
-                IsDeleted = meeting.Organizer.IsDeleted
-            },
-            Attendee = new UserLookupDTO
-            {
-                UserID = meeting.Attendee.UserID,
-                Name = meeting.Attendee.Name,
-                Email = meeting.Attendee.Email,
-                IsDeleted = meeting.Organizer.IsDeleted
-            },
-            Task = new ProjectTaskLookupDTO
-            {
-                TaskID = meeting.Task.ProjectTaskID,
-                Title = meeting.Task.Title
-            },
-            Status = GetMeetingStatus(meeting.IsAccepted, meeting.End)
-        };
+        query = queryExtension?.Invoke(query) ?? query;
+
+        return await query.Select(selector)
+                          .FirstOrDefaultAsync()
+                          ?? throw new UnauthorizedAccessException("Meeting Not Found!");
     }
 
-    public async Task<IEnumerable<GetMeetingsDTO>> GetSupervisorMeetings(long userID)
+    public async Task<IEnumerable<T>> GetSupervisorMeetings<T>(
+        long userID,
+        Expression<Func<Meeting, T>> selector
+    )
     {
-        var projectSupervisor = await dbContext.Projects
-                                .Where(p => p.SupervisorID == userID || p.StudentID == userID)
-                                .Select(p => p.Supervisor)
-                                .FirstOrDefaultAsync()
-                                ?? throw new Exception("Project Supervisor Not Found!");
+        var supervisor = (await projectService.GetProjectsWithCount(
+            userID,
+            selector: p => p.Supervisor,
+            queryExtension: p => p.Include(p => p.Supervisor.AttendedMeetings)
+                                  .Include(p => p.Supervisor.OrganizedMeetings)
+        )).items.ToList()[0];
 
-        var meetings = await dbContext.Meetings
-                    .Include(m => m.Task)
-                    .Include(m => m.Organizer)
-                    .Include(m => m.Attendee)
-                    .Where(m => m.AttendeeID == projectSupervisor.UserID || m.OrganizerID == projectSupervisor.UserID)
-                    .ToListAsync();
+        var supervisorMeetingIDs = supervisor.OrganizedMeetings
+                                             .Concat(supervisor.AttendedMeetings)
+                                             .Select(m => m.MeetingID);
 
-        return meetings.Select(m => new GetMeetingsDTO
-        {
-            MeetingID = m.MeetingID,
-            Start = m.Start,
-            End = m.End,
-            Description = m.Description,
-            Task = new ProjectTaskLookupDTO
-            {
-                TaskID = m.Task.ProjectID,
-                Title = m.Task.Title
-            },
-            Organizer = new UserLookupDTO
-            {
-                UserID = m.Organizer.UserID,
-                Name = m.Organizer.Name,
-                Email = m.Organizer.Email,
-                IsDeleted = m.Organizer.IsDeleted
-            },
-            Attendee = new UserLookupDTO
-            {
-                UserID = m.Attendee.UserID,
-                Name = m.Attendee.Name,
-                Email = m.Attendee.Email,
-                IsDeleted = m.Attendee.IsDeleted
-            },
-            Status = GetMeetingStatus(m.IsAccepted, m.End)
-        })
-        .Distinct()
-        .ToList();
+        return await dbContext.Meetings
+                              .Where(m => supervisorMeetingIDs.Contains(m.MeetingID))
+                              .Select(selector)
+                              .ToListAsync();
     }
 
     public async Task BookMeeting(
-        long organizerID, long attendeeID, long taskID,
-        string? description, DateTime start, DateTime end
+        long organizerID, long projectID, long taskID,
+        long attendeeID, string? description, DateTime start, DateTime end
     )
     {
-        var task = await dbContext.Tasks.Where(
-                        t => t.ProjectTaskID == taskID
-                            && ((t.Project.StudentID == organizerID
-                                 && t.Project.SupervisorID == attendeeID)
-                            || (t.Project.SupervisorID == organizerID
-                                && t.Project.StudentID == attendeeID))
-                            && t.Project.Status != "archived"
-                    ).FirstOrDefaultAsync()
-                    ?? throw new UnauthorizedAccessException("Unauthorized Access!");
-
-        var organizer = await dbContext.Users.FindAsync(organizerID)
-                            ?? throw new Exception("Organizer Not Found!");
-        var attendee = await dbContext.Users.FindAsync(attendeeID)
-                            ?? throw new Exception("Attendee Not Found!");
+        var task = await projectTaskService.GetProjectTask(
+            organizerID,
+            projectID,
+            taskID,
+            selector: t => t,
+            projectQueryExtension: p => p.MatchStudentAndSupervisor(organizerID, attendeeID)
+        );
 
         Meeting newMeeting;
-
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
             try
@@ -149,12 +120,19 @@ public class MeetingService
 
                 await dbContext.SaveChangesAsync();
 
-                await dbContext.Entry(newMeeting).Reference(m => m.Organizer).LoadAsync();
-                await dbContext.Entry(newMeeting).Reference(m => m.Attendee).LoadAsync();
+                var meeting = await GetSupervisorMeeting(
+                    newMeeting.MeetingID,
+                    selector: m => m,
+                    queryExtension: m => m.Include(m => m.Organizer)
+                                          .Include(m => m.Attendee)
+                );
 
-                await notificationService.CreateMeetingNotification(newMeeting, NotificationType.MEETING_BOOKED);
-                await reminderService.CreateMeetingReminders(newMeeting);
-                mailService.CreateAndEnqueueMeetingMail(newMeeting, MailType.MEETING_SCHEDULED);
+                await notificationService.CreateMeetingNotification(
+                    meeting.Organizer, meeting.Attendee, meeting, NotificationType.MEETING_BOOKED);
+                await reminderService.CreateMeetingReminders(
+                    meeting.Organizer, meeting.Attendee, meeting);
+                mailService.CreateAndEnqueueMeetingMail(
+                    meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_SCHEDULED);
 
                 await transaction.CommitAsync();
             }
@@ -172,10 +150,11 @@ public class MeetingService
         string description
     )
     {
-        var meeting = await dbContext.Meetings.Where(m =>
-                m.MeetingID == meetingID && (m.AttendeeID == userID || m.OrganizerID == userID)
-            ).FirstOrDefaultAsync()
-            ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
+        var meeting = await GetSupervisorMeeting(
+            meetingID,
+            selector: m => m,
+            queryExtension: m => m.IsParticipant(userID)
+        );
 
         meeting.Description = description;
 
@@ -188,18 +167,19 @@ public class MeetingService
         {
             try
             {
-                var meeting = await dbContext.Meetings.Where(m =>
-                    m.MeetingID == meetingID &&
-                        m.OrganizerID == organizerID)
-                    .Include(m => m.Organizer)
-                    .Include(m => m.Attendee)
-                    .FirstOrDefaultAsync()
-                    ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
+                var meeting = await GetSupervisorMeeting(
+                    meetingID,
+                    selector: m => m,
+                    queryExtension: m => m.IsOrganizer(organizerID)
+                                          .Include(m => m.Organizer)
+                                          .Include(m => m.Attendee)
+                );
 
-
-                await notificationService.CreateMeetingNotification(meeting, NotificationType.MEETING_CANCELLED);
+                await notificationService.CreateMeetingNotification(
+                    meeting.Organizer, meeting.Attendee, meeting, NotificationType.MEETING_CANCELLED);
                 await reminderService.DeleteMeetingReminders(meeting);
-                mailService.CreateAndEnqueueMeetingMail(meeting, MailType.MEETING_CANCELLED);
+                mailService.CreateAndEnqueueMeetingMail(
+                    meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_CANCELLED);
 
                 dbContext.Remove(meeting);
                 await dbContext.SaveChangesAsync();
@@ -221,20 +201,21 @@ public class MeetingService
         {
             try
             {
-                var meeting = await dbContext.Meetings.Where(m =>
-                    m.MeetingID == meetingID &&
-                        m.AttendeeID == attendeeID)
-                        .Include(m => m.Organizer)
-                        .Include(m => m.Attendee)
-                    .FirstOrDefaultAsync()
-                    ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
-
+                var meeting = await GetSupervisorMeeting(
+                    meetingID,
+                    selector: m => m,
+                    queryExtension: m => m.IsAttendee(attendeeID)
+                                          .Include(m => m.Organizer)
+                                          .Include(m => m.Attendee)
+                );
 
                 meeting.IsAccepted = true;
                 await dbContext.SaveChangesAsync();
 
-                await notificationService.CreateMeetingNotification(meeting, NotificationType.MEETING_ACCEPTED);
-                mailService.CreateAndEnqueueMeetingMail(meeting, MailType.MEETING_ACCEPTED);
+                await notificationService.CreateMeetingNotification(
+                    meeting.Organizer, meeting.Attendee, meeting, NotificationType.MEETING_ACCEPTED);
+                mailService.CreateAndEnqueueMeetingMail(
+                    meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_ACCEPTED);
 
                 await transaction.CommitAsync();
             }
@@ -252,17 +233,19 @@ public class MeetingService
         {
             try
             {
-                var meeting = await dbContext.Meetings.Where(m =>
-                  m.MeetingID == meetingID &&
-                      m.AttendeeID == attendeeID)
-                    .Include(m => m.Organizer)
-                    .Include(m => m.Attendee)
-                  .FirstOrDefaultAsync()
-                  ?? throw new UnauthorizedAccessException("Unauthorized Access or Meeting Not Found!");
+                var meeting = await GetSupervisorMeeting(
+                    meetingID,
+                    selector: m => m,
+                    queryExtension: m => m.IsAttendee(attendeeID)
+                                          .Include(m => m.Organizer)
+                                          .Include(m => m.Attendee)
+                );
 
-                await notificationService.CreateMeetingNotification(meeting, NotificationType.MEETING_REJECTED);
+                await notificationService.CreateMeetingNotification(
+                    meeting.Organizer, meeting.Attendee, meeting, NotificationType.MEETING_REJECTED);
                 await reminderService.DeleteMeetingReminders(meeting);
-                mailService.CreateAndEnqueueMeetingMail(meeting, MailType.MEETING_REJECTED);
+                mailService.CreateAndEnqueueMeetingMail(
+                    meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_REJECTED);
 
                 dbContext.Remove(meeting);
                 await dbContext.SaveChangesAsync();
@@ -277,7 +260,7 @@ public class MeetingService
         }
     }
 
-    protected static string GetMeetingStatus(bool isAccepted, DateTime end)
+    public static string GetMeetingStatus(bool isAccepted, DateTime end)
     {
         if (isAccepted)
             return "accepted";

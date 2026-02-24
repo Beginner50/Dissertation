@@ -365,7 +365,7 @@ export default function TaskRoute() {
           </TaskDetails.Content>
 
           {((user.role == "student" && (task?.feedbackCriterias ?? []).length > 0) ||
-            user.role == "supervisor") && (
+            (user.role == "supervisor" && submittedDeliverable)) && (
             <TableLayout spacing={0}>
               <TableLayout.Toolbar title="Feedback Criteria">
                 {user.role === "supervisor" && (

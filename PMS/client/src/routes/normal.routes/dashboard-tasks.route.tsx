@@ -233,11 +233,8 @@ export default function DashboardTasksRoute() {
     switch (taskModalState.mode) {
       case "create":
       case "edit":
-        return Object.entries(taskModalData).some(([key, val]) => {
-          if (typeof val == "number") return Number.isNaN(val);
-          if (key == "description") return false;
-          return val == "";
-        });
+        if (taskModalData.title == "") return true;
+        return false;
       case "delete":
         return false;
     }

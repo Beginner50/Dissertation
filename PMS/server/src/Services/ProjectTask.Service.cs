@@ -1,6 +1,7 @@
-using System.Transactions;
+using System.Linq.Expressions;
+using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.EntityFrameworkCore;
-using MimeKit;
+using Microsoft.OpenApi;
 using PMS.DatabaseContext;
 using PMS.DTOs;
 using PMS.Lib;
@@ -11,88 +12,78 @@ namespace PMS.Services;
 public class ProjectTaskService
 {
     private readonly ILogger logger;
-    protected readonly MailService mailService;
-    protected readonly NotificationService notificationService;
-    protected readonly ReminderService reminderService;
-    protected readonly PMSDbContext dbContext;
+    private readonly ProjectService projectService;
+    private readonly MailService mailService;
+    private readonly NotificationService notificationService;
+    private readonly ReminderService reminderService;
+    private readonly PMSDbContext dbContext;
     public ProjectTaskService(
         ILogger<ProjectTaskService> logger,
         PMSDbContext dbContext,
-        MailService mailService, NotificationService notificationService, ReminderService reminderService)
+        ProjectService projectService,
+        MailService mailService,
+        NotificationService notificationService,
+        ReminderService reminderService)
     {
         this.logger = logger;
         this.dbContext = dbContext;
+        this.projectService = projectService;
         this.mailService = mailService;
         this.notificationService = notificationService;
         this.reminderService = reminderService;
     }
 
-    public async Task<GetProjectTaskDTO> GetProjectTask(long userID, long projectID, long taskID)
+    public async Task<T> GetProjectTask<T>(
+        long userID, long projectID, long taskID,
+        Expression<Func<ProjectTask, T>> selector,
+        Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
+        Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null
+    )
     {
-        var task = await dbContext.Tasks.Where(
-            t => t.ProjectTaskID == taskID &&
-                t.ProjectID == projectID &&
-                    (t.Project.StudentID == userID || t.Project.SupervisorID == userID)
-        )
-        .Include(t => t.AssignedBy)
-        .Include(t => t.FeedbackCriterias)
-        .FirstOrDefaultAsync()
-            ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
+        IQueryable<Project> projectQuery = dbContext.Projects
+                            .NotArchived()
+                            .ContainsMember(userID);
+        projectQuery = projectQueryExtension?.Invoke(projectQuery) ?? projectQuery;
 
-        return new GetProjectTaskDTO
-        {
-            TaskID = task.ProjectTaskID,
-            Title = task.Title,
-            Description = task.Description,
-            AssignedDate = task.AssignedDate,
-            DueDate = task.DueDate,
-            Status = GetProjectTaskStatus(task.SubmittedDeliverableID, task.DueDate),
-            IsLocked = task.IsLocked,
-            StagedDeliverableID = task.StagedDeliverableID,
-            SubmittedDeliverableID = task.SubmittedDeliverableID,
-            AssignedBy = new UserLookupDTO
-            {
-                UserID = task.AssignedBy.UserID,
-                Name = task.AssignedBy.Name,
-                Email = task.AssignedBy.Email,
-                IsDeleted = task.AssignedBy.IsDeleted
-            },
-            FeedbackCriterias = task.FeedbackCriterias.Select(c =>
-                new GetFeedbackCriterionDTO
-                {
-                    FeedbackCriterionID = c.FeedbackCriterionID,
-                    Description = c.Description,
-                    Status = c.Status,
-                    ChangeObserved = c.ChangeObserved
-                }).ToList()
-        };
+        IQueryable<ProjectTask> query = dbContext.Tasks
+            .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID)
+            .Where(t => projectQuery.Any(p => p.ProjectID == t.ProjectID));
+        query = taskQueryExtension?.Invoke(query) ?? query;
+
+        return await query
+            .Select(selector)
+            .FirstOrDefaultAsync()
+            ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
     }
 
-    public async Task<(IEnumerable<GetProjectTaskDTO> tasks, long count)>
-        GetProjectTasksWithCount(long userID, long projectID, long limit = 5, long offset = 0)
+    public async Task<(IEnumerable<T> tasks, long count)>
+        GetProjectTasksWithCount<T>(
+            long userID, long projectID,
+            Expression<Func<ProjectTask, T>> selector,
+            long limit = 5, long offset = 0,
+            Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
+            Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null
+        )
     {
-        var tasksQuery = dbContext.Tasks.Where(
-            t => t.ProjectID == projectID &&
-                    (t.Project.StudentID == userID || t.Project.SupervisorID == userID)
-            );
+        IQueryable<Project> projectQuery = dbContext.Projects
+                                                .NotArchived()
+                                                .ContainsMember(userID);
+        projectQuery = projectQueryExtension?.Invoke(projectQuery) ?? projectQuery;
 
-        var count = await tasksQuery.LongCountAsync();
+        var query = dbContext.Tasks
+                        .Where(t => t.ProjectID == projectID)
+                        .Where(t => projectQuery.Any(p => p.ProjectID == t.ProjectID))
+                        .OrderByDescending(t => t.DueDate);
 
-        var tasks = await tasksQuery
-            .OrderByDescending(t => t.DueDate)
+        var count = await query.LongCountAsync();
+
+        var tasks = await query
+            .Select(selector)
             .Skip((int)offset)
             .Take((int)limit)
             .ToListAsync();
 
-        return (tasks.Select(t => new GetProjectTaskDTO
-        {
-            TaskID = t.ProjectTaskID,
-            Title = t.Title,
-            Description = t.Description,
-            AssignedDate = t.AssignedDate,
-            DueDate = t.DueDate,
-            Status = GetProjectTaskStatus(t.SubmittedDeliverableID, t.DueDate),
-        }), count);
+        return (tasks, count);
     }
 
     public async Task<ProjectTask> CreateProjectTask(
@@ -100,16 +91,16 @@ public class ProjectTaskService
         DateTime dueDate
     )
     {
-        var project = await dbContext.Projects.Where(p =>
-                p.ProjectID == projectID && p.SupervisorID == userID &&
-                p.Status != "archived")
-            .Include(p => p.Student)
-            .Include(p => p.Supervisor)
-            .FirstOrDefaultAsync()
-            ?? throw new UnauthorizedAccessException("Unauthorized Access or Project Not Found!");
+        var project = await projectService.GetProject(
+                userID,
+                projectID,
+                selector: p => p,
+                queryExtension: p => p.ContainsSupervisor(userID)
+                                      .Include(p => p.Student)
+                                      .Include(p => p.Supervisor)
+            );
 
         ProjectTask newTask;
-
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
             try
@@ -130,9 +121,12 @@ public class ProjectTaskService
 
                 if (project.StudentID != null)
                 {
-                    await notificationService.CreateTaskNotification(newTask, NotificationType.TASK_CREATED);
-                    await reminderService.CreateTaskReminder(newTask);
-                    mailService.CreateAndEnqueueTaskMail(newTask, MailType.TASK_ASSIGNED);
+                    await notificationService.CreateTaskNotification(
+                        project.Supervisor, project.Student, newTask, NotificationType.TASK_CREATED);
+                    await reminderService.CreateTaskReminder(
+                        project.Supervisor, project.Student, newTask);
+                    mailService.CreateAndEnqueueTaskMail(
+                        project.Supervisor, project.Student, newTask, MailType.TASK_ASSIGNED);
                 }
 
                 await transaction.CommitAsync();
@@ -147,20 +141,27 @@ public class ProjectTaskService
         return newTask;
     }
 
+    // Note: Fetching Project & Task can be consolidated into one query, but left as it is for readability
     public async Task EditProjectTask(
         long userID, long projectID, long taskID, string? title,
         string? description, DateTime? dueDate, bool? isLocked
     )
     {
-        var task = await dbContext.Tasks.Where(t =>
-            t.ProjectTaskID == taskID && t.ProjectID == projectID &&
-            t.Project.SupervisorID == userID && t.Project.Status != "archived")
-            .Include(t => t.Project)
-                .ThenInclude(p => p.Student)
-            .Include(t => t.Project)
-                .ThenInclude(p => p.Supervisor)
-            .FirstOrDefaultAsync()
-            ?? throw new KeyNotFoundException("Unauthorized Access or Task Not Found.");
+        var project = await projectService.GetProject(
+            userID,
+            projectID,
+            selector: p => p,
+            queryExtension: p => p.Include(p => p.Student)
+                                  .Include(p => p.Supervisor)
+        );
+
+        var task = await GetProjectTask(
+            userID,
+            projectID,
+            taskID,
+            selector: t => t,
+            taskQueryExtension: t => t.Where(t => t.AssignedByID == userID)
+        );
 
         bool dueDateUpdated = false;
         using var transaction = await dbContext.Database.BeginTransactionAsync();
@@ -179,12 +180,14 @@ public class ProjectTaskService
 
             if (task.Project.StudentID != null)
             {
-                await notificationService.CreateTaskNotification(task, NotificationType.TASK_UPDATED);
+                await notificationService.CreateTaskNotification(
+                    project.Supervisor, project.Student, task, NotificationType.TASK_UPDATED);
 
                 if (dueDateUpdated)
                 {
                     await reminderService.UpdateTaskReminder(task);
-                    mailService.CreateAndEnqueueTaskMail(task, MailType.TASK_UPDATED);
+                    mailService.CreateAndEnqueueTaskMail(
+                        project.Supervisor, project.Student, task, MailType.TASK_UPDATED);
                 }
             }
 
@@ -200,15 +203,21 @@ public class ProjectTaskService
 
     public async Task DeleteProjectTask(long userID, long projectID, long taskID)
     {
-        var task = await dbContext.Tasks.Where(t =>
-            t.ProjectTaskID == taskID && t.ProjectID == projectID &&
-             t.Project.SupervisorID == userID && t.Project.Status != "archived")
-            .Include(t => t.Project)
-                .ThenInclude(p => p.Student)
-            .Include(t => t.Project)
-                .ThenInclude(p => p.Supervisor)
-            .FirstOrDefaultAsync()
-            ?? throw new KeyNotFoundException("Unauthorized Access or Task Not Found.");
+        var project = await projectService.GetProject(
+            userID,
+            projectID,
+            selector: p => p,
+            queryExtension: p => p.Include(p => p.Supervisor)
+                                  .Include(p => p.Student)
+        );
+
+        var task = await GetProjectTask(
+            userID,
+            projectID,
+            taskID,
+            selector: t => t,
+            taskQueryExtension: t => t.Where(t => t.AssignedByID == userID)
+        );
 
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
@@ -216,9 +225,11 @@ public class ProjectTaskService
             {
                 if (task.Project.StudentID != null)
                 {
-                    await notificationService.CreateTaskNotification(task, NotificationType.TASK_DELETED);
+                    await notificationService.CreateTaskNotification(
+                        project.Supervisor, project.Student, task, NotificationType.TASK_DELETED);
                     await reminderService.DeleteTaskReminder(task);
-                    mailService.CreateAndEnqueueTaskMail(task, MailType.TASK_DELETED);
+                    mailService.CreateAndEnqueueTaskMail(
+                        project.Supervisor, project.Student, task, MailType.TASK_DELETED);
                 }
 
                 dbContext.Remove(task);
@@ -235,9 +246,9 @@ public class ProjectTaskService
         }
     }
 
-    protected static string GetProjectTaskStatus(long? latestSubmission, DateTime dueDate)
+    public static string GetProjectTaskStatus(bool hasSubmission, DateTime dueDate)
     {
-        if (latestSubmission != null)
+        if (hasSubmission)
             return "completed";
         else if (dueDate < DateTime.UtcNow)
             return "missing";

@@ -112,14 +112,13 @@ export default function ProjectSupervisionTable({
 
                     <TableCell>
                       <Chip
-                        label={project.status}
+                        label={project.isArchived ? "Archived" : "Active"}
                         size="small"
                         sx={{
                           fontWeight: 700,
                           textTransform: "capitalize",
-                          bgcolor: project.status === "active" ? "#e8f5e9" : "#f5f5f5",
-                          color:
-                            project.status === "active" ? "#2e7d32" : theme.textStrong,
+                          bgcolor: !project.isArchived ? "#e8f5e9" : "#f5f5f5",
+                          color: !project.isArchived ? "#2e7d32" : theme.textStrong,
                         }}
                       />
                     </TableCell>
@@ -191,7 +190,7 @@ ProjectSupervisionTable.Actions = ({
 
   return (
     <ProjectSupervisionTable.MenuButton
-      status={project.status}
+      isArchived={project.isArchived}
       onEdit={onEdit}
       onArchive={onArchive}
       onRestore={onRestore}
@@ -200,12 +199,12 @@ ProjectSupervisionTable.Actions = ({
 };
 
 ProjectSupervisionTable.MenuButton = ({
-  status,
+  isArchived,
   onEdit,
   onArchive,
   onRestore,
 }: {
-  status: Project["status"];
+  isArchived: boolean;
   onEdit: () => void;
   onArchive: () => void;
   onRestore: () => void;
@@ -218,7 +217,7 @@ ProjectSupervisionTable.MenuButton = ({
       <Typography variant="body2">Edit Project</Typography>
     </MenuItem>
     <Divider sx={{ my: 1 }} />
-    {status === "active" ? (
+    {!isArchived ? (
       <MenuItem onClick={onArchive}>
         <ListItemIcon>
           <Archive fontSize="small" color="error" />

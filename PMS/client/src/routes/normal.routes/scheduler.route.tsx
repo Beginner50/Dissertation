@@ -138,7 +138,7 @@ export default function SchedulerRoute() {
     mutation.mutate(
       {
         method: "post",
-        url: `api/users/${user.userID}/meetings`,
+        url: `api/users/${user.userID}/projects/${meetingFormData.projectID}/tasks/${meetingFormData.taskID}/meetings`,
         data: {
           ...meetingFormData,
           start: meetingFormData.start.toISOString(),
@@ -158,7 +158,7 @@ export default function SchedulerRoute() {
     setSelectedMeeting({ ...selectedMeeting, description: newDesc });
     mutation.mutate({
       method: "put",
-      url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}/edit-description`,
+      url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}`,
       data: { description: newDesc },
     });
   };

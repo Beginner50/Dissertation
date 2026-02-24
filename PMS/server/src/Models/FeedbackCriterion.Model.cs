@@ -13,7 +13,4 @@ public class FeedbackCriterion
     [ForeignKey("TaskID")]
     public ProjectTask Task { get; init; }
 
-    public required long ProvidedByID { get; set; }
-    [ForeignKey("ProvidedByID")]
-    public User ProvidedBy { get; init; }
 }
