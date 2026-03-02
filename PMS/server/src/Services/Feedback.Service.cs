@@ -1,7 +1,9 @@
 using System.Linq.Expressions;
 using System.Text.Json;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
+using PMS.DTOs;
 using PMS.Models;
 
 namespace PMS.Services;
@@ -14,11 +16,13 @@ public class FeedbackService
     private readonly NotificationService notificationService;
     private readonly ReminderService reminderService;
     private readonly AIService AIService;
+    private readonly AIJobQueue aIProcessingQueue;
     private readonly ILogger<FeedbackService> logger;
 
     public FeedbackService(
         PMSDbContext dbContext,
         AIService aiService,
+        AIJobQueue aIProcessingQueue,
         ProjectTaskService projectTaskService,
         NotificationService notificationService,
         ReminderService reminderService,
@@ -31,6 +35,12 @@ public class FeedbackService
         this.notificationService = notificationService;
         this.reminderService = reminderService;
         this.AIService = aiService;
+    }
+
+    // DO NOT USE: Reserved for AI Compliance
+    public async Task<FeedbackCriterion> GetFeedbackCriterion(long feedbackCriterionID)
+    {
+        return await dbContext.FeedbackCriterias.FirstAsync(c => c.FeedbackCriterionID == feedbackCriterionID);
     }
 
     public async Task<T> GetFeedbackCriterion<T>(
@@ -112,6 +122,19 @@ public class FeedbackService
         await dbContext.SaveChangesAsync();
     }
 
+    // DO NOT USE: Reserved for AI Compliance
+    public async Task EditFeedbackCriterion(
+        long feedbackCriterionID, string? description, string? status
+    )
+    {
+        var feedbackCriterion = await GetFeedbackCriterion(feedbackCriterionID);
+
+        feedbackCriterion.Description = description ?? feedbackCriterion.Description;
+        feedbackCriterion.Status = status ?? feedbackCriterion.Status;
+
+        await dbContext.SaveChangesAsync();
+    }
+
     public async Task EditFeedbackCriterion
         (long userID, long projectID, long taskID, long feedbackCriterionID
             , string? description = null, string? status = null)
@@ -166,9 +189,7 @@ public class FeedbackService
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task AIFeedbackComplianceCheck(
-        long userID, long projectID, long taskID
-    )
+    public async Task CreateAndEnqueueComplianceCheckJob(long userID, long projectID, long taskID)
     {
         var task = await projectTaskService.GetProjectTask(
             userID,
@@ -185,23 +206,20 @@ public class FeedbackService
         if (task.FeedbackCriterias == null || task.FeedbackCriterias.Count == 0)
             throw new UnauthorizedAccessException("Prior Feedback Criteria Not Found!");
 
-        var newFeedbackCriteriaMap = (await AIService.EvaluateFeedbackCriteria(
-                    task,
-                    previousDeliverable: task.SubmittedDeliverable.File,
-                    newDeliverable: task.StagedDeliverable.File,
-                    previousCriteria: task.FeedbackCriterias.Where(c => c.Status == "unmet").ToList()
-            )).ToDictionary(f => f.FeedbackCriterionID);
+        AIService.CreateAndEnqueueAIComplianceJob(
+            task,
+            previousDeliverable: task.SubmittedDeliverable.File,
+            newDeliverable: task.StagedDeliverable.File,
+            previousCriteria: task.FeedbackCriterias.Where(c => c.Status == "unmet").ToList()
+        );
+    }
 
-        task.FeedbackCriterias.ForEach(c =>
-        {
-            if (c.Status == "unmet")
-            {
-                var updatedCriterion = newFeedbackCriteriaMap[c.FeedbackCriterionID];
-                c.ChangeObserved = updatedCriterion.ChangeObserved;
-                c.Status = updatedCriterion.Status ?? c.Status;
-            }
-        });
+    public string PollComplianceCheckJob(long taskID)
+    {
+        var status = AIService.GetAIComplianceJobStatus(taskID);
+        if (status == "completed")
+            AIService.ClearAIComplianceJobStatus(taskID);
 
-        await dbContext.SaveChangesAsync();
+        return status;
     }
 }

@@ -70,7 +70,6 @@ public class MailQueue
 
     public void QueueMail(MimeMessage message)
     {
-        if (message == null) return;
         queue.Writer.TryWrite(message);
     }
 

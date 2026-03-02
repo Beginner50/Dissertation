@@ -1,0 +1,69 @@
+@startuml
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+actor "User\n(Supervisor/Student)" as User 
+actor Supervisor
+participant "ProjectService" as PS
+participant "ReportService" as RS
+
+User -> PS : GetProject(userID, projectID)
+activate PS
+    note right of PS : Fetch active project that contain\nuserID as a member
+    alt project == null
+        PS --> User: throw UnauthorizedAccessException
+    end
+    PS --> User : project : Project
+deactivate PS
+
+User -> PS : GetProjectsWithCount(userID, limit, offset)
+activate PS
+    note right of PS 
+        Fetch active project that contain
+        userID as a member
+    end note
+    PS --> User : (Project[], totalCount)
+deactivate PS
+
+User -> RS : GenerateProgressLogReport(userID, projectID)
+activate RS
+    
+    note right of RS
+        Fetch the specific project and 
+        all related meeting notes 
+    end note
+    
+    note right of RS
+        Convert the project details and 
+        meeting history into a PDF file
+    end note
+
+    RS --> User : FileObject { name, data, type }
+deactivate RS
+
+Supervisor -> PS : EditProject(supervisorID, projectID, title, description)
+activate PS
+    PS -> PS : project := GetProject(projectID)
+    
+    note right of PS
+        Ensure project.SupervisorID = userID
+    end note
+    
+    note right of PS : Update project details 
+    PS --> Supervisor : void
+deactivate PS
+
+Supervisor -> PS : ArchiveProject(supervisorID, projectID)
+activate PS
+    PS -> PS : project := GetProject(userID, projectID)
+    
+    note right of PS
+        Ensure project.SupervisorID = userID
+    end note
+    
+    PS -> PS : project.IsArchived := true
+    PS --> Supervisor : void
+deactivate PS
+
+
+@enduml

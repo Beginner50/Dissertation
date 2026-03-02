@@ -1,0 +1,80 @@
+@startuml
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+actor Supervisor
+actor Student
+actor "User (Student/Supervisor)" as U
+participant "FeedbackService" as FS
+participant "ProjectTaskService" as PTS
+participant "AIService" as AI
+
+Supervisor -> FS : CreateFeedbackCriterion(userID, projectID, taskID, description)
+activate FS
+    FS -> PTS : task := GetProjectTask\n(userID, projectID, taskID)
+    
+    alt task has no submitted deliverable
+        FS --> Supervisor : throw UnauthorizedAccessException
+    else
+        create participant "c : FeedbackCriterion" as C
+        FS -> C : new FeedbackCriterion(description, taskID)
+        FS --> Supervisor : void
+    end
+deactivate FS
+
+Student -> FS : AIFeedbackComplianceCheck(userID, projectID, taskID)
+activate FS
+    FS -> PTS : task := GetProjectTask\n(userID, projectID, taskID)
+    
+    alt staged or submitted file missing
+        FS --> Student : throw Exception
+    else no unmet criteria found
+        FS --> Student : throw UnauthorizedAccessException
+    else
+        FS -> AI : EvaluateFeedbackCriteria\n(task, oldFile, newFile, unmetCriteria)
+        activate AI
+            note right of AI : AI compares PDF files against requirements
+            AI --> FS : List of updated statuses and observed changes
+        deactivate AI
+        
+        note right of FS : Update criteria where changes were observed
+        FS --> Student : void
+    end
+deactivate FS
+
+U -> FS : GetFeedbackCriteria(userID, projectID, taskID)
+activate FS
+    note right of FS : Verify user is a member of project
+    FS --> U : FeedbackCriterion[]
+deactivate FS
+
+Supervisor -> FS : EditFeedbackCriterion(userID, projectID, taskID, criterionID, description, status)
+activate FS
+    FS -> FS : c := GetFeedbackCriterion(criterionID)
+    note right of FS : Verify userID is the assigned Supervisor
+    
+    note right of FS : Update details
+    FS --> Supervisor : void
+deactivate FS
+
+Supervisor -> FS : DeleteFeedbackCriterion(userID, projectID, taskID, criterionID)
+activate FS
+    FS -> FS : c := GetFeedbackCriterion(criterionID)
+    note right of FS : Verify userID is the assigned Supervisor
+    
+    note right of FS : Remove criterion from system
+    FS --> Supervisor : void
+deactivate FS
+
+Student -> FS : OverrideFeedbackCriterion(userID, projectID, taskID, criterionID)
+activate FS
+    FS -> FS : c := GetFeedbackCriterion(criterionID)
+    note right of FS
+         Verify user is a student of
+         the project
+    end note
+    note right of FS : c.Status := "overridden"
+    FS --> Student : void
+deactivate FS
+
+@enduml

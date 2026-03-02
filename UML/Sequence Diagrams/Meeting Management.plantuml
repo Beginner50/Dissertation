@@ -1,0 +1,100 @@
+@startuml
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+actor User
+participant "MeetingService" as MS
+participant "ProjectTaskService" as PTS
+participant "NotificationService" as NS
+participant "ReminderService" as RS
+participant "MailService" as MLS
+
+User -> MS : GetSupervisorMeetings(userID)
+activate MS
+    MS -> PS : GetProjectsWithCount(userID)
+    note right of MS : Extract Supervisor from first project
+    
+    note right of MS
+      Fetch all organized and
+      attended meetings
+    end note
+    
+    MS --> User : Meeting[]
+deactivate MS
+
+User -> MS : BookMeeting(organizerID, projectID, taskID, attendeeID, details)
+activate MS
+    MS -> PTS : task := GetProjectTask\n(organizerID, projectID, taskID)
+    
+    create participant "m : Meeting" as M
+    MS -> M : new Meeting(organizerID, attendeeID, taskID, details)
+    note right of MS : m.IsAccepted := false
+    
+    note right of MS : **Transaction Start**
+    MS -> NS : CreateMeetingNotification(m.Organizer, m.Attendee, m)
+    MS -> RS : CreateMeetingReminders(m.Organizer, m.Attendee, m)
+    MS -> MLS : CreateAndEnqueueMeetingMail(m.Organizer, m.Attendee, m)
+    note right of MS : **Transaction Commit**
+    
+    MS --> User : void
+deactivate MS
+
+User -> MS : AcceptMeeting(userID, meetingID)
+activate MS
+    MS -> MS : m := GetSupervisorMeeting(meetingID)
+    
+    note right of MS
+        Ensure the userID matches 
+        the meeting AttendeeID
+    end note
+    
+    note right of MS : m.IsAccepted = true
+    note right of MS : **Transaction Start**
+    MS -> NS : CreateMeetingNotification(m.Organizer, m.Attendee, m)
+    MS -> MLS : CreateAndEnqueueMeetingMail(m.Organizer, m.Attendee, m)
+    note right of MS : **Transaction Commit**
+    
+    MS --> User : void
+deactivate MS
+
+User -> MS : CancelMeeting(userID, meetingID)
+activate MS
+    MS -> MS : m := GetSupervisorMeeting(meetingID)
+    
+    note right of MS
+        Ensure the userID matches 
+        the meeting OrganizerID
+    end note
+    
+    note right of MS : **Transaction Start**
+    MS -> NS : CreateMeetingNotification(m.Organizer, m.Attendee, m)
+    MS -> RS : DeleteMeetingReminders(m)
+    MS -> MLS : CreateAndEnqueueMeetingMail(m.Organizezr, m.Attendee, m)
+    
+    note right of MS : Delete meeting from system
+    note right of MS : **Transaction Commit**
+    
+    MS --> User : void
+deactivate MS
+
+User -> MS : RejectMeeting(userID, meetingID)
+activate MS
+    MS -> MS : m := GetSupervisorMeeting(meetingID)
+    
+    note right of MS
+        Ensure the userID matches 
+        the meeting AttendeeID
+    end note
+    
+    note right of MS : **Transaction Start**
+    MS -> NS : CreateMeetingNotification(m.Organizer, m.Attendee, m)
+    MS -> RS : DeleteMeetingReminders(m)
+    MS -> MLS : CreateAndEnqueueMeetingMail(m.Organizer, m.Attendee, m)
+    
+    note right of MS : Delete meeting from system
+    note right of MS : **Transaction Commit**
+    
+    MS --> User : void
+deactivate MS
+
+@enduml

@@ -1,7 +1,8 @@
 Pending Tasks
-  Change select component to email inputs for manual student-supervisor assignment
-  Delete Organized and Attended meetings when deleting Users.
-  Add Pagination for fetching Users
+  Rewire feedback controller methods for compliance checking
+  Add feedback refresh polling
+  Update UML (Add section for mail worker and AI worker + student polling)
+  Add flowchart for Compliance Checking
   Improve progress log report generation
 
   UI Fixes:
@@ -18,3 +19,4 @@ Suggested Improvements (Not Required)
     - Change supervisorID to supervisorIDs in Project
       (Justify unormalized form due to sparse co-supervised projects)
     - Modify every report section (Time Consuming)
+  Change select component to email inputs for manual student-supervisor assignment

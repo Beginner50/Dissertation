@@ -1,4 +1,7 @@
+using System.Collections.Concurrent;
+using System.Reflection.Metadata.Ecma335;
 using System.Text.Json;
+using System.Threading.Channels;
 using Google.GenAI;
 using Google.GenAI.Types;
 using PMS.DTOs;
@@ -6,6 +9,48 @@ using PMS.Models;
 using Type = Google.GenAI.Types.Type;
 
 namespace PMS.Services;
+
+public class AIJobQueue
+{
+    private readonly Channel<AIJob> queue;
+    private readonly ConcurrentDictionary<long, string> jobStatusMap;
+
+    public AIJobQueue()
+    {
+        queue = Channel.CreateUnbounded<AIJob>();
+        jobStatusMap = new ConcurrentDictionary<long, string>();
+    }
+
+    public void QueueJob(AIJob job)
+    {
+        queue.Writer.TryWrite(job);
+        jobStatusMap[job.JobID] = "queued";
+    }
+
+    public async Task<AIJob> DequeueJob(CancellationToken cancellationToken)
+    {
+        var AIJob = await queue.Reader.ReadAsync(cancellationToken);
+        jobStatusMap[AIJob.JobID] = "processing";
+
+        return AIJob;
+    }
+
+    public string GetJobStatus(long jobID)
+    {
+        return jobStatusMap[jobID];
+    }
+
+    public void MarkJobCompleted(long jobID)
+    {
+        jobStatusMap[jobID] = "completed";
+    }
+
+    public void ClearStatusEntry(long jobID)
+    {
+        jobStatusMap.Remove(jobID, out _);
+    }
+}
+
 
 public class AIService
 {
@@ -25,22 +70,30 @@ public class AIService
         }
     };
 
-    protected readonly Client client;
-    protected readonly ILogger<AIService> logger;
+    private readonly AIJobQueue AIProcessingQueue;
+    private readonly Client client;
+    private readonly ProjectTaskService projectTaskService;
+    private readonly ILogger<AIService> logger;
 
-    public AIService(Client client, ILogger<AIService> logger)
+    public AIService(
+        Client client,
+        AIJobQueue AIProcessingQueue,
+        ProjectTaskService projectTaskService,
+        ILogger<AIService> logger)
     {
         this.client = client;
+        this.AIProcessingQueue = AIProcessingQueue;
+        this.projectTaskService = projectTaskService;
         this.logger = logger;
     }
 
-    public async Task<IEnumerable<UpdateFeedbackCriterionDTO>> EvaluateFeedbackCriteria(
+    public void CreateAndEnqueueAIComplianceJob(
        ProjectTask task,
        byte[] previousDeliverable, byte[] newDeliverable,
        List<FeedbackCriterion> previousCriteria
-   )
+    )
     {
-        var userContent = new Content
+        var content = new Content
         {
             Role = "user",
             Parts = new List<Part> {
@@ -65,26 +118,53 @@ public class AIService
             new Part { InlineData = new Blob { MimeType = "application/pdf", Data = newDeliverable } }
             }
         };
+        var config = new GenerateContentConfig
+        {
+            ResponseMimeType = "application/json",
+            ResponseJsonSchema = feedbackCriteriaListSchema,
+            Temperature = 0.1f
+        };
 
-        var response = await client.Models.GenerateContentAsync(
-            model: "gemini-2.5-flash",
-            contents: new List<Content> { userContent },
-            config: new GenerateContentConfig
-            {
-                ResponseMimeType = "application/json",
-                ResponseJsonSchema = feedbackCriteriaListSchema,
-                Temperature = 0.1f
-            }
-        );
+        var job = new AIJob
+        {
+            JobID = task.ProjectTaskID,
+            Content = content,
+            Config = config
+        };
 
-        var jsonText = response?.Candidates?[0]?.Content?.Parts?[0].Text ?? "[]";
-        logger.LogInformation("AI Response: {AIResponse}", jsonText);
-        var newCriteria = JsonSerializer.Deserialize<List<UpdateFeedbackCriterionDTO>>(jsonText) ?? [];
-        // logger.LogInformation("AI Response: {AIResponse}", JsonSerializer.Serialize(newCriteria));
+        AIProcessingQueue.QueueJob(job);
+    }
 
-        if (newCriteria.Count != previousCriteria.Count)
-            throw new Exception("AI evaluation returned unexpected number of criteria");
 
-        return newCriteria;
+    public string GetAIComplianceJobStatus(long taskID)
+    {
+        return AIProcessingQueue.GetJobStatus(taskID);
+    }
+
+    public void ClearAIComplianceJobStatus(long taskID)
+    {
+        AIProcessingQueue.ClearStatusEntry(taskID);
+    }
+
+    public async Task<T> DequeueExecuteAIJob<T>(AIJob job)
+    {
+        var generatedContent = await client.Models.GenerateContentAsync(
+                   model: "gemini-2.5-flash",
+                   contents: new List<Content> { job.Content },
+                   config: job.Config
+                );
+
+        var text = generatedContent?.Candidates?[0]?.Content?.Parts?[0].Text ?? "[]";
+        logger.LogInformation("AI Response: {AIResponse}", text);
+
+        try
+        {
+            return JsonSerializer.Deserialize<T>(text);
+        }
+        catch (JsonException e)
+        {
+            logger.LogError(e, "Failed to deserialize AI response for Job {JobId}. Raw text: {RawText}", job.JobID, text);
+            throw;
+        }
     }
 }

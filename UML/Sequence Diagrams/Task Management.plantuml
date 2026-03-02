@@ -1,0 +1,78 @@
+@startuml
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+actor "User\n(Student/Supervisor)" as U
+actor Supervisor
+participant "ProjectTaskService" as PTS
+participant "ProjectService" as PS
+participant "NotificationService" as NS
+participant "ReminderService" as RS
+participant "MailService" as MS
+
+U -> PTS : GetProjectTask(userID, projectID, taskID)
+activate PTS
+    note right of PTS 
+     Fetch task belonging to project 
+     with userID as member 
+    end note
+    PTS --> U : ProjectTask
+deactivate PTS
+
+U -> PTS : GetProjectTasksWithCount(userID, projectID)
+activate PTS
+    note right of PTS 
+     Fetch task belonging to project
+     with userID as member 
+    end note
+    PTS --> U : (ProjectTask[], count)
+deactivate PTS
+
+Supervisor -> PTS : CreateProjectTask(userID, projectID, title, dueDate)
+activate PTS
+    PTS -> PS : project := GetProject(userID, projectID)
+    
+    create participant "newTask : ProjectTask" as NT
+    note right of PTS : **Transaction Start**
+    PTS -> NT : new ProjectTask(title, dueDate, projectID)
+    PTS -> NS : CreateTaskNotification(project.Supervisor, project.Student, newTask)
+    PTS -> RS : CreateTaskReminder(project.Supervisor, project.Student, newTask)
+    PTS -> MS : CreateAndEnqueueTaskMail(project.Supervisor, project.Student, newTask)
+    note right of PTS : **Transaction Commit**
+
+    PTS --> Supervisor : ProjectTask
+deactivate PTS
+
+Supervisor -> PTS : EditProjectTask(userID, projectID, taskID, updates)
+activate PTS
+    PTS -> PS : project := GetProject(userID, projectID)
+    PTS -> PTS : task := GetProjectTask(userID, projectID, taskID)
+    
+    note right of PTS : **Transaction Start**
+    note right of PTS : Update task details 
+    PTS -> NS : CreateTaskNotification(project.Supervisor, project.Student, task)
+    alt newDueDate != task.DueDate
+        PTS -> RS : UpdateTaskReminder(newTask)
+        PTS -> MS : CreateAndEnqueueTaskMail(project.Supervisor, project.Student, newTask)
+    end
+    note right of PTS : **Transaction Commit**
+    
+    PTS --> Supervisor : void
+deactivate PTS
+
+Supervisor -> PTS : DeleteProjectTask(userID, projectID, taskID)
+activate PTS
+    PTS -> PS : project := GetProject(userID, projectID)
+    PTS -> PTS : task := GetProjectTask(userID, projectID, taskID)
+    
+    note right of PTS : **Transaction Start**
+    PTS -> NS : CreateTaskNotification(project.Supervisor, project.Student, task)
+    PTS -> RS : DeleteTaskReminder(task)
+    PTS -> MS : CreateAndEnqueueTaskMail(project.Supervisor, project.Student, task)
+    note right of PTS : Delete task
+    note right of PTS : **Transaction Commit**
+
+    PTS --> Supervisor : void
+deactivate PTS
+
+@enduml

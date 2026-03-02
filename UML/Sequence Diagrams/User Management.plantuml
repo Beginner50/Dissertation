@@ -1,0 +1,60 @@
+@startuml
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+actor Admin
+participant "UserService" as US
+
+Admin -> US : CreateUser(name, email, password, role)
+activate US
+    US -> US : existingUser := GetUserByEmail(email)
+    alt existingUser != null
+        US --> Admin : throw UnauthorizedAccessException
+    end
+        create participant "newUser : User" as UN
+        US -> UN : new User(name, email, hashedPass, role)
+        US --> Admin : void
+deactivate US
+
+Admin -> US : EditUser(userID, newName, newEmail, newRole)
+activate US
+    US -> US : user := GetUser(userID)
+    alt user == null
+        US --> Admin : throw UnauthorizedAccessException
+    end
+    alt newEmail != null && newEmail != user.email
+        US -> US : existingUser := GetUserByEmail(newEmail)
+        alt existingUser != null
+                US --> Admin : throw UnauthorizedAccessException
+        end
+    end
+    note right of US : Update user details
+    US --> Admin : void
+deactivate US
+
+Admin -> US : DeleteUser(userID)
+activate US
+    US -> US : user := GetUser(userID)
+    note right of US
+        Include supervised and conducted projects
+    end note
+    note right of US : Set user.isDeleted = true
+    loop for each project in (supervised + conducted)
+        note right of US : Set project.isArchived = true
+    end
+    US -> US : Logout(userID)
+    US --> Admin : void
+deactivate US
+
+Admin -> US : GetAllUsersWithCount(limit, offset)
+activate US
+    note right of US: Filter out Admin users
+    US --> Admin : (User[], count)
+deactivate US
+
+Admin -> US : GetUsersByIds(userIDs)
+activate US
+    US --> Admin : User[]
+deactivate US
+
+@enduml

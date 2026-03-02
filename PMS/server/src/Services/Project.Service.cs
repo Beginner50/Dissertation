@@ -166,7 +166,7 @@ public class ProjectService
     }
 
     public async Task EditProject(
-         long userID, long projectID, string? title, string? description,
+         long supervisorID, long projectID, string? title, string? description,
          Func<IQueryable<Project>, IQueryable<Project>>? queryExtension = null
      )
     {
@@ -176,7 +176,7 @@ public class ProjectService
             description: description,
             queryExtension: q =>
             {
-                var securityCheck = q.NotArchived().ContainsSupervisor(userID);
+                var securityCheck = q.NotArchived().ContainsSupervisor(supervisorID);
                 return queryExtension != null ? queryExtension(securityCheck) : securityCheck;
             });
     }
@@ -194,14 +194,14 @@ public class ProjectService
     }
 
     public async Task ArchiveProject(
-         long userID,
+         long supervisorID,
          long projectID,
          Func<IQueryable<Project>, IQueryable<Project>>? queryExtension = null
      )
     {
         await ArchiveProject(projectID, queryExtension: q =>
             {
-                var securityCheck = q.NotArchived().ContainsSupervisor(userID);
+                var securityCheck = q.NotArchived().ContainsSupervisor(supervisorID);
                 return queryExtension != null ? queryExtension(securityCheck) : securityCheck;
             });
     }

@@ -98,16 +98,10 @@ public class TasksController : ControllerBase
                     }, limit, offset
                 );
 
-            return Ok(new
-            {
-                Items = tasks,
-                TotalCount = count
-            });
+            return Ok(new { Items = tasks, TotalCount = count });
         }
         catch (Exception e)
-        {
-            return NotFound(e.Message);
-        }
+        { return NotFound(e.Message); }
     }
 
     [Route("api/users/{userID}/projects/{projectID}/tasks")]
