@@ -36,6 +36,8 @@ export default function TaskRoute() {
     changeObserved: "",
   });
 
+  const [isPolling, setIsPolling] = useState(false);
+
   const { projectID, taskID } = useParams();
 
   /* ---------------------------------------------------------------------------------- */
@@ -129,6 +131,25 @@ export default function TaskRoute() {
     enabled: user.role != "supervisor",
   });
 
+  const { data: pollStatus } = useQuery({
+    queryKey: ["tasks", taskID, "compliance-status"],
+    queryFn: async () => {
+      const response: any = await authorizedAPI
+        .get(
+          `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/compliance-status`,
+        )
+        .json();
+
+      if (response.status === "completed") {
+        setIsPolling(false);
+        queryClient.invalidateQueries({ queryKey: ["tasks", taskID] });
+      }
+      return response.status;
+    },
+    enabled: isPolling,
+    refetchInterval: isPolling ? 1000 * 5 : false,
+  });
+
   /* ---------------------------------------------------------------------------------- */
 
   const handleCreateCriterionClick = () => {
@@ -162,23 +183,12 @@ export default function TaskRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const handleOpenStagedDeliverable = async () => {
+  const openDeliverableInNewTab = async (url: string, defaultName: string) => {
     try {
-      const response = await authorizedAPI.get(
-        `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`,
-      );
-
-      const contentDisposition = response.headers.get("content-disposition");
-      const filename = (() => {
-        if (contentDisposition) {
-          const match = contentDisposition.match(/filename="?([^";]+)"/);
-          if (match && match[1]) return match[1];
-        }
-        return "staged_deliverable.pdf";
-      })();
-
+      const response = await authorizedAPI.get(url);
       const blob = await response.blob();
-      const file = new File([blob], filename, { type: blob.type });
+
+      const file = new File([blob], defaultName, { type: blob.type });
       const fileURL = window.URL.createObjectURL(file);
 
       window.open(fileURL, "_blank", "noopener,noreferrer");
@@ -187,36 +197,7 @@ export default function TaskRoute() {
         window.URL.revokeObjectURL(fileURL);
       }, 1000 * 30);
     } catch (error) {
-      console.error("Could not open staged deliverable:", error);
-    }
-  };
-
-  const handleOpenSubmittedDeliverable = async () => {
-    try {
-      const response = await authorizedAPI.get(
-        `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable?file=true`,
-      );
-
-      const contentDisposition = response.headers.get("content-disposition");
-      const filename = (() => {
-        if (contentDisposition) {
-          const match = contentDisposition.match(/filename="?([^";]+)"/);
-          if (match && match[1]) return match[1];
-        }
-        return "submitted_deliverable.pdf";
-      })();
-
-      const blob = await response.blob();
-      const file = new File([blob], filename, { type: blob.type });
-      const fileURL = window.URL.createObjectURL(file);
-
-      window.open(fileURL, "_blank", "noopener,noreferrer");
-
-      setTimeout(() => {
-        window.URL.revokeObjectURL(fileURL);
-      }, 1000 * 30);
-    } catch (error) {
-      console.error("Could not open submitted deliverable:", error);
+      console.error(`Could not open deliverable (${defaultName}):`, error);
     }
   };
 
@@ -329,13 +310,19 @@ export default function TaskRoute() {
   };
 
   const handleCheckFeedbackCompliance = () => {
-    mutation.mutate({
-      method: "post",
-      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/compliance-check`,
-      data: {},
-      timeout: 1000 * 60,
-      invalidateQueryKeys: [["tasks", taskID]],
-    });
+    mutation.mutate(
+      {
+        method: "post",
+        url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/compliance-check`,
+        data: {},
+        invalidateQueryKeys: [],
+      },
+      {
+        onSuccess: () => {
+          setIsPolling(true);
+        },
+      },
+    );
   };
 
   /* ---------------------------------------------------------------------------------- */
@@ -406,14 +393,24 @@ export default function TaskRoute() {
             <DeliverableCard
               cardDescription="Submitted Deliverable"
               deliverable={submittedDeliverable}
-              onOpenDeliverable={handleOpenSubmittedDeliverable}
+              onOpenDeliverable={() =>
+                openDeliverableInNewTab(
+                  `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/submitted-deliverable?file=true`,
+                  "submitted_deliverable.pdf",
+                )
+              }
             />
           )}
           {!task?.isLocked && user.role != "supervisor" && stagedDeliverable ? (
             <DeliverableCard
               cardDescription="Staged Deliverable"
               deliverable={stagedDeliverable}
-              onOpenDeliverable={handleOpenStagedDeliverable}
+              onOpenDeliverable={() =>
+                openDeliverableInNewTab(
+                  `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable?file=true`,
+                  "staged_deliverable.pdf",
+                )
+              }
               onRemove={handleRemoveStagedDeliverable}
             />
           ) : (
@@ -435,11 +432,12 @@ export default function TaskRoute() {
             {user.role == "student" && (
               <TaskActions.CheckComplianceButton
                 disabled={
+                  isPolling ||
                   !stagedDeliverable ||
                   task?.feedbackCriterias?.filter((c) => c.status == "unmet").length == 0
                 }
                 onClick={handleCheckFeedbackCompliance}
-                isLoading={mutation.status == "pending"}
+                isLoading={mutation.status == "pending" || isPolling}
               />
             )}
             {user.role == "student" && (

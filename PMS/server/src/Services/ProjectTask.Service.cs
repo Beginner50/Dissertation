@@ -33,6 +33,23 @@ public class ProjectTaskService
         this.reminderService = reminderService;
     }
 
+    // DO NOT USE: Reserved For AI Compliance
+    public async Task<T> GetProjectTask<T>(
+            long taskID,
+            Expression<Func<ProjectTask, T>> selector,
+            Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null
+        )
+    {
+        IQueryable<ProjectTask> query = dbContext.Tasks
+            .Where(t => t.ProjectTaskID == taskID);
+        query = taskQueryExtension?.Invoke(query) ?? query;
+
+        return await query
+            .Select(selector)
+            .FirstOrDefaultAsync()
+            ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
+    }
+
     public async Task<T> GetProjectTask<T>(
         long userID, long projectID, long taskID,
         Expression<Func<ProjectTask, T>> selector,

@@ -16,16 +16,16 @@ public class FeedbackService
     private readonly NotificationService notificationService;
     private readonly ReminderService reminderService;
     private readonly AIService AIService;
-    private readonly AIJobQueue aIProcessingQueue;
+    private readonly MailService mailService;
     private readonly ILogger<FeedbackService> logger;
 
     public FeedbackService(
         PMSDbContext dbContext,
         AIService aiService,
-        AIJobQueue aIProcessingQueue,
         ProjectTaskService projectTaskService,
         NotificationService notificationService,
         ReminderService reminderService,
+        MailService mailService,
         ILogger<FeedbackService> logger
     )
     {
@@ -35,6 +35,7 @@ public class FeedbackService
         this.notificationService = notificationService;
         this.reminderService = reminderService;
         this.AIService = aiService;
+        this.mailService = mailService;
     }
 
     // DO NOT USE: Reserved for AI Compliance
@@ -124,13 +125,13 @@ public class FeedbackService
 
     // DO NOT USE: Reserved for AI Compliance
     public async Task EditFeedbackCriterion(
-        long feedbackCriterionID, string? description, string? status
+        long feedbackCriterionID, string? status, string? changedObserved
     )
     {
         var feedbackCriterion = await GetFeedbackCriterion(feedbackCriterionID);
 
-        feedbackCriterion.Description = description ?? feedbackCriterion.Description;
         feedbackCriterion.Status = status ?? feedbackCriterion.Status;
+        feedbackCriterion.ChangeObserved = changedObserved ?? feedbackCriterion.ChangeObserved;
 
         await dbContext.SaveChangesAsync();
     }
@@ -221,5 +222,54 @@ public class FeedbackService
             AIService.ClearAIComplianceJobStatus(taskID);
 
         return status;
+    }
+
+    public async Task ExecuteJobAndUpdateFeedbackCriteria(AIJob job)
+    {
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
+        {
+            try
+            {
+
+                var task = await projectTaskService.GetProjectTask(
+                                       job.JobID,
+                                       selector: t => t,
+                                       taskQueryExtension: t => t.Include(t => t.Project)
+                                                                   .ThenInclude(p => p.Supervisor)
+                                                                 .Include(t => t.Project)
+                                                                   .ThenInclude(p => p.Student)
+                                                                 .Include(t => t.FeedbackCriterias)
+                                   );
+
+                var feedbackToUpdate = (await AIService.DequeueExecuteAIJob<List<UpdateFeedbackCriterionDTO>>(job))
+                                                          .ToDictionary(c => c.FeedbackCriterionID);
+                task.FeedbackCriterias.ForEach(old =>
+                {
+                    old.Status = feedbackToUpdate[old.FeedbackCriterionID].Status ?? old.Status;
+                    old.ChangeObserved = feedbackToUpdate[old.FeedbackCriterionID].ChangeObserved ?? old.ChangeObserved;
+                });
+                await dbContext.SaveChangesAsync();
+
+                await notificationService.CreateTaskNotification(
+                    supervisor: task.Project.Supervisor,
+                    student: task.Project.Student,
+                    task: task,
+                    NotificationType.TASK_COMPLIANCE_CHECK_COMPLETION
+                );
+                mailService.CreateAndEnqueueTaskMail(
+                                        supervisor: task.Project.Supervisor,
+                                        student: task.Project.Student,
+                                        task: task,
+                                        MailType.TASK_COMPLIANCE_CHECK_COMPLETION
+                                    );
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 }

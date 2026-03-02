@@ -95,12 +95,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 try {
                   const data = await performRefresh();
 
-                  const newAuth = {
-                    user: authState.user,
+                  setAuthState((current) => ({
+                    ...current,
+                    token: data.token,
                     isAuthenticated: true,
-                    ...data,
-                  };
-                  setAuthState(newAuth);
+                    tokenExpiry: data.tokenExpiry,
+                  }));
                 } catch (e) {
                   await signOut();
                 }

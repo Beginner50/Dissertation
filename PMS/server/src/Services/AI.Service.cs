@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading.Channels;
 using Google.GenAI;
 using Google.GenAI.Types;
+using Newtonsoft.Json.Linq;
 using PMS.DTOs;
 using PMS.Models;
 using Type = Google.GenAI.Types.Type;
@@ -37,7 +38,11 @@ public class AIJobQueue
 
     public string GetJobStatus(long jobID)
     {
-        return jobStatusMap[jobID];
+        if (jobStatusMap.TryGetValue(jobID, out var status))
+        {
+            return status;
+        }
+        return "unknown";
     }
 
     public void MarkJobCompleted(long jobID)
@@ -72,18 +77,14 @@ public class AIService
 
     private readonly AIJobQueue AIProcessingQueue;
     private readonly Client client;
-    private readonly ProjectTaskService projectTaskService;
     private readonly ILogger<AIService> logger;
 
     public AIService(
         Client client,
-        AIJobQueue AIProcessingQueue,
-        ProjectTaskService projectTaskService,
         ILogger<AIService> logger)
     {
         this.client = client;
-        this.AIProcessingQueue = AIProcessingQueue;
-        this.projectTaskService = projectTaskService;
+        this.AIProcessingQueue = new AIJobQueue();
         this.logger = logger;
     }
 
@@ -135,6 +136,10 @@ public class AIService
         AIProcessingQueue.QueueJob(job);
     }
 
+    public async Task<AIJob> DequeueJob(CancellationToken cancellationToken)
+    {
+        return await AIProcessingQueue.DequeueJob(cancellationToken);
+    }
 
     public string GetAIComplianceJobStatus(long taskID)
     {
@@ -159,7 +164,9 @@ public class AIService
 
         try
         {
-            return JsonSerializer.Deserialize<T>(text);
+            var deserializedData = JsonSerializer.Deserialize<T>(text);
+            AIProcessingQueue.MarkJobCompleted(job.JobID);
+            return deserializedData;
         }
         catch (JsonException e)
         {

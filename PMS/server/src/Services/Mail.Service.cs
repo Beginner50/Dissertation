@@ -51,6 +51,7 @@ namespace PMS.Services;
 public enum MailType
 {
     TASK_ASSIGNED,
+    TASK_COMPLIANCE_CHECK_COMPLETION,
     TASK_UPDATED,
     TASK_DELETED,
     MEETING_SCHEDULED,
@@ -247,6 +248,20 @@ public class MailService
 
                     {sanitizedSupervisorName} has deleted the task, 
                     <b>{sanitizedTaskTitle}</b>.<br/><br/>
+
+                    {MailFooter}
+                    """
+                };
+                break;
+            case MailType.TASK_COMPLIANCE_CHECK_COMPLETION:
+                mail.Subject = "FYP: Compliance Check Completed!";
+                mail.Body = new TextPart("html")
+                {
+                    Text = $"""
+                    Dear {sanitizedStudentName}, <br><br>
+
+                    The AI Feedback Compliance Check has completed. Please review
+                    the updated feedback.
 
                     {MailFooter}
                     """

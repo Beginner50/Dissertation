@@ -1,6 +1,4 @@
 Pending Tasks
-  Rewire feedback controller methods for compliance checking
-  Add feedback refresh polling
   Update UML (Add section for mail worker and AI worker + student polling)
   Add flowchart for Compliance Checking
   Improve progress log report generation

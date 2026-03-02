@@ -1,39 +1,36 @@
 using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
+using PMS.DatabaseContext;
 using PMS.DTOs;
 using PMS.Services;
 
 
 public class AIWorker : BackgroundService
 {
-    private readonly AIJobQueue AIJobQueue;
+    private readonly AIService AIService;
     private readonly IServiceProvider serviceProvider;
     private readonly ILogger<AIWorker> logger;
 
-    public AIWorker(IServiceProvider serviceProvider, AIJobQueue AIJobQueue, ILogger<AIWorker> logger)
+    public AIWorker(AIService AIService, IServiceProvider serviceProvider, ILogger<AIWorker> logger)
     {
-        this.AIJobQueue = AIJobQueue;
+        this.AIService = AIService;
         this.serviceProvider = serviceProvider;
         this.logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
+                var job = await AIService.DequeueJob(cancellationToken);
                 using (var scope = serviceProvider.CreateScope())
                 {
-                    var aiService = scope.ServiceProvider.GetRequiredService<AIService>();
                     var feedbackService = scope.ServiceProvider.GetRequiredService<FeedbackService>();
-                    var job = await AIJobQueue.DequeueJob(stoppingToken);
 
                     // Note: To create different AI Job logic, add a type field to AIJob and use a switch here
-                    await ExecuteAIComplianceCheckJobAndUpdateFeedbackCriteria(
-                        job,
-                        aiService,
-                        feedbackService
-                    );
+                    await feedbackService.ExecuteJobAndUpdateFeedbackCriteria(job);
                 }
                 logger.LogInformation("AI Compliance Succesful!");
             }
@@ -41,22 +38,8 @@ public class AIWorker : BackgroundService
             catch (Exception)
             {
                 logger.LogError("Error occurred");
+                throw;
             }
         }
-    }
-
-    protected async Task ExecuteAIComplianceCheckJobAndUpdateFeedbackCriteria(
-        AIJob job,
-        AIService aiService,
-        FeedbackService feedbackService
-    )
-    {
-        var feedbackToUpdate = await aiService.DequeueExecuteAIJob<List<UpdateFeedbackCriterionDTO>>(job);
-        foreach (var feedback in feedbackToUpdate)
-            await feedbackService.EditFeedbackCriterion(
-                feedback.FeedbackCriterionID,
-                feedback.Description,
-                feedback.ChangeObserved
-            );
     }
 }

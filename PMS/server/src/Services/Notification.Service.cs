@@ -14,6 +14,7 @@ public enum NotificationType
     TASK_CREATED,
     TASK_UPDATED,
     TASK_DELETED,
+    TASK_COMPLIANCE_CHECK_COMPLETION,
     DELIVERABLE_SUBMITTED,
     FEEDBACK_PROVIDED,
     FEEDBACK_UPDATED,
@@ -161,10 +162,18 @@ public class NotificationService
                 notification = new Notification
                 {
                     Type = "task",
-                    Description = $"{supervisor.Name} updated feedback for task: {task.Title}",
+                    Description = $"Task {task.Title}: {supervisor.Name} updated feedback",
                     RecipientID = (long)student.UserID
                 };
                 await dbContext.AddAsync(notification);
+                break;
+            case NotificationType.TASK_COMPLIANCE_CHECK_COMPLETION:
+                notification = new Notification
+                {
+                    Type = "task",
+                    Description = $"{task.Title}: Compliance Check completed!",
+                    RecipientID = (long)student.UserID
+                };
                 break;
             default:
                 throw new Exception("Invalid Notification Type!");

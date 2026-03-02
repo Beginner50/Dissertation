@@ -133,15 +133,16 @@ public class TaskDeliverableService
     public async Task RemoveStagedDeliverable(long userID, long projectID, long taskID)
     {
 
-        var stagedDeliverableID = await GetStagedDeliverable(
+        var task = await projectTaskService.GetProjectTask(
             userID,
             projectID,
             taskID,
-            selector: t => t.DeliverableID
+            selector: t => t
         );
 
+        task.StagedDeliverableID = null;
         await dbContext.Deliverables
-                .Where(d => d.DeliverableID == stagedDeliverableID)
+                .Where(d => d.DeliverableID == task.StagedDeliverableID)
                 .ExecuteDeleteAsync();
 
         await dbContext.SaveChangesAsync();
@@ -170,19 +171,24 @@ public class TaskDeliverableService
             throw new InvalidOperationException("Submission Disabled For Locked Task!");
         if (task.StagedDeliverableID == null)
             throw new InvalidOperationException("Staged Deliverable Not Found!");
-        if (task.FeedbackCriterias.Any(c => c.Status == "overriden"))
+        if (task.FeedbackCriterias.Any(c => c.Status == "unmet"))
             throw new InvalidOperationException("Not All Feedback Criteria Met!");
 
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
             try
             {
-                if (task.SubmittedDeliverableID != null)
-                    await dbContext.Deliverables
-                             .Where(d => d.DeliverableID == task.SubmittedDeliverableID)
-                             .ExecuteDeleteAsync();
+                var previousSubmissionID = task.SubmittedDeliverableID;
+
                 task.SubmittedDeliverableID = task.StagedDeliverableID;
                 task.StagedDeliverableID = null;
+
+                await dbContext.SaveChangesAsync();
+
+                if (previousSubmissionID != null)
+                    await dbContext.Deliverables
+                             .Where(d => d.DeliverableID == previousSubmissionID)
+                             .ExecuteDeleteAsync();
 
                 await dbContext.SaveChangesAsync();
 

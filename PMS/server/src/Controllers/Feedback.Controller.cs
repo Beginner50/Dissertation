@@ -128,10 +128,10 @@ public class FeedbackController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback/compliance-check")]
     [HttpPost]
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback/compliance-check")]
     [Authorize(Policy = "Ownership")]
-    public async Task<IActionResult> FeedbackComplianceCheck(
+    public async Task<IActionResult> StartFeedbackComplianceCheck(
         [FromRoute] long userID,
         [FromRoute] long projectID,
         [FromRoute] long taskID
@@ -139,12 +139,23 @@ public class FeedbackController : ControllerBase
     {
         try
         {
-            await feedbackService.AIFeedbackComplianceCheck(userID, projectID, taskID);
-            return NoContent();
+            await feedbackService.CreateAndEnqueueComplianceCheckJob(userID, projectID, taskID);
+
+            return Accepted();
         }
         catch (Exception e)
         {
             return BadRequest(e.Message);
         }
+    }
+
+    [HttpGet]
+    [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback/compliance-status")]
+    [Authorize(Policy = "Ownership")]
+    public IActionResult GetFeedbackComplianceStatus([FromRoute] long taskID)
+    {
+        var status = feedbackService.PollComplianceCheckJob(taskID);
+
+        return Ok(new { status });
     }
 }

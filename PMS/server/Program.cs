@@ -233,6 +233,7 @@ builder.Services.AddScoped<ReminderService>();
 builder.Services.AddScoped<NotificationService>();
 
 builder.Services.AddHostedService<MailWorker>();
+builder.Services.AddHostedService<AIWorker>();
 
 builder.Services.AddDbContext<PMSDbContext>(); // Database Context Registration
 builder.Services.AddControllers();

@@ -79,8 +79,10 @@ TaskModal.TaskTitle = ({
   useEffect(() => setLocalValue(title), [title]);
 
   useEffect(() => {
-    if (title == "") handleTitleChange(localValue);
-  }, [title]);
+    if (title == "") {
+      handleTitleChange(localValue);
+    }
+  }, [localValue]);
 
   return (
     <FormControl fullWidth>
