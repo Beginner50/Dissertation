@@ -7,7 +7,6 @@ actor Student
 actor "User (Student/Supervisor)" as U
 participant "FeedbackService" as FS
 participant "ProjectTaskService" as PTS
-participant "AIService" as AI
 
 Supervisor -> FS : CreateFeedbackCriterion(userID, projectID, taskID, description)
 activate FS
@@ -19,26 +18,6 @@ activate FS
         create participant "c : FeedbackCriterion" as C
         FS -> C : new FeedbackCriterion(description, taskID)
         FS --> Supervisor : void
-    end
-deactivate FS
-
-Student -> FS : AIFeedbackComplianceCheck(userID, projectID, taskID)
-activate FS
-    FS -> PTS : task := GetProjectTask\n(userID, projectID, taskID)
-    
-    alt staged or submitted file missing
-        FS --> Student : throw Exception
-    else no unmet criteria found
-        FS --> Student : throw UnauthorizedAccessException
-    else
-        FS -> AI : EvaluateFeedbackCriteria\n(task, oldFile, newFile, unmetCriteria)
-        activate AI
-            note right of AI : AI compares PDF files against requirements
-            AI --> FS : List of updated statuses and observed changes
-        deactivate AI
-        
-        note right of FS : Update criteria where changes were observed
-        FS --> Student : void
     end
 deactivate FS
 

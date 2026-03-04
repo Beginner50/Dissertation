@@ -218,8 +218,8 @@ AddHostedService:
 */
 builder.Services.AddSingleton<IAuthorizationHandler, OwnershipHandler>();
 builder.Services.AddSingleton<Client>(); // Gemini client
+builder.Services.AddSingleton<AIJobQueue>();
 builder.Services.AddSingleton<TokenService>(new TokenService(symmetricKey));
-builder.Services.AddSingleton<AIService>();
 builder.Services.AddSingleton<MailService>(new MailService(new MailQueue(), mailAccount, mailPassword));
 
 builder.Services.AddScoped<ReportService>();
@@ -231,6 +231,7 @@ builder.Services.AddScoped<FeedbackService>();
 builder.Services.AddScoped<MeetingService>();
 builder.Services.AddScoped<ReminderService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<AIComplianceService>();
 
 builder.Services.AddHostedService<MailWorker>();
 builder.Services.AddHostedService<AIWorker>();

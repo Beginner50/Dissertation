@@ -14,18 +14,12 @@ public class FeedbackService
     private readonly PMSDbContext dbContext;
     private readonly ProjectTaskService projectTaskService;
     private readonly NotificationService notificationService;
-    private readonly ReminderService reminderService;
-    private readonly AIService AIService;
-    private readonly MailService mailService;
     private readonly ILogger<FeedbackService> logger;
 
     public FeedbackService(
         PMSDbContext dbContext,
-        AIService aiService,
         ProjectTaskService projectTaskService,
         NotificationService notificationService,
-        ReminderService reminderService,
-        MailService mailService,
         ILogger<FeedbackService> logger
     )
     {
@@ -33,15 +27,6 @@ public class FeedbackService
         this.logger = logger;
         this.projectTaskService = projectTaskService;
         this.notificationService = notificationService;
-        this.reminderService = reminderService;
-        this.AIService = aiService;
-        this.mailService = mailService;
-    }
-
-    // DO NOT USE: Reserved for AI Compliance
-    public async Task<FeedbackCriterion> GetFeedbackCriterion(long feedbackCriterionID)
-    {
-        return await dbContext.FeedbackCriterias.FirstAsync(c => c.FeedbackCriterionID == feedbackCriterionID);
     }
 
     public async Task<T> GetFeedbackCriterion<T>(
@@ -74,28 +59,37 @@ public class FeedbackService
     }
 
     public async Task<IEnumerable<FeedbackCriterion>> GetFeedbackCriteria(
-    long userID, long projectID, long taskID,
-    Func<IQueryable<FeedbackCriterion>, IQueryable<FeedbackCriterion>>? feedbackQueryExtension = null,
-    Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
-    Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null
-)
+        long taskID,
+        Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
+        Func<IQueryable<FeedbackCriterion>, IQueryable<FeedbackCriterion>>? feedbackQueryExtension = null
+    )
+    {
+        IQueryable<ProjectTask> taskQuery = dbContext.Tasks
+                                    .Where(t => t.ProjectTaskID == taskID);
+        taskQuery = taskQueryExtension?.Invoke(taskQuery) ?? taskQuery;
+
+        IQueryable<FeedbackCriterion> feedbackQuery = dbContext.FeedbackCriterias
+                                        .Where(c => taskQuery.Any(t => t.ProjectTaskID == c.TaskID));
+        feedbackQuery = feedbackQueryExtension?.Invoke(feedbackQuery) ?? feedbackQuery;
+
+        return await feedbackQuery.ToListAsync();
+    }
+
+    public async Task<IEnumerable<FeedbackCriterion>> GetFeedbackCriteria(
+        long userID, long projectID, long taskID,
+        Func<IQueryable<FeedbackCriterion>, IQueryable<FeedbackCriterion>>? feedbackQueryExtension = null
+    )
     {
         IQueryable<Project> projectQuery = dbContext.Projects
                                 .NotArchived()
                                 .ContainsMember(userID);
-        projectQuery = projectQueryExtension?.Invoke(projectQuery) ?? projectQuery;
 
-        IQueryable<ProjectTask> taskQuery = dbContext.Tasks
-                                .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID)
-                                .Where(t => projectQuery.Any(p => p.ProjectID == t.ProjectID));
-        taskQuery = taskQueryExtension?.Invoke(taskQuery) ?? taskQuery;
-
-        var query = dbContext.FeedbackCriterias
-                    .Where(f => taskQuery.Any(t => t.ProjectTaskID == f.TaskID));
-
-        query = feedbackQueryExtension?.Invoke(query) ?? query;
-
-        return await query.ToListAsync();
+        return await GetFeedbackCriteria(
+            taskID,
+            taskQueryExtension: q => q.Where(t => t.ProjectID == projectID &&
+                                                  projectQuery.Any(p => p.ProjectID == t.ProjectID)),
+            feedbackQueryExtension: feedbackQueryExtension
+        );
     }
 
     public async Task CreateFeedbackCriterion
@@ -107,6 +101,10 @@ public class FeedbackService
             taskID,
             selector: t => t,
             taskQueryExtension: t => t.Where(t => t.AssignedByID == userID)
+                                      .Include(t => t.Project)
+                                        .ThenInclude(p => p.Supervisor)
+                                      .Include(t => t.Project)
+                                        .ThenInclude(p => p.Student)
         );
 
         if (task.SubmittedDeliverableID == null)
@@ -119,21 +117,27 @@ public class FeedbackService
             TaskID = taskID,
         };
 
-        await dbContext.AddAsync(newCriterion);
-        await dbContext.SaveChangesAsync();
-    }
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
+        {
+            try
+            {
+                await dbContext.AddAsync(newCriterion);
+                await dbContext.SaveChangesAsync();
 
-    // DO NOT USE: Reserved for AI Compliance
-    public async Task EditFeedbackCriterion(
-        long feedbackCriterionID, string? status, string? changedObserved
-    )
-    {
-        var feedbackCriterion = await GetFeedbackCriterion(feedbackCriterionID);
+                await notificationService.CreateTaskNotification(
+                    task.Project.Supervisor,
+                    task.Project.Student,
+                    task,
+                    NotificationType.FEEDBACK_PROVIDED);
 
-        feedbackCriterion.Status = status ?? feedbackCriterion.Status;
-        feedbackCriterion.ChangeObserved = changedObserved ?? feedbackCriterion.ChangeObserved;
-
-        await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 
     public async Task EditFeedbackCriterion
@@ -151,6 +155,26 @@ public class FeedbackService
 
         feedbackCriterion.Description = description ?? feedbackCriterion.Description;
         feedbackCriterion.Status = status ?? feedbackCriterion.Status;
+
+        await dbContext.SaveChangesAsync();
+    }
+
+    // Currently reserved FOR AI Compliance
+    public async Task EditFeedbackCriteria(long taskID, List<UpdateFeedbackCriterionDTO> newFeedbackValues)
+    {
+        var newFeedbackValuesMap = newFeedbackValues.ToDictionary(c => c.FeedbackCriterionID);
+        var feedbackCriterionIDs = newFeedbackValues.Select(c => c.FeedbackCriterionID).ToList();
+
+        var originalFeedbackValues = (await GetFeedbackCriteria(
+            taskID,
+            feedbackQueryExtension: q => q.Where(c => feedbackCriterionIDs.Contains(c.FeedbackCriterionID))
+        )).ToList();
+
+        originalFeedbackValues.ForEach(c =>
+        {
+            c.Status = newFeedbackValuesMap[c.FeedbackCriterionID].Status ?? c.Status;
+            c.ChangeObserved = newFeedbackValuesMap[c.FeedbackCriterionID].ChangeObserved ?? c.ChangeObserved;
+        });
 
         await dbContext.SaveChangesAsync();
     }
@@ -188,88 +212,5 @@ public class FeedbackService
 
         dbContext.Remove(feedbackCriterion);
         await dbContext.SaveChangesAsync();
-    }
-
-    public async Task CreateAndEnqueueComplianceCheckJob(long userID, long projectID, long taskID)
-    {
-        var task = await projectTaskService.GetProjectTask(
-            userID,
-            projectID,
-            taskID,
-            selector: t => t,
-            taskQueryExtension: t => t.Include(t => t.SubmittedDeliverable)
-                                      .Include(t => t.StagedDeliverable)
-                                      .Include(t => t.FeedbackCriterias)
-        );
-
-        if (task.StagedDeliverable == null || task.SubmittedDeliverable == null)
-            throw new Exception("Staged Or Submitted Deliverable Not Found!");
-        if (task.FeedbackCriterias == null || task.FeedbackCriterias.Count == 0)
-            throw new UnauthorizedAccessException("Prior Feedback Criteria Not Found!");
-
-        AIService.CreateAndEnqueueAIComplianceJob(
-            task,
-            previousDeliverable: task.SubmittedDeliverable.File,
-            newDeliverable: task.StagedDeliverable.File,
-            previousCriteria: task.FeedbackCriterias.Where(c => c.Status == "unmet").ToList()
-        );
-    }
-
-    public string PollComplianceCheckJob(long taskID)
-    {
-        var status = AIService.GetAIComplianceJobStatus(taskID);
-        if (status == "completed")
-            AIService.ClearAIComplianceJobStatus(taskID);
-
-        return status;
-    }
-
-    public async Task ExecuteJobAndUpdateFeedbackCriteria(AIJob job)
-    {
-        using (var transaction = await dbContext.Database.BeginTransactionAsync())
-        {
-            try
-            {
-
-                var task = await projectTaskService.GetProjectTask(
-                                       job.JobID,
-                                       selector: t => t,
-                                       taskQueryExtension: t => t.Include(t => t.Project)
-                                                                   .ThenInclude(p => p.Supervisor)
-                                                                 .Include(t => t.Project)
-                                                                   .ThenInclude(p => p.Student)
-                                                                 .Include(t => t.FeedbackCriterias)
-                                   );
-
-                var feedbackToUpdate = (await AIService.DequeueExecuteAIJob<List<UpdateFeedbackCriterionDTO>>(job))
-                                                          .ToDictionary(c => c.FeedbackCriterionID);
-                task.FeedbackCriterias.ForEach(old =>
-                {
-                    old.Status = feedbackToUpdate[old.FeedbackCriterionID].Status ?? old.Status;
-                    old.ChangeObserved = feedbackToUpdate[old.FeedbackCriterionID].ChangeObserved ?? old.ChangeObserved;
-                });
-                await dbContext.SaveChangesAsync();
-
-                await notificationService.CreateTaskNotification(
-                    supervisor: task.Project.Supervisor,
-                    student: task.Project.Student,
-                    task: task,
-                    NotificationType.TASK_COMPLIANCE_CHECK_COMPLETION
-                );
-                mailService.CreateAndEnqueueTaskMail(
-                                        supervisor: task.Project.Supervisor,
-                                        student: task.Project.Student,
-                                        task: task,
-                                        MailType.TASK_COMPLIANCE_CHECK_COMPLETION
-                                    );
-
-                await transaction.CommitAsync();
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
     }
 }

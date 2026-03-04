@@ -1,0 +1,83 @@
+@startuml
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+actor Student
+actor AIWorker
+participant "AIComplianceService" as ACS
+participant "ProjectTaskService" as PTS
+participant "AIJobQueue" as Q
+participant "FeedbackService" as FS
+participant "NotificationService" as NS
+participant "MailService" as MS
+
+Student -> ACS : CreateAndEnqueueAIComplianceJob(userID, projectID, taskID)
+activate ACS
+    ACS -> PTS : task := GetProjectTask(userID, projectID, taskID)
+    
+    alt task.StagedDeliverable == null OR task.SubmittedDeliverable == null
+        ACS --> Student : throw Exception
+    else task.FeedbackCriterias.Count == 0
+        ACS --> Student : throw Exception
+    else
+        note right of ACS
+            unmetCriteria := task.FeedbackCriterias.Where(status == "unmet")
+            prevFile := task.SubmittedDeliverable.File
+            newFile := task.StagedDeliverable.File
+        end note
+        
+        create participant "job : AIJob" as J
+        ACS -> J : new AIJob(task.ProjectTaskID, unmetCriteria, prevFile, newFile)
+        
+        ACS -> Q : QueueJob(job)
+        activate Q
+            note left of Q : statusMap[jobID] := "queued"
+        deactivate Q
+        ACS --> Student : void
+    end
+deactivate ACS
+
+Student -> ACS : PollAIComplianceJob(taskID)
+activate ACS
+    ACS -> Q : status := GetJobStatus(taskID)
+    
+    alt status == "completed" OR status == "failed"
+        ACS -> Q : ClearMapEntry(taskID)
+    end
+    ACS --> Student : status
+deactivate ACS
+
+loop while !cancellationToken.IsCancellationRequested
+    AIWorker -> Q : job := DequeueJob(cancellationToken)
+    activate AIWorker
+    activate Q
+        note left of Q : statusMap[jobID] := "processing"
+    deactivate Q
+
+    note right of AIWorker : Wait until job is available
+    
+    AIWorker -> ACS : ExecuteAIComplianceJob(job)
+    activate ACS
+        ACS -> ACS : results := ExecuteAIJob<T>(job)
+        note right of ACS : Invoke Gemini API with Job Content
+        
+        ACS -> PTS : task := GetProjectTask(job.JobID)
+        
+        note right of ACS : **Transaction Start**
+        ACS -> FS : EditFeedbackCriteria(job.JobID, results)
+        ACS -> NS : CreateTaskNotification(task.Supervisor, task.Student, task)
+        ACS -> MS : CreateAndEnqueueTaskMail(task.Supervisor, task.Student, task)
+        
+        alt success
+            note right of ACS : **Transaction Commit**
+            ACS -> Q : SetJobStatus(job.JobID, "completed")
+        else failure
+            note right of ACS : **Transaction Rollback**
+            ACS -> Q : SetJobStatus(job.JobID, "failed")
+        end
+        ACS --> AIWorker : void
+    deactivate ACS
+    deactivate AIWorker
+end
+
+@enduml

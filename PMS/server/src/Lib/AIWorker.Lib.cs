@@ -1,19 +1,27 @@
 using System.Collections.Concurrent;
+using Google.GenAI.Types;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
 using PMS.DTOs;
 using PMS.Services;
 
+public class AIJob
+{
+    public long JobID { get; set; }
+    public Content Content { get; set; }
+    public GenerateContentConfig Config { get; set; }
+    public string Response { get; set; }
+}
 
 public class AIWorker : BackgroundService
 {
-    private readonly AIService AIService;
+    private readonly AIJobQueue AIJobQueue;
     private readonly IServiceProvider serviceProvider;
     private readonly ILogger<AIWorker> logger;
 
-    public AIWorker(AIService AIService, IServiceProvider serviceProvider, ILogger<AIWorker> logger)
+    public AIWorker(AIJobQueue AIJobQueue, IServiceProvider serviceProvider, ILogger<AIWorker> logger)
     {
-        this.AIService = AIService;
+        this.AIJobQueue = AIJobQueue;
         this.serviceProvider = serviceProvider;
         this.logger = logger;
     }
@@ -24,13 +32,12 @@ public class AIWorker : BackgroundService
         {
             try
             {
-                var job = await AIService.DequeueJob(cancellationToken);
+                var job = await AIJobQueue.DequeueJob(cancellationToken);
                 using (var scope = serviceProvider.CreateScope())
                 {
-                    var feedbackService = scope.ServiceProvider.GetRequiredService<FeedbackService>();
+                    var AIComplianceService = scope.ServiceProvider.GetRequiredService<AIComplianceService>();
 
-                    // Note: To create different AI Job logic, add a type field to AIJob and use a switch here
-                    await feedbackService.ExecuteJobAndUpdateFeedbackCriteria(job);
+                    await AIComplianceService.ExecuteAIComplianceJob(job);
                 }
                 logger.LogInformation("AI Compliance Succesful!");
             }

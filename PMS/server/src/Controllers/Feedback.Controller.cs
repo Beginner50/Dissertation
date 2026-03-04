@@ -9,10 +9,12 @@ namespace PMS.Controllers;
 [ApiController]
 public class FeedbackController : ControllerBase
 {
-    protected readonly FeedbackService feedbackService;
-    public FeedbackController(FeedbackService feedbackService)
+    private readonly FeedbackService feedbackService;
+    private readonly AIComplianceService AIComplianceService;
+    public FeedbackController(FeedbackService feedbackService, AIComplianceService AIComplianceService)
     {
         this.feedbackService = feedbackService;
+        this.AIComplianceService = AIComplianceService;
     }
 
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback")]
@@ -139,7 +141,7 @@ public class FeedbackController : ControllerBase
     {
         try
         {
-            await feedbackService.CreateAndEnqueueComplianceCheckJob(userID, projectID, taskID);
+            await AIComplianceService.CreateAndEnqueueAIComplianceJob(userID, projectID, taskID);
 
             return Accepted();
         }
@@ -154,7 +156,7 @@ public class FeedbackController : ControllerBase
     [Authorize(Policy = "Ownership")]
     public IActionResult GetFeedbackComplianceStatus([FromRoute] long taskID)
     {
-        var status = feedbackService.PollComplianceCheckJob(taskID);
+        var status = AIComplianceService.PollAIComplianceJob(taskID);
 
         return Ok(new { status });
     }
