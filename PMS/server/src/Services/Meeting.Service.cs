@@ -68,7 +68,8 @@ public class MeetingService
 
     public async Task<IEnumerable<T>> GetSupervisorMeetings<T>(
         long userID,
-        Expression<Func<Meeting, T>> selector
+        Expression<Func<Meeting, T>> selector,
+        Func<IQueryable<Meeting>, IQueryable<Meeting>>? queryExtension = null
     )
     {
         var supervisor = (await projectService.GetProjectsWithCount(
@@ -82,10 +83,12 @@ public class MeetingService
                                              .Concat(supervisor.AttendedMeetings)
                                              .Select(m => m.MeetingID);
 
-        return await dbContext.Meetings
-                              .Where(m => supervisorMeetingIDs.Contains(m.MeetingID))
-                              .Select(selector)
-                              .ToListAsync();
+        var query = dbContext.Meetings
+                              .Where(m => supervisorMeetingIDs.Contains(m.MeetingID));
+        query = queryExtension?.Invoke(query) ?? query;
+
+        return await query.Select(selector)
+                          .ToListAsync();
     }
 
     public async Task BookMeeting(

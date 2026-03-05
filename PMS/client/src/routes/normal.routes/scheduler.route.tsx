@@ -48,9 +48,10 @@ export default function SchedulerRoute() {
 
   /*
     During transfer from the server to the client and vice-versa, temporal data is converted
-    into ISO format to account for timezones. 
+    into UTC format to account for timezones. 
 
-    Date represents datetime in the local timezone
+    Instantiating a Date object from the UTC string representation will dynamically parse and
+    convert the temporal data into the user's local date and time.
   */
   const { data: meetingEvents } = useQuery({
     queryKey: [user.userID, "meetings"],

@@ -85,12 +85,11 @@ export default function Scheduler({
         ".fc-event": {
           cursor: "pointer",
           border: "none",
-          ":hover": { boxShadow: "0 0 5px rgba(0, 0, 0, 0.3)", opacity: 0.95 },
+          opacity: 0.95,
+          ":hover": { boxShadow: "0 0 5px rgba(0, 0, 0, 0.3)" },
         },
 
-        ".fc-timegrid-slot": {
-          height: "1.95rem !important",
-        },
+        ".fc-timegrid-slot": { height: "1.95rem !important" },
 
         // Attendee
         ".attendee.pending": {
