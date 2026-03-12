@@ -1,4 +1,4 @@
-// Returns YYYY-MM-DD in Local Time (Safe for <input type="date">)
+// Returns date in format: YYYY-MM-DD (Local Timezone) (For <input type="date">)
 export const toLocalDateString = (date: Date) => {
   const y = date.getFullYear();
   const m = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -6,7 +6,7 @@ export const toLocalDateString = (date: Date) => {
   return `${y}-${m}-${d}`;
 };
 
-// Returns HH:mm in Local Time (Safe for <input type="time">)
+// Returns date in format: HH:mm (Local Timezone) (For <input type="time">)
 export const toLocalTimeString = (date: Date) => {
   return date.toLocaleTimeString([], {
     hour: "2-digit",
@@ -29,10 +29,24 @@ export const mergeDateTime = (
     updated.setFullYear(y, m - 1, d);
   } else {
     const [h, min] = newValue.split(":").map(Number);
-    if (isNaN(h) || isNaN(min))
-      throw Error("Hour and Min should be numeric!");
+    if (isNaN(h) || isNaN(min)) throw Error("Hour and Min should be numeric!");
 
     updated.setHours(h, min, 0, 0);
   }
   return updated;
+};
+
+export const extractErrorMessage = async (err: any) => {
+  const error = await err?.response?.text();
+
+  try {
+    const parsedError = JSON.parse(error);
+
+    if (parsedError?.errors) {
+      return Object.values(parsedError.errors).flat().join(", ");
+    }
+    return parsedError.message;
+  } catch (e: any) {
+    return error;
+  }
 };

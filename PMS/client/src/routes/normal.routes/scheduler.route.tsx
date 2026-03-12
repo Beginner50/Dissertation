@@ -5,12 +5,22 @@ import SchedulerActions from "../../components/scheduler.components/scheduler-ac
 import { BookMeetingForm } from "../../components/scheduler.components/book-meeting-form.component";
 import { MeetingDetails } from "../../components/scheduler.components/meeting-details.component";
 import { Box, Divider, Stack, Typography } from "@mui/material";
-import type { Meeting, MeetingFormData, Project, User } from "../../lib/types";
+import type {
+  Meeting,
+  MeetingFormData,
+  OutletContext,
+  Project,
+  User,
+} from "../../lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../providers/auth.provider";
 import { AccessTime, Event, Person } from "@mui/icons-material";
+import { useOutletContext } from "react-router";
+import { extractErrorMessage } from "../../lib/utils";
 
 export default function SchedulerRoute() {
+  const { setErrorMessage } = useOutletContext<OutletContext>();
+
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
 
@@ -147,6 +157,10 @@ export default function SchedulerRoute() {
         },
       },
       {
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to book meeting.");
+        },
         onSettled: () => {
           setSelectedSlot(null);
         },
@@ -157,11 +171,19 @@ export default function SchedulerRoute() {
   const handleUpdateDescription = (newDesc: string) => {
     if (!selectedMeeting) return;
     setSelectedMeeting({ ...selectedMeeting, description: newDesc });
-    mutation.mutate({
-      method: "put",
-      url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}`,
-      data: { description: newDesc },
-    });
+    mutation.mutate(
+      {
+        method: "put",
+        url: `api/users/${user.userID}/meetings/${selectedMeeting.meetingID}`,
+        data: { description: newDesc },
+      },
+      {
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to update meeting details.");
+        },
+      },
+    );
   };
 
   const handleAcceptMeeting = () => {
@@ -175,6 +197,10 @@ export default function SchedulerRoute() {
       {
         onSettled: () => {
           setSelectedMeeting(null);
+        },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to accept meeting.");
         },
       },
     );
@@ -192,6 +218,10 @@ export default function SchedulerRoute() {
         onSettled: () => {
           setSelectedMeeting(null);
         },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to reject meeting.");
+        },
       },
     );
   };
@@ -207,6 +237,10 @@ export default function SchedulerRoute() {
       {
         onSettled: () => {
           setSelectedMeeting(null);
+        },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to cancel meeting.");
         },
       },
     );

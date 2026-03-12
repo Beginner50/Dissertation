@@ -8,10 +8,11 @@ import type {
   Deliverable,
   DeliverableFile,
   FeedbackCriterion,
+  OutletContext,
   Task,
   User,
 } from "../../lib/types";
-import { useParams } from "react-router";
+import { useOutletContext, useParams } from "react-router";
 import FeedbackModal from "../../components/feedback.components/feedback-criteria-modal.component";
 import type { ModalState as FeedbackModalState } from "../../components/feedback.components/feedback-criteria-modal.component";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,8 +21,11 @@ import { useAuth } from "../../providers/auth.provider";
 import TableLayout from "../../components/base.components/table-layout.component";
 import type { ModalMode } from "../../components/project.components/project-modal.component";
 import { preventContextMenu } from "@fullcalendar/core/internal";
+import { extractErrorMessage } from "../../lib/utils";
 
 export default function TaskRoute() {
+  const { setErrorMessage } = useOutletContext<OutletContext>();
+
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
 
@@ -218,33 +222,57 @@ export default function TaskRoute() {
       contentType: file.type,
     };
 
-    mutation.mutate({
-      method: "post",
-      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
-      data: deliverableFile,
-      invalidateQueryKeys: [[taskID, "deliverables", "staged"]],
-    });
+    mutation.mutate(
+      {
+        method: "post",
+        url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
+        data: deliverableFile,
+        invalidateQueryKeys: [[taskID, "deliverables", "staged"]],
+      },
+      {
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to upload file");
+        },
+      },
+    );
   };
 
   const handleSubmitDeliverable = () => {
-    mutation.mutate({
-      method: "post",
-      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable/submit`,
-      data: {},
-      invalidateQueryKeys: [
-        [taskID, "deliverables", "staged"],
-        [taskID, "deliverables", "submitted"],
-      ],
-    });
+    mutation.mutate(
+      {
+        method: "post",
+        url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable/submit`,
+        data: {},
+        invalidateQueryKeys: [
+          [taskID, "deliverables", "staged"],
+          [taskID, "deliverables", "submitted"],
+        ],
+      },
+      {
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to submit deliverable.");
+        },
+      },
+    );
   };
 
   const handleRemoveStagedDeliverable = () => {
-    mutation.mutate({
-      method: "delete",
-      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
-      data: {},
-      invalidateQueryKeys: [[taskID, "deliverables", "staged"]],
-    });
+    mutation.mutate(
+      {
+        method: "delete",
+        url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
+        data: {},
+        invalidateQueryKeys: [[taskID, "deliverables", "staged"]],
+      },
+      {
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to remove deliverable.");
+        },
+      },
+    );
   };
 
   const handleCreateCriterion = () => {
@@ -258,6 +286,10 @@ export default function TaskRoute() {
       {
         onSettled: () => {
           setFeedbackModalState((prev) => ({ ...prev, open: false }));
+        },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to create feedback criterion.");
         },
       },
     );
@@ -275,6 +307,10 @@ export default function TaskRoute() {
         onSettled: () => {
           setFeedbackModalState((prev) => ({ ...prev, open: false }));
         },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to update feedback criterion.");
+        },
       },
     );
   };
@@ -283,30 +319,58 @@ export default function TaskRoute() {
     criterion: FeedbackCriterion,
     action: "override" | "restore",
   ) => {
-    mutation.mutate({
-      method: "put",
-      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/${criterion.feedbackCriterionID}/override`,
-      data: { ...criterion, status: action == "override" ? "overridden" : "unmet" },
-      invalidateQueryKeys: [["tasks", taskID]],
-    });
+    mutation.mutate(
+      {
+        method: "put",
+        url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/${criterion.feedbackCriterionID}/override`,
+        data: { ...criterion, status: action == "override" ? "overridden" : "unmet" },
+        invalidateQueryKeys: [["tasks", taskID]],
+      },
+      {
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to override feedback criterion.");
+        },
+      },
+    );
   };
 
   const handleDeleteCriterion = (criterion: FeedbackCriterion) => {
-    mutation.mutate({
-      method: "delete",
-      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/${criterion.feedbackCriterionID}`,
-      data: {},
-      invalidateQueryKeys: [["tasks", taskID]],
-    });
+    mutation.mutate(
+      {
+        method: "delete",
+        url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/feedback/${criterion.feedbackCriterionID}`,
+        data: {},
+        invalidateQueryKeys: [["tasks", taskID]],
+      },
+      {
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to delete feedback criterion.");
+        },
+      },
+    );
   };
 
   const handleLockTask = () => {
-    mutation.mutate({
-      method: "put",
-      url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`,
-      data: { ...task, dueDate: task?.dueDate.toISOString(), isLocked: !task?.isLocked },
-      invalidateQueryKeys: [["tasks", taskID]],
-    });
+    mutation.mutate(
+      {
+        method: "put",
+        url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`,
+        data: {
+          ...task,
+          dueDate: task?.dueDate.toISOString(),
+          isLocked: !task?.isLocked,
+        },
+        invalidateQueryKeys: [["tasks", taskID]],
+      },
+      {
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to toggle task lock.");
+        },
+      },
+    );
   };
 
   const handleCheckFeedbackCompliance = () => {
@@ -320,6 +384,10 @@ export default function TaskRoute() {
       {
         onSuccess: () => {
           setIsPolling(true);
+        },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to perform feedback compliance check.");
         },
       },
     );

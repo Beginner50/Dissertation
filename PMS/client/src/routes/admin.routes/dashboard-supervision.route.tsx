@@ -4,6 +4,7 @@ import ProjectSupervisionTable from "../../components/project.components/project
 import { theme } from "../../lib/theme";
 import type {
   DeliverableFile,
+  OutletContext,
   Project,
   ProjectSupervisionFormData,
   User,
@@ -16,8 +17,12 @@ import ProjectModal, {
 } from "../../components/project.components/project-modal.component";
 import base64js from "base64-js";
 import TableLayout from "../../components/base.components/table-layout.component";
+import { useOutletContext } from "react-router";
+import { extractErrorMessage } from "../../lib/utils";
 
 export default function DashboardSupervisionRoute() {
+  const { setErrorMessage } = useOutletContext<OutletContext>();
+
   const { authorizedAPI } = useAuth();
   const [limit, setLimit] = useState(5);
   const [offset, setOffset] = useState(0);
@@ -168,6 +173,14 @@ export default function DashboardSupervisionRoute() {
             ...projectSupervisionModalState,
             open: false,
           }),
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to create project.");
+          setProjectSupervisionModalState({
+            ...projectSupervisionModalState,
+            open: false,
+          });
+        },
       },
     );
   };
@@ -190,6 +203,14 @@ export default function DashboardSupervisionRoute() {
             ...projectSupervisionModalState,
             open: false,
           }),
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to edit project details.");
+          setProjectSupervisionModalState({
+            ...projectSupervisionModalState,
+            open: false,
+          });
+        },
       },
     );
   };
@@ -205,6 +226,14 @@ export default function DashboardSupervisionRoute() {
       {
         onSettled: () => {
           setProjectSupervisionModalState((p) => ({ ...p, open: false }));
+        },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to archive project.");
+          setProjectSupervisionModalState({
+            ...projectSupervisionModalState,
+            open: false,
+          });
         },
       },
     );
@@ -222,6 +251,14 @@ export default function DashboardSupervisionRoute() {
         onSettled: () => {
           setProjectSupervisionModalState((p) => ({ ...p, open: false }));
         },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to restore project.");
+          setProjectSupervisionModalState({
+            ...projectSupervisionModalState,
+            open: false,
+          });
+        },
       },
     );
   };
@@ -236,12 +273,24 @@ export default function DashboardSupervisionRoute() {
       contentType: file.type,
     };
 
-    mutation.mutate({
-      method: "post",
-      url: `api/projects/ingest-list`,
-      data: deliverableFile,
-      invalidateQueryKeys: [["projects", limit, offset]],
-    });
+    mutation.mutate(
+      {
+        method: "post",
+        url: `api/projects/ingest-list`,
+        data: deliverableFile,
+        invalidateQueryKeys: [["projects", limit, offset]],
+      },
+      {
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to ingest project list.");
+          setProjectSupervisionModalState({
+            ...projectSupervisionModalState,
+            open: false,
+          });
+        },
+      },
+    );
   };
 
   /* ---------------------------------------------------------------------------------- */
@@ -279,7 +328,13 @@ export default function DashboardSupervisionRoute() {
           <TableLayout.AddButton text="Add Project" onClick={handleCreateProjectClick} />
           <TableLayout.IngestButton
             text="Ingest Project List"
-            onIngest={handleProjectListIngest}
+            handleIngest={handleProjectListIngest}
+            requiredColumns={[
+              "Title",
+              "Description",
+              "Student Email",
+              "Supervisor Email",
+            ]}
             isPending={mutation.status == "pending"}
           />
         </TableLayout.Header>

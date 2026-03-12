@@ -2,6 +2,9 @@ services:
   postgres:
     image: postgres:latest
     container_name: postgres_db_pms
+    # profiles:
+    #   - development
+    #   - production
     environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=password1234
@@ -17,6 +20,10 @@ services:
       retries: 20 # Arbitrary numbers for interval, timeout, retries
 
   dotnet-server:
+    # profiles:
+    #   - development
+    #   - production
+    #   - test
     build:
       context: ./server
       target: development
@@ -35,6 +42,10 @@ services:
       - "5081:5081"
     
   react:
+    # profiles:
+    #   - development
+    #   - production
+    #   - test
     build:
       context: ./client
       target: development
@@ -68,5 +79,17 @@ services:
   #     timeout: 2s
   #     retries: 20 # Arbitrary numbers for interval, timeout, retries
 
+  playwright-test:
+    profiles:
+      - test
+    container_name: playwright_test
+    build:
+      context: ./tests
+    depends_on:
+      - react
+      - dotnet-server
+    volumes:
+      - ./tests/tests
+    
 volumes:
   postgres-data-pms:

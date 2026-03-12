@@ -2,6 +2,7 @@ import { ProjectList } from "../../components/project.components/project-list.co
 import { ReminderList } from "../../components/notification-reminder.components/reminder-list.component";
 import type {
   Notification,
+  OutletContext,
   Project,
   ProjectFormData,
   Reminder,
@@ -19,8 +20,12 @@ import { useAuth } from "../../providers/auth.provider";
 import { Box } from "@mui/material";
 import Pagination from "../../components/base.components/pagination.component";
 import ProjectListEntry from "../../components/project.components/project-list-entry.component";
+import { useOutletContext } from "react-router";
+import { extractErrorMessage } from "../../lib/utils";
 
 export default function DashboardProjectsRoute() {
+  const { setErrorMessage } = useOutletContext<OutletContext>();
+
   /* ------------------------------- React Hooks --------------------------------------- */
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
@@ -200,6 +205,11 @@ export default function DashboardProjectsRoute() {
         onSettled: () => {
           setProjectModalState((p) => ({ ...p, open: false }));
         },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to update project details.");
+          setProjectModalState((p) => ({ ...p, open: false }));
+        },
       },
     );
   };
@@ -216,6 +226,11 @@ export default function DashboardProjectsRoute() {
       },
       {
         onSettled: () => {
+          setProjectModalState((p) => ({ ...p, open: false }));
+        },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to archive project.");
           setProjectModalState((p) => ({ ...p, open: false }));
         },
       },

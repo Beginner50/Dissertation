@@ -14,6 +14,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  AlertTitle,
 } from "@mui/material";
 import type { Project, User } from "../../lib/types";
 
@@ -241,5 +242,14 @@ ProjectModal.Actions = ({
         {labels[mode]}
       </Button>
     </DialogActions>
+  );
+};
+
+ProjectModal.Error = ({ message }: { message: string }) => {
+  return (
+    <Alert severity="error" sx={{ mb: 2 }} data-testid="project-error">
+      <AlertTitle>Error</AlertTitle>
+      {message}
+    </Alert>
   );
 };

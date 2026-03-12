@@ -5,6 +5,7 @@ import { useAuth } from "../../providers/auth.provider";
 import Breadcrumbs from "../../components/header.components/breadcrumbs.component";
 import { useQuery } from "@tanstack/react-query";
 import type { Project, User } from "../../lib/types";
+import { useState } from "react";
 
 /*
   This is a layout route for the part of the website visible to ordinary users
@@ -20,6 +21,8 @@ export default function NormalRoutesLayout() {
   const { projectID, taskID } = useParams();
   const { pathname } = useLocation();
   const user = authState.user as User;
+
+  const [errorMessage, setErrorMessage] = useState("");
 
   if (!authState.isAuthenticated) return <Navigate to={"/sign-in"} />;
 
@@ -69,7 +72,7 @@ export default function NormalRoutesLayout() {
           </Breadcrumbs>
         )}
 
-        <Outlet />
+        <Outlet context={{ setErrorMessage }} />
       </Box>
     </>
   );

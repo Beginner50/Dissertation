@@ -1,7 +1,7 @@
 import { ProjectDetails } from "../../components/project.components/project-details.component";
 import { TaskList } from "../../components/task.components.tsx/task-list.component";
-import { useParams } from "react-router";
-import type { Project, Task, TaskFormData, User } from "../../lib/types";
+import { useOutletContext, useParams } from "react-router";
+import type { OutletContext, Project, Task, TaskFormData, User } from "../../lib/types";
 import { useCallback, useState } from "react";
 import TaskModal, {
   type ModalState,
@@ -11,8 +11,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box } from "@mui/material";
 import Pagination from "../../components/base.components/pagination.component";
 import TaskListEntry from "../../components/task.components.tsx/task-list-entry.component";
+import { extractErrorMessage } from "../../lib/utils";
 
 export default function DashboardTasksRoute() {
+  const { setErrorMessage } = useOutletContext<OutletContext>();
+
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
 
@@ -146,6 +149,10 @@ export default function DashboardTasksRoute() {
         onSettled: () => {
           setTaskModalState((t) => ({ ...t, open: false }));
         },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to create task.");
+        },
       },
     );
   };
@@ -162,6 +169,10 @@ export default function DashboardTasksRoute() {
         onSettled: () => {
           setTaskModalState((t) => ({ ...t, open: false }));
         },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to update task details.");
+        },
       },
     );
   };
@@ -177,6 +188,10 @@ export default function DashboardTasksRoute() {
       {
         onSettled: () => {
           setTaskModalState((t) => ({ ...t, open: false }));
+        },
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to delete task.");
         },
       },
     );

@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useContext, useState, type Dispatch, type SetStateAction } from "react";
 import { Container, Typography, Button, Stack, Box, Paper } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { useAuth } from "../../providers/auth.provider";
-import type { DeliverableFile, User, UserFormData } from "../../lib/types";
+import type { DeliverableFile, OutletContext, User, UserFormData } from "../../lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import UserTable from "../../components/user.components/user-table.component";
 import UserModal from "../../components/user.components/user-modal.component";
@@ -10,9 +10,13 @@ import type { ModalState as UserModalState } from "../../components/user.compone
 import { theme } from "../../lib/theme";
 import base64js from "base64-js";
 import TableLayout from "../../components/base.components/table-layout.component";
+import { GlobalError } from "../../components/base.components/global-error.component";
+import { useOutletContext } from "react-router";
+import { extractErrorMessage } from "../../lib/utils";
 
 export default function DashboardUsersRoute() {
   const { authorizedAPI } = useAuth();
+  const { setErrorMessage } = useOutletContext<OutletContext>();
 
   const [userLimit, setUserLimit] = useState(5);
   const [userOffset, setUserOffset] = useState(0);
@@ -117,7 +121,12 @@ export default function DashboardUsersRoute() {
         invalidateQueryKeys: [["users"]],
       },
       {
-        onSettled: () => setUserModalState({ ...userModalState, open: false }),
+        onSuccess: () => setUserModalState({ ...userModalState, open: false }),
+        onError: async (err: any) => {
+          const msg = await err?.response?.text();
+          setErrorMessage(msg || "Failed to create user.");
+          setUserModalState({ ...userModalState, open: false });
+        },
       },
     );
   };
@@ -131,7 +140,12 @@ export default function DashboardUsersRoute() {
         invalidateQueryKeys: [["users"]],
       },
       {
-        onSettled: () => setUserModalState({ ...userModalState, open: false }),
+        onSuccess: () => setUserModalState({ ...userModalState, open: false }),
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to update user details.");
+          setUserModalState({ ...userModalState, open: false });
+        },
       },
     );
   };
@@ -145,7 +159,12 @@ export default function DashboardUsersRoute() {
         invalidateQueryKeys: [["users"]],
       },
       {
-        onSettled: () => setUserModalState({ ...userModalState, open: false }),
+        onSuccess: () => setUserModalState({ ...userModalState, open: false }),
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to delete user.");
+          setUserModalState({ ...userModalState, open: false });
+        },
       },
     );
   };
@@ -160,12 +179,20 @@ export default function DashboardUsersRoute() {
       contentType: file.type,
     };
 
-    mutation.mutate({
-      method: "post",
-      url: `api/users/ingest-list`,
-      data: deliverableFile,
-      invalidateQueryKeys: [["users"]],
-    });
+    mutation.mutate(
+      {
+        method: "post",
+        url: `api/users/ingest-list`,
+        data: deliverableFile,
+        invalidateQueryKeys: [["users"]],
+      },
+      {
+        onError: async (err: any) => {
+          const msg = await extractErrorMessage(err);
+          setErrorMessage(msg || "Failed to ingest user list.");
+        },
+      },
+    );
   };
 
   /* ---------------------------------------------------------------------------------- */
@@ -185,7 +212,8 @@ export default function DashboardUsersRoute() {
             <TableLayout.AddButton text={"Add User"} onClick={handleAddUserClick} />
             <TableLayout.IngestButton
               text="Ingest User List"
-              onIngest={handleUserListIngest}
+              handleIngest={handleUserListIngest}
+              requiredColumns={["Name", "Email", "Password", "Role"]}
               isPending={mutation.status == "pending"}
             />
           </TableLayout.Header>

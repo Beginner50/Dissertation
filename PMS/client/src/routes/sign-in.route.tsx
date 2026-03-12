@@ -1,53 +1,46 @@
-import React, { useState } from "react";
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Container,
-  Stack,
-  Alert,
-} from "@mui/material";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { useAuth } from "../providers/auth.provider";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../providers/auth.provider";
+import { Box } from "@mui/material";
 import Header from "../components/header.components/header.component";
+import { SignIn } from "../components/auth.components/sign-in.component";
 
 export default function SignInRoute() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [authData, setAuthData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEmailChange = useCallback((email: string) => {
+    setAuthData((prev) => ({ ...prev, email }));
+  }, []);
+
+  const handlePasswordChange = useCallback((password: string) => {
+    setAuthData((prev) => ({ ...prev, password }));
+  }, []);
+
+  const handleSignIn = async () => {
     setError("");
-    setSuccess("");
+    if (!authData.email || !authData.password)
+      return setError("All fields are required.");
+    if (!authData.email.includes("@"))
+      return setError("Please enter a valid email address.");
 
-    if (!email || !password) {
-      setError("All fields are required.");
-      return;
-    }
-
-    if (!email.includes("@")) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-
+    setLoading(true);
     try {
-      await signIn({ email, password });
+      await signIn(authData);
       navigate("/");
     } catch (err) {
-      console.error(err);
       setError("Sign-in failed. Check your credentials.");
+      setAuthData((prev) => ({ ...prev, password: "" }));
+    } finally {
+      setLoading(false);
     }
-
-    setEmail("");
-    setPassword("");
   };
+
+  const isInvalid = !authData.email || !authData.password;
 
   return (
     <>
@@ -57,78 +50,21 @@ export default function SignInRoute() {
         </Box>
       </Header>
 
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          height: "89.5vh",
-        }}
-      >
-        <Container component="main" maxWidth="xs" sx={{ mt: 8 }}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              p: 4,
-              borderRadius: 2,
-              boxShadow: 3,
-              bgcolor: "background.paper",
-            }}
-          >
-            <LockOutlinedIcon color="primary" sx={{ fontSize: 40, mb: 1 }} />
-            <Typography component="h1" variant="h5" sx={{ mb: 3 }}>
-              Sign In
-            </Typography>
-
-            <Box
-              component="form"
-              onSubmit={handleSubmit}
-              sx={{ mt: 1, width: "100%" }}
-            >
-              <Stack spacing={2}>
-                {error && <Alert severity="error">{error}</Alert>}
-                {success && <Alert severity="success">{success}</Alert>}
-
-                {/* Email */}
-                <TextField
-                  required
-                  fullWidth
-                  id="email"
-                  label="Email Address"
-                  name="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  variant="outlined"
-                />
-
-                {/* Password */}
-                <TextField
-                  required
-                  fullWidth
-                  name="password"
-                  label="Password"
-                  type="password"
-                  id="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  variant="outlined"
-                />
-
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  sx={{ mt: 3, mb: 2, py: 1.5 }}
-                >
-                  Sign In
-                </Button>
-              </Stack>
-            </Box>
-          </Box>
-        </Container>
+      <Box sx={{ display: "flex", flexDirection: "column", height: "89.5vh" }}>
+        <SignIn>
+          <SignIn.Email value={authData.email} handleChange={handleEmailChange} />
+          <SignIn.Password
+            value={authData.password}
+            handleChange={handlePasswordChange}
+          />
+          <SignIn.Error message={error} />
+          <SignIn.Action
+            label="Sign In"
+            isLoading={loading}
+            isDisabled={isInvalid}
+            handleAction={handleSignIn}
+          />
+        </SignIn>
       </Box>
     </>
   );

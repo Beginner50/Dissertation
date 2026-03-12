@@ -1,7 +1,17 @@
-import { Stack, Typography, Button, Box, CircularProgress } from "@mui/material";
+import {
+  Stack,
+  Typography,
+  Button,
+  Box,
+  CircularProgress,
+  Divider,
+  Paper,
+  Tooltip,
+  IconButton,
+} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { theme } from "../../lib/theme";
-import { UploadFile } from "@mui/icons-material";
+import { InfoOutlined, UploadFile } from "@mui/icons-material";
 import type { ReactNode } from "react";
 
 export default function TableLayout({
@@ -85,34 +95,43 @@ TableLayout.AddButton = ({ text, onClick }: { text: string; onClick: () => void 
 
 TableLayout.IngestButton = ({
   text,
-  onIngest,
+  handleIngest,
+  requiredColumns,
   isPending,
 }: {
   text: string;
-  onIngest: (file: File) => void;
+  handleIngest: (file: File) => void;
+  requiredColumns: string[];
   isPending: boolean;
 }) => {
   const handleFileClick = () => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".csv, .xlsx, .xls";
+
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) onIngest(file);
+      if (file) handleIngest(file);
     };
+
     input.click();
   };
 
   return (
-    <Button
-      variant="contained"
-      startIcon={<UploadFile />}
-      onClick={handleFileClick}
-      disabled={isPending}
-      loading={isPending}
-      sx={{ textTransform: "none", borderRadius: "8px", fontWeight: 600, ml: 1 }}>
-      {text}
-    </Button>
+    <Tooltip
+      title={`Required Columns: ${requiredColumns.join(", ")}`}
+      placement="top"
+      arrow>
+      <Button
+        variant="contained"
+        startIcon={<UploadFile />}
+        onClick={handleFileClick}
+        disabled={isPending}
+        loading={isPending}
+        sx={{ textTransform: "none", borderRadius: "8px", fontWeight: 600, ml: 1 }}>
+        {text}
+      </Button>
+    </Tooltip>
   );
 };
 

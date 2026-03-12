@@ -1,4 +1,5 @@
 import type ky from "ky";
+import type { Dispatch, SetStateAction } from "react";
 
 export type AuthState = {
   isAuthenticated: boolean;
@@ -12,6 +13,10 @@ export type AuthContextType = {
   authorizedAPI: typeof ky;
   signIn: (userData: Record<string, any>) => Promise<AuthState>;
   signOut: () => Promise<void>;
+};
+
+export type OutletContext = {
+  setErrorMessage: Dispatch<SetStateAction<string>>;
 };
 
 export type User = {

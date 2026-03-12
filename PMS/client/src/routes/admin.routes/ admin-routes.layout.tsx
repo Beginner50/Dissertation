@@ -3,6 +3,9 @@ import Header from "../../components/header.components/header.component";
 import { Navigate, Outlet } from "react-router";
 import { useAuth } from "../../providers/auth.provider";
 import AdminBar from "../../components/header.components/admin-bar.component";
+import { useState, type Dispatch, type SetStateAction } from "react";
+import { Global } from "@emotion/react";
+import { GlobalError } from "../../components/base.components/global-error.component";
 
 export default function AdminRoutesLayout() {
   const {
@@ -10,6 +13,8 @@ export default function AdminRoutesLayout() {
   } = useAuth();
 
   if (!isAuthenticated) return <Navigate to={"/sign-in"} />;
+
+  const [errorMessage, setErrorMessage] = useState("");
 
   return (
     <Box
@@ -19,6 +24,8 @@ export default function AdminRoutesLayout() {
         minHeight: "100vh",
         bgcolor: "#f5f7f9",
       }}>
+      <GlobalError message={errorMessage} onClose={() => setErrorMessage("")} />
+
       <Header>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Header.Brand title="Project Management System" />
@@ -40,7 +47,7 @@ export default function AdminRoutesLayout() {
         </AdminBar>
 
         <Box component="main">
-          <Outlet />
+          <Outlet context={{ setErrorMessage }} />
         </Box>
       </Container>
     </Box>
