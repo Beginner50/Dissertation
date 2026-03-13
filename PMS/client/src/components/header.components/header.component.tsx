@@ -76,6 +76,7 @@ Header.SignOutButton = () => {
 
   return (
     <Button
+      data-testid="sign-out-button"
       variant="contained"
       color="primary"
       onClick={handleSignOut}

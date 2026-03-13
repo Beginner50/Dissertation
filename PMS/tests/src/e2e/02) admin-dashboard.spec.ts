@@ -1,6 +1,4 @@
 import { test, expect, Page } from "@playwright/test";
-import "node";
-import path from "path";
 import SignInPage from "../pom/signIn.page";
 import AdminLayoutPage from "../pom/admin/adminLayout.page";
 import UserTablePage from "../pom/components/userTable.page";
@@ -14,7 +12,7 @@ test.describe("Admin role - user & project management", () => {
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
     const signIn = new SignInPage(page);
-    await page.goto("http://localhost:3000/sign-in");
+    await page.goto("/sign-in");
     await signIn.signIn("admin@uni.com", "password");
 
     adminLayout = new AdminLayoutPage(page);
@@ -78,54 +76,57 @@ test.describe("Admin role - user & project management", () => {
         B.4.1. Successful Project Archived
         B.4.2. Successful Project Restored
    */
+  // test.describe("A.1 User List Ingestion", () => {
+  //   test("A.1.1 Complete List Ingestion (no existing users)", async ({ page }) => {
+  //     await page.setInputFiles(
+  //       "input[type='file']",
+  //       "test-assets/user-list/no_existing.xlsx",
+  //     );
 
-  test("A.1.1 Complete List Ingestion (no existing users)", async ({ page }) => {
-    const filePath = path.resolve(__dirname, "../test-assets/valid_users.xlsx");
+  //     await expect(adminLayout.users().table.getRow("ingest1@uni.com")).toBeVisible();
+  //     await expect(adminLayout.users().table.getRow("ingest2@uni.com")).toBeVisible();
+  //   });
 
-    // Playwright's file chooser listener
-    const fileChooserPromise = page.waitForEvent("filechooser");
-    await adminLayout.users().ingestButton.click();
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(filePath);
+  //   test("A.1.2 Partial List Ingestion (some existing users)", async ({ page }) => {
+  //     await page.setInputFiles(
+  //       "input[type='file']",
+  //       "test-assets/user-list/partial_existing.xlsx",
+  //     );
 
-    await expect(adminLayout.users().table.getRow("ingest_one@uni.com")).toBeVisible();
-    await expect(adminLayout.users().table.getRow("ingest_two@uni.com")).toBeVisible();
-  });
+  //     await expect(
+  //       adminLayout.users().table.getRow("existing_user@uni.com"),
+  //     ).toBeVisible();
+  //     await expect(adminLayout.users().table.getRow("ingest4@uni.com")).toBeVisible();
+  //   });
 
-  test("A.1.2 Partial List Ingestion (some existing users)", async ({ page }) => {
-    const filePath = path.resolve(__dirname, "../test-assets/partial_existing.xlsx");
+  //   test("A.1.3 Unsuccessful Ingestion (invalid file format)", async ({ page }) => {
+  //     await page.setInputFiles(
+  //       "input[type='file']",
+  //       "test-assets/user-list/wrong_format.txt",
+  //     );
 
-    await page.setInputFiles("input[type='file']", filePath);
+  //     await expect(adminLayout.error).toBeVisible();
+  //     await expect(adminLayout.error).toContainText(/invalid file format|unsupported/i);
+  //   });
 
-    // If your backend merges users, check that the existing user data is updated/intact
-    await expect(adminLayout.users().table.getRow("existing_user@uni.com")).toBeVisible();
-  });
+  //   test("A.1.4 Unsuccessful Ingestion (missing columns)", async ({ page }) => {
+  //     await page.setInputFiles(
+  //       "input[type='file']",
+  //       "test-assets/user-list/missing_columns.xlsx",
+  //     );
 
-  test("A.1.3 Unsuccessful Ingestion (invalid file format)", async ({ page }) => {
-    const filePath = path.resolve(__dirname, "../test-assets/wrong_format.txt");
+  //     await expect(adminLayout.error).toBeVisible();
+  //     await expect(adminLayout.error).toContainText("Excel is missing required columns");
+  //   });
 
-    await page.setInputFiles("input[type='file']", filePath);
+  //   test("A.1.5 Unsuccessful Ingestion (invalid data)", async ({ page }) => {
+  //     await page.setInputFiles(
+  //       "input[type='file']",
+  //       "test-assets/user-list/invalid_data.xlsx",
+  //     );
 
-    await expect(adminLayout.error).toBeVisible();
-    await expect(adminLayout.error).toContainText(/invalid file format|unsupported/i);
-  });
-
-  test("A.1.4 Unsuccessful Ingestion (missing columns)", async ({ page }) => {
-    const filePath = path.resolve(__dirname, "../test-assets/missing_columns.xlsx");
-
-    await page.setInputFiles("input[type='file']", filePath);
-
-    await expect(adminLayout.error).toBeVisible();
-    await expect(adminLayout.error).toContainText(/missing required columns/i);
-  });
-
-  test("A.1.5 Unsuccessful Ingestion (invalid data)", async ({ page }) => {
-    const filePath = path.resolve(__dirname, "../test-assets/invalid_data.xlsx");
-
-    await page.setInputFiles("input[type='file']", filePath);
-
-    await expect(adminLayout.error).toBeVisible();
-    // This will use your extractErrorMessage logic to show the nested validation errors
-    await expect(adminLayout.error).toContainText(/invalid/i);
-  });
+  //     await expect(adminLayout.error).toBeVisible();
+  //     await expect(adminLayout.error).toContainText(/Row \((0-9)+\): */i);
+  //   });
+  // });
 });

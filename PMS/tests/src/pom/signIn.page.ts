@@ -4,7 +4,7 @@ export default class SignInPage {
   readonly page: Page;
   readonly emailInput: Locator;
   readonly passwordInput: Locator;
-  readonly submitButton: Locator;
+  readonly signInButton: Locator;
   readonly error: Locator;
   readonly heading: Locator;
 
@@ -12,14 +12,14 @@ export default class SignInPage {
     this.page = page;
     this.emailInput = page.getByLabel("Email Address");
     this.passwordInput = page.getByLabel("Password");
-    this.submitButton = page.getByRole("button", { name: "Sign In" });
+    this.signInButton = page.getByTestId("sign-in-button");
     this.error = page.getByRole("alert");
-    this.heading = page.getByRole("heading", { name: "Sign In" });
+    this.heading = page.getByRole("heading", { name: /Sign In/i });
   }
 
   async signIn(email: string, password: string) {
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
-    await this.submitButton.click();
+    await this.signInButton.click();
   }
 }

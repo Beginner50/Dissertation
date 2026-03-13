@@ -81,13 +81,21 @@ public class PDFUtils
 
                 foreach (var row in worksheet.RowsUsed().Skip(1))
                 {
-                    users.Add(new User
+                    try
                     {
-                        Name = row.Cell(columnMap["Name"]).GetValue<string>(),
-                        Email = row.Cell(columnMap["Email"]).GetValue<string>(),
-                        Password = BCrypt.Net.BCrypt.HashPassword(row.Cell(columnMap["Password"]).GetValue<string>()),
-                        Role = row.Cell(columnMap["Role"]).GetValue<string>()
-                    });
+
+                        users.Add(new User
+                        {
+                            Name = row.Cell(columnMap["Name"]).GetValue<string>(),
+                            Email = row.Cell(columnMap["Email"]).GetValue<string>(),
+                            Password = BCrypt.Net.BCrypt.HashPassword(row.Cell(columnMap["Password"]).GetValue<string>()),
+                            Role = row.Cell(columnMap["Role"]).GetValue<string>()
+                        });
+                    }
+                    catch (Exception)
+                    {
+                        throw new Exception($"Row {row}: Invalid Data Found!");
+                    }
                 }
             }
         }

@@ -11,6 +11,7 @@ RUN dotnet restore
 COPY . .
 
 FROM base AS development
+RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
 EXPOSE 5081
 ENTRYPOINT  ["dotnet", "watch", "--urls", "http://0.0.0.0:5081"]
 
@@ -19,6 +20,7 @@ RUN dotnet publish -c Debug -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS production
 WORKDIR /app
+RUN apt update && apt install -y curl && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/out .
 EXPOSE 5081
 ENTRYPOINT [ "dotnet", "PMS.dll" ]

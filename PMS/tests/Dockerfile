@@ -1,6 +1,8 @@
-FROM node-alpine:latest as base
+FROM mcr.microsoft.com/playwright:v1.58.2-noble AS base
 WORKDIR /tests
 COPY ./package*.json .
 RUN npm install
 COPY . .
-RUN npx playwright test -ui
+
+FROM base AS test
+CMD ["npx", "playwright", "test"]

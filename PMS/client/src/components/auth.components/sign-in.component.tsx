@@ -106,6 +106,7 @@ SignIn.Action = ({
   handleAction: () => void;
 }) => (
   <Button
+    data-testid="sign-in-button"
     variant="contained"
     fullWidth
     onClick={handleAction}

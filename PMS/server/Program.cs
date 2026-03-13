@@ -37,6 +37,8 @@ using Microsoft.AspNetCore.Authorization;
 /*------------------------------------ Configuration Phase --------------------------------------*/
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHealthChecks();
+
 // Allow access to the HTTP context in services (request, response, headers, etc.)
 builder.Services.AddHttpContextAccessor();
 
@@ -311,7 +313,7 @@ else
 }
 
 app.MapControllers();
-
+app.MapHealthChecks("/health");
 
 /*------------------------------------ Execution Phase --------------------------------------*/
 

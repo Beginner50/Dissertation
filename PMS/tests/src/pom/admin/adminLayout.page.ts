@@ -24,7 +24,7 @@ export default class AdminLayoutPage {
     this.brandLink = page.getByRole("link", { name: /Project Management System/i });
     this.usersNav = page.getByRole("link", { name: /Users/i });
     this.supervisionNav = page.getByRole("link", { name: /Supervision List/i });
-    this.signOutButton = page.getByRole("button", { name: "Sign Out" });
+    this.signOutButton = page.getByTestId("sign-out-button");
 
     this.error = page.getByRole("alert");
   }

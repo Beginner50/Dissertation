@@ -13,7 +13,9 @@ test.describe("Login Workflow", () => {
     const signInPage = new SignInPage(page);
     const adminLayoutPage = new AdminLayoutPage(page);
 
-    await page.goto("http://localhost:3000/sign-in");
+    await page.screenshot({ path: "debug-screenshot.png" });
+
+    await page.goto("/sign-in");
     await signInPage.signIn("admin@uni.com", "password");
 
     await expect(adminLayoutPage.signOutButton).toBeVisible();
@@ -22,23 +24,23 @@ test.describe("Login Workflow", () => {
   test("Submit Button disabled for empty fields", async ({ page }) => {
     const signInPage = new SignInPage(page);
 
-    await page.goto("http://localhost:3000/sign-in");
+    await page.goto("/sign-in");
 
-    await expect(signInPage.submitButton).toBeDisabled();
+    await expect(signInPage.signInButton).toBeDisabled();
 
     await signInPage.emailInput.fill("notexists@uni.com");
     await signInPage.passwordInput.fill("");
-    await expect(signInPage.submitButton).toBeDisabled();
+    await expect(signInPage.signInButton).toBeDisabled();
 
     await signInPage.emailInput.fill("");
     await signInPage.passwordInput.fill("password");
-    await expect(signInPage.submitButton).toBeDisabled();
+    await expect(signInPage.signInButton).toBeDisabled();
   });
 
   test("Unsuccessful login with invalid credentials", async ({ page }) => {
     const signInPage = new SignInPage(page);
 
-    await page.goto("http://localhost:3000/sign-in");
+    await page.goto("/sign-in");
     await signInPage.signIn("notexists@uni.com", "password");
 
     await expect(signInPage.error).toBeVisible();
