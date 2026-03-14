@@ -49,20 +49,4 @@ services:
       - dotnet-server-test
     ports:
       - "3000:3000"
-
-  playwright-test:
-    container_name: playwright_test
-    build:
-      context: ./tests
-    volumes:
-      - ./tests/playwright-report:/tests/playwright-report
-      - ./tests/test-results:/tests/test-results
-    depends_on:
-      react-test:
-        condition: service_started
-      dotnet-server-test:
-        condition: service_healthy
    
-volumes:
-  postgres-data-pms:
-

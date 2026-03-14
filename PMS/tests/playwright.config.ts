@@ -12,7 +12,7 @@ import { defineConfig, devices } from "@playwright/test";
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: "./src/e2e",
+  testDir: "./src",
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -32,7 +32,7 @@ export default defineConfig({
     trace: "on",
     screenshot: "on",
     video: "on",
-    baseURL: "http://react-test:3000",
+    baseURL: "http://localhost:3000",
   },
   outputDir: "test-results",
 
@@ -75,9 +75,10 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  webServer: {
+    command: `docker compose -f ${path.join(__dirname, "..", "docker-compose.test.yaml")} down -v && docker compose -f ${path.join(__dirname, "..", "docker-compose.test.yaml")} up --build`,
+    url: "http://localhost:3000",
+    timeout: 120 * 1000,
+    reuseExistingServer: false,
+  },
 });

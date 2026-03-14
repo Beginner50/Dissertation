@@ -12,7 +12,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import { theme } from "../../lib/theme";
 import { InfoOutlined, UploadFile } from "@mui/icons-material";
-import type { ReactNode } from "react";
+import { useRef, type ChangeEvent, type ReactNode } from "react";
 
 export default function TableLayout({
   children,
@@ -104,17 +104,18 @@ TableLayout.IngestButton = ({
   requiredColumns: string[];
   isPending: boolean;
 }) => {
-  const handleFileClick = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".csv, .xlsx, .xls";
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) handleIngest(file);
-    };
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
 
-    input.click();
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleIngest(file);
+    }
+    e.target.value = "";
   };
 
   return (
@@ -122,15 +123,25 @@ TableLayout.IngestButton = ({
       title={`Required Columns: ${requiredColumns.join(", ")}`}
       placement="top"
       arrow>
-      <Button
-        variant="contained"
-        startIcon={<UploadFile />}
-        onClick={handleFileClick}
-        disabled={isPending}
-        loading={isPending}
-        sx={{ textTransform: "none", borderRadius: "8px", fontWeight: 600, ml: 1 }}>
-        {text}
-      </Button>
+      <span>
+        <Button
+          variant="contained"
+          startIcon={<UploadFile />}
+          onClick={handleButtonClick}
+          disabled={isPending}
+          loading={isPending}
+          sx={{ textTransform: "none", borderRadius: "8px", fontWeight: 600, ml: 1 }}>
+          {text}
+        </Button>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept=".csv, .xlsx, .xls"
+          style={{ display: "none" }}
+          data-testid="hidden-file-input"
+        />
+      </span>
     </Tooltip>
   );
 };

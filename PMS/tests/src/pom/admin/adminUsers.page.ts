@@ -1,28 +1,37 @@
-import type { Locator, Page } from "@playwright/test";
-import UserModalPage from "../components/userModal.page";
-import UserTablePage from "../components/userTable.page";
+import { expect, type Locator, type Page } from "@playwright/test";
+import TablePOM from "../components/table.pom";
+import ModalPOM from "../components/modal.pom";
 
 export default class AdminUsersPage {
   readonly page: Page;
-  readonly modal: UserModalPage;
-  readonly table: UserTablePage;
+  readonly modal: ModalPOM;
+  readonly table: TablePOM;
   readonly addUserButton: Locator;
   readonly ingestButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.modal = new UserModalPage(page);
-    this.table = new UserTablePage(page);
+    this.modal = new ModalPOM(page);
+    this.table = new TablePOM(page);
     this.addUserButton = page.getByRole("button", { name: /Add User/i });
-    this.ingestButton = page.getByRole("button", { name: /Ingest User List/i });
+    this.ingestButton = page.getByText(/Ingest User List/i);
   }
 
   async navigate() {
     await this.page.goto("/admin-dashboard/users");
   }
 
-  async startAddUser() {
+  async clickAddUserButton() {
     await this.addUserButton.click();
-    await this.modal.container.waitFor({ state: "visible" });
+    await this.modal.waitForVisible();
+    return this.modal;
+  }
+
+  // https://playwright.dev/docs/api/class-filechooser
+  async ingestFile(filePath: string) {
+    const fileChooserPromise = this.page.waitForEvent("filechooser");
+    await this.ingestButton.click();
+    const fileChooser = await fileChooserPromise;
+    await fileChooser.setFiles(filePath);
   }
 }

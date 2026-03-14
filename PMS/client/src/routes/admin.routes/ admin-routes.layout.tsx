@@ -4,7 +4,6 @@ import { Navigate, Outlet } from "react-router";
 import { useAuth } from "../../providers/auth.provider";
 import AdminBar from "../../components/header.components/admin-bar.component";
 import { useState, type Dispatch, type SetStateAction } from "react";
-import { Global } from "@emotion/react";
 import { GlobalError } from "../../components/base.components/global-error.component";
 
 export default function AdminRoutesLayout() {

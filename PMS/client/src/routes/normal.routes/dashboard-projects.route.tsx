@@ -243,7 +243,7 @@ export default function DashboardProjectsRoute() {
     switch (projectModalState.mode) {
       // case "create":
       case "edit":
-        return Number.isNaN(projectModalData.projectID) || projectModalData.title === "";
+        return !(projectModalData.projectID && projectModalData.title);
       case "archive":
         return false;
     }

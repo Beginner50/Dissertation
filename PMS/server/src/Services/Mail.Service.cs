@@ -1,7 +1,6 @@
+using System.Net;
+using System.Net.Mail;
 using System.Threading.Channels;
-using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
 using PMS.Models;
 
 namespace PMS.Services;
@@ -62,19 +61,19 @@ public enum MailType
 
 public class MailQueue
 {
-    private readonly Channel<MimeMessage> queue;
+    private readonly Channel<MailMessage> queue;
 
     public MailQueue()
     {
-        queue = Channel.CreateUnbounded<MimeMessage>();
+        queue = Channel.CreateUnbounded<MailMessage>();
     }
 
-    public void QueueMail(MimeMessage message)
+    public void QueueMail(MailMessage message)
     {
         queue.Writer.TryWrite(message);
     }
 
-    public async Task<MimeMessage> DequeueMail(CancellationToken cancellationToken)
+    public async Task<MailMessage> DequeueMail(CancellationToken cancellationToken)
     {
         return await queue.Reader.ReadAsync(cancellationToken);
     }
@@ -99,13 +98,13 @@ public class MailService
 
     public void CreateAndEnqueueMeetingMail(User organizer, User attendee, Meeting meeting, MailType mailType)
     {
-        var mail = new MimeMessage();
+        var mail = new MailMessage();
 
-        var sanitizedMeetingDescription = Sanitization.SanitizeString(meeting.Description);
+        var sanitizedMeetingDescription = Sanitization.SanitizeString(meeting.Description ?? "");
         var sanitizedAttendeeName = Sanitization.SanitizeString(attendee.Name);
         var sanitizedOrganizerName = Sanitization.SanitizeString(organizer.Name);
 
-        mail.From.Add(new MailboxAddress("Project Management System", "noreply@pms.com"));
+        mail.From = new MailAddress("noreply@pms.com", "Project Management System");
 
         switch (mailType)
         {
@@ -115,9 +114,7 @@ public class MailService
                                          $"Meeting Description:<br/> <span color='gray'><{sanitizedMeetingDescription}</span><br/><br/>";
 
                 mail.Subject = "FYP: New Meeting Scheduled";
-                mail.Body = new TextPart("html")
-                {
-                    Text = $"""
+                mail.Body = $"""
                     Dear {sanitizedAttendeeName},<br/><br/>
 
                     You have a new meeting scheduled with {sanitizedOrganizerName}.<br/><br/>
@@ -128,15 +125,13 @@ public class MailService
                     <b>Meeting End Time:</b> {meeting.End.ToLocalTime()}<br/><br/>
 
                     {MailFooter}
-                    """
-                };
-                mail.To.Add(new MailboxAddress("", meeting.Attendee.Email));
+                    """;
+                mail.IsBodyHtml = true;
+                mail.To.Add(new MailAddress(meeting.Attendee.Email));
                 break;
             case MailType.MEETING_ACCEPTED:
                 mail.Subject = "FYP: Meeting Accepted";
-                mail.Body = new TextPart("html")
-                {
-                    Text = $"""
+                mail.Body = $"""
                     Dear {sanitizedOrganizerName},<br/><br/>
 
                     {sanitizedAttendeeName} has accepted the meeting at
@@ -144,15 +139,13 @@ public class MailService
                     with you.<br/><br/>
 
                     {MailFooter}
-                    """
-                };
-                mail.To.Add(new MailboxAddress("", meeting.Organizer.Email));
+                    """;
+                mail.IsBodyHtml = true;
+                mail.To.Add(new MailAddress(meeting.Organizer.Email));
                 break;
             case MailType.MEETING_REJECTED:
                 mail.Subject = "FYP: Meeting Rejected";
-                mail.Body = new TextPart("html")
-                {
-                    Text = $"""
+                mail.Body = $"""
                     Dear {sanitizedOrganizerName},<br/><br/>
 
                     {sanitizedAttendeeName} has rejected the meeting at
@@ -160,15 +153,13 @@ public class MailService
                     with you.<br/><br/>
 
                     {MailFooter}
-                    """
-                };
-                mail.To.Add(new MailboxAddress("", meeting.Organizer.Email));
+                    """;
+                mail.IsBodyHtml = true;
+                mail.To.Add(new MailAddress(meeting.Organizer.Email));
                 break;
             case MailType.MEETING_CANCELLED:
                 mail.Subject = "FYP: Meeting Cancelled";
-                mail.Body = new TextPart("html")
-                {
-                    Text = $"""
+                mail.Body = $"""
                     Dear {sanitizedAttendeeName},<br/><br/>
 
                     {sanitizedOrganizerName} has cancelled the meeting at
@@ -176,9 +167,9 @@ public class MailService
                     with you.<br/><br/>
 
                     {MailFooter}
-                    """
-                };
-                mail.To.Add(new MailboxAddress("", meeting.Attendee.Email));
+                    """;
+                mail.IsBodyHtml = true;
+                mail.To.Add(new MailAddress(meeting.Attendee.Email));
                 break;
         }
 
@@ -189,15 +180,15 @@ public class MailService
 
     public void CreateAndEnqueueTaskMail(User supervisor, User student, ProjectTask task, MailType mailType)
     {
-        var mail = new MimeMessage();
+        var mail = new MailMessage();
 
-        var sanitizedTaskDescription = Sanitization.SanitizeString(task.Description);
+        var sanitizedTaskDescription = Sanitization.SanitizeString(task.Description ?? "");
         var sanitizedStudentName = Sanitization.SanitizeString(student.Name);
         var sanitizedSupervisorName = Sanitization.SanitizeString(supervisor.Name);
         var sanitizedTaskTitle = Sanitization.SanitizeString(task.Title);
 
-        mail.From.Add(new MailboxAddress("Project Management System", "noreply@pms.com"));
-        mail.To.Add(new MailboxAddress("", student.Email));
+        mail.From = new MailAddress("noreply@pms.com", "Project Management System");
+        mail.To.Add(new MailAddress(student.Email));
 
         switch (mailType)
         {
@@ -207,9 +198,7 @@ public class MailService
                                          $"Task Description:<br/> <span color='gray'><{sanitizedTaskDescription}</span><br/><br/>";
 
                 mail.Subject = "FYP: New Task Assigned";
-                mail.Body = new TextPart("html")
-                {
-                    Text = $"""
+                mail.Body = $"""
                     Dear {sanitizedStudentName},<br/><br/>
 
                     {sanitizedSupervisorName} has assigned you a new task,
@@ -220,14 +209,12 @@ public class MailService
                     <b>Task Due Date:</b> {task.DueDate.ToLocalTime()}<br/><br/>
 
                     {MailFooter}
-                    """
-                };
+                    """;
+                mail.IsBodyHtml = true;
                 break;
             case MailType.TASK_UPDATED:
                 mail.Subject = "FYP: Task Updated";
-                mail.Body = new TextPart("html")
-                {
-                    Text = $"""
+                mail.Body = $"""
                     Dear {sanitizedStudentName},<br/><br/>
 
                     {sanitizedSupervisorName} has updated the due date for the task,
@@ -236,36 +223,32 @@ public class MailService
                     <b>New Task Due Date:</b> {task.DueDate.ToLocalTime()}<br/><br/>
 
                     {MailFooter}
-                    """
-                };
+                    """;
+                mail.IsBodyHtml = true;
                 break;
             case MailType.TASK_DELETED:
                 mail.Subject = "FYP: Task Deleted";
-                mail.Body = new TextPart("html")
-                {
-                    Text = $"""
+                mail.Body = $"""
                     Dear {sanitizedStudentName},<br/><br/>
 
                     {sanitizedSupervisorName} has deleted the task, 
                     <b>{sanitizedTaskTitle}</b>.<br/><br/>
 
                     {MailFooter}
-                    """
-                };
+                    """;
+                mail.IsBodyHtml = true;
                 break;
             case MailType.TASK_COMPLIANCE_CHECK_COMPLETION:
                 mail.Subject = "FYP: Compliance Check Completed!";
-                mail.Body = new TextPart("html")
-                {
-                    Text = $"""
+                mail.Body = $"""
                     Dear {sanitizedStudentName}, <br><br>
 
                     The AI Feedback Compliance Check has completed. Please review
                     the updated feedback.
 
                     {MailFooter}
-                    """
-                };
+                    """;
+                mail.IsBodyHtml = true;
                 break;
         }
 
@@ -276,20 +259,18 @@ public class MailService
     {
         var mail = await mailQueue.DequeueMail(cancellationToken);
 
-        using var client = new SmtpClient();
+        using var client = new SmtpClient("smtp.gmail.com", 587)
+        {
+            EnableSsl = true,
+            Credentials = new NetworkCredential(mailAccount, mailPassword)
+        };
         try
         {
-            await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
-            await client.AuthenticateAsync(mailAccount, mailPassword);
-            await client.SendAsync(mail);
+            await client.SendMailAsync(mail);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             throw;
-        }
-        finally
-        {
-            await client.DisconnectAsync(true);
         }
     }
 }

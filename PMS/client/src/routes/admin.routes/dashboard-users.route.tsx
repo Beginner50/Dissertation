@@ -196,6 +196,20 @@ export default function DashboardUsersRoute() {
   };
 
   /* ---------------------------------------------------------------------------------- */
+  const formDataIncomplete = (() => {
+    switch (userModalState.mode) {
+      case "create":
+      case "edit":
+        return !(
+          userModalData.name &&
+          userModalData.email &&
+          userModalData.password &&
+          userModalData.role
+        );
+      case "delete":
+        return false;
+    }
+  })();
 
   return (
     <>
@@ -264,7 +278,7 @@ export default function DashboardUsersRoute() {
         )}
         <UserModal.Actions
           mode={userModalState.mode}
-          isValid={!!(userModalData.name && userModalData.email)}
+          isValid={!formDataIncomplete}
           handleCancelClick={handleCancelClick}
           handleCreateUser={handleCreateUser}
           handleEditUser={handleEditUser}

@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import AdminUsersPage from "./adminUsers.page";
 import AdminSupervisionPage from "./adminSupervision.page";
 
@@ -25,27 +25,32 @@ export default class AdminLayoutPage {
     this.usersNav = page.getByRole("link", { name: /Users/i });
     this.supervisionNav = page.getByRole("link", { name: /Supervision List/i });
     this.signOutButton = page.getByTestId("sign-out-button");
-
     this.error = page.getByRole("alert");
+  }
+
+  async waitUntilLoaded() {
+    await this.page.waitForURL(/admin/);
   }
 
   async clickUsers() {
     await this.usersNav.click();
+    await this.page.waitForURL(/users/i);
+    return new AdminUsersPage(this.page);
   }
 
   async clickSupervision() {
     await this.supervisionNav.click();
+    await this.page.waitForURL(/supervision/i);
+    return new AdminSupervisionPage(this.page);
   }
 
   async clickSignOut() {
     await this.signOutButton.click();
   }
 
-  users() {
-    return new AdminUsersPage(this.page);
-  }
-
-  supervision() {
-    return new AdminSupervisionPage(this.page);
+  async expectErrorValueAndCloseError(value: RegExp) {
+    await expect(this.error).toBeVisible();
+    await expect(this.error).toHaveText(value);
+    await this.error.getByRole("button", { name: /close/i }).click();
   }
 }

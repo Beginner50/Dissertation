@@ -1,11 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "xdQfYcm6e6A=",
+  "dgSpecHash": "ZQEk209Y/Ko=",
   "success": true,
   "projectFilePath": "/home/jatooUOM/Desktop/Dissertation/PMS/server/PMS.csproj",
   "expectedPackageFiles": [
     "/home/jatooUOM/.nuget/packages/bcrypt.net-next/4.0.3/bcrypt.net-next.4.0.3.nupkg.sha512",
-    "/home/jatooUOM/.nuget/packages/bouncycastle.cryptography/2.6.2/bouncycastle.cryptography.2.6.2.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/closedxml/0.105.0/closedxml.0.105.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/closedxml.parser/2.0.0/closedxml.parser.2.0.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/documentformat.openxml/3.1.1/documentformat.openxml.3.1.1.nupkg.sha512",
@@ -16,7 +15,6 @@
     "/home/jatooUOM/.nuget/packages/google.apis.core/1.69.0/google.apis.core.1.69.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/google.genai/0.9.0/google.genai.0.9.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
-    "/home/jatooUOM/.nuget/packages/mailkit/4.15.0/mailkit.4.15.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/microsoft.aspnetcore.authentication.jwtbearer/10.0.1/microsoft.aspnetcore.authentication.jwtbearer.10.0.1.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/microsoft.aspnetcore.openapi/10.0.1/microsoft.aspnetcore.openapi.10.0.1.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/microsoft.build/17.7.2/microsoft.build.17.7.2.nupkg.sha512",
@@ -44,7 +42,6 @@
     "/home/jatooUOM/.nuget/packages/microsoft.identitymodel.tokens/8.0.1/microsoft.identitymodel.tokens.8.0.1.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/microsoft.net.stringtools/17.14.28/microsoft.net.stringtools.17.14.28.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/microsoft.openapi/2.0.0/microsoft.openapi.2.0.0.nupkg.sha512",
-    "/home/jatooUOM/.nuget/packages/mimekit/4.15.0/mimekit.4.15.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/mono.texttemplating/3.0.0/mono.texttemplating.3.0.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/npgsql/10.0.0/npgsql.10.0.0.nupkg.sha512",
@@ -67,23 +64,10 @@
     "/home/jatooUOM/.nuget/packages/system.management/7.0.2/system.management.7.0.2.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/system.reflection.metadataloadcontext/7.0.0/system.reflection.metadataloadcontext.7.0.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/system.resources.extensions/9.0.0/system.resources.extensions.9.0.0.nupkg.sha512",
-    "/home/jatooUOM/.nuget/packages/system.security.cryptography.pkcs/10.0.0/system.security.cryptography.pkcs.10.0.0.nupkg.sha512",
+    "/home/jatooUOM/.nuget/packages/system.security.cryptography.pkcs/9.0.0/system.security.cryptography.pkcs.9.0.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/system.security.cryptography.protecteddata/9.0.0/system.security.cryptography.protecteddata.9.0.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/system.security.permissions/9.0.0/system.security.permissions.9.0.0.nupkg.sha512",
     "/home/jatooUOM/.nuget/packages/system.windows.extensions/9.0.0/system.windows.extensions.9.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1902",
-      "level": "Warning",
-      "message": "Package 'MimeKit' 4.15.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g7hc-96xr-gvvx",
-      "projectPath": "/home/jatooUOM/Desktop/Dissertation/PMS/server/PMS.csproj",
-      "warningLevel": 1,
-      "filePath": "/home/jatooUOM/Desktop/Dissertation/PMS/server/PMS.csproj",
-      "libraryId": "MimeKit",
-      "targetGraphs": [
-        "net10.0"
-      ]
-    }
-  ]
+  "logs": []
 }

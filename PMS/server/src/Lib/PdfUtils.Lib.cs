@@ -1,8 +1,10 @@
+using System.ComponentModel.DataAnnotations;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using ClosedXML.Excel;
 using PMS.DTOs;
 using PMS.Models;
+using Scalar.AspNetCore;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
@@ -68,34 +70,37 @@ public class PDFUtils
     public static List<User> IngestUserList(string filename, byte[] fileData, string contentType)
     {
         var users = new List<User>();
+        var acceptableRoles = new[] { "student", "supervisor", "admin" };
+        var expectedHeaders = new[] { "Name", "Email", "Password", "Role" };
 
         using (var stream = new MemoryStream(fileData))
         {
             using (var workbook = new XLWorkbook(stream))
             {
                 var worksheet = workbook.Worksheets.First();
-                var firstRow = worksheet.Row(1);
-
-                var expectedHeaders = new[] { "Name", "Email", "Password", "Role" };
-                var columnMap = GetColumnMap(worksheet.Row(1), expectedHeaders);
+                var columnMap = MapHeadersToColumns(worksheet.Row(1), expectedHeaders);
 
                 foreach (var row in worksheet.RowsUsed().Skip(1))
                 {
-                    try
-                    {
+                    var name = row.Cell(columnMap["Name"]).GetValue<string>();
+                    var email = row.Cell(columnMap["Email"]).GetValue<string>();
+                    var rawPassword = row.Cell(columnMap["Password"]).GetValue<string>();
+                    var role = row.Cell(columnMap["Role"]).GetValue<string>().ToLower();
 
-                        users.Add(new User
-                        {
-                            Name = row.Cell(columnMap["Name"]).GetValue<string>(),
-                            Email = row.Cell(columnMap["Email"]).GetValue<string>(),
-                            Password = BCrypt.Net.BCrypt.HashPassword(row.Cell(columnMap["Password"]).GetValue<string>()),
-                            Role = row.Cell(columnMap["Role"]).GetValue<string>()
-                        });
-                    }
-                    catch (Exception)
+                    if (string.IsNullOrEmpty(email) || !(new EmailAddressAttribute().IsValid(email)))
+                        throw new Exception($"Row {row.RowNumber()}: Invalid Email Format!");
+                    if (string.IsNullOrEmpty(role) || !acceptableRoles.Contains(role))
+                        throw new Exception($"Row {row.RowNumber()}: Invalid Role Format!");
+
+                    var newUser = new User
                     {
-                        throw new Exception($"Row {row}: Invalid Data Found!");
-                    }
+                        Name = name,
+                        Email = email,
+                        Password = BCrypt.Net.BCrypt.HashPassword(rawPassword),
+                        Role = role
+                    };
+
+                    users.Add(newUser);
                 }
             }
         }
@@ -106,25 +111,32 @@ public class PDFUtils
     public static List<ExtractProjectDTO> IngestProjectSupervisionList(string filename, byte[] fileData, string contentType)
     {
         var extractedProjects = new List<ExtractProjectDTO>();
+        var expectedHeaders = new[] { "Title", "Description", "Student Email", "Supervisor Email" };
 
         using (var stream = new MemoryStream(fileData))
         {
             using (var workbook = new XLWorkbook(stream))
             {
                 var worksheet = workbook.Worksheets.First();
-                var firstRow = worksheet.Row(1);
+                var columnMap = MapHeadersToColumns(worksheet.Row(1), expectedHeaders);
 
-                var expectedHeaders = new[] { "Title", "Description", "Student Email", "Supervisor Email" };
-                var columnMap = GetColumnMap(worksheet.Row(1), expectedHeaders);
 
                 foreach (var row in worksheet.RowsUsed().Skip(1))
                 {
+                    var studentEmail = row.Cell(columnMap["Student Email"]).GetValue<string>()?.Trim();
+                    var supervisorEmail = row.Cell(columnMap["Supervisor Email"]).GetValue<string>()?.Trim();
+
+                    if (string.IsNullOrEmpty(studentEmail) || !(new EmailAddressAttribute().IsValid(studentEmail)))
+                        throw new Exception($"Row {row.RowNumber()}: Invalid Student Email Format!");
+                    if (string.IsNullOrEmpty(supervisorEmail) || !(new EmailAddressAttribute().IsValid(supervisorEmail)))
+                        throw new Exception($"Row {row.RowNumber()}: Invalid Supervisor Email Format!");
+
                     extractedProjects.Add(new ExtractProjectDTO
                     {
                         Title = row.Cell(columnMap["Title"]).GetValue<string>(),
                         Description = row.Cell(columnMap["Description"]).GetValue<string>(),
-                        StudentEmail = row.Cell(columnMap["Student Email"]).GetValue<string>(),
-                        SupervisorEmail = row.Cell(columnMap["Supervisor Email"]).GetValue<string>()
+                        StudentEmail = studentEmail,
+                        SupervisorEmail = supervisorEmail
                     });
                 }
             }
@@ -133,7 +145,7 @@ public class PDFUtils
         return extractedProjects;
     }
 
-    private static Dictionary<string, int> GetColumnMap(IXLRow firstRow, string[] expectedHeaders)
+    private static Dictionary<string, int> MapHeadersToColumns(IXLRow firstRow, string[] expectedHeaders)
     {
         var columnMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 

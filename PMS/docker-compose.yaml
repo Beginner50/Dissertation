@@ -19,7 +19,8 @@ services:
   dotnet-server:
     build:
       context: ./server
-      target: ${COMPOSE_PROFILES:-development}
+      # target: development
+      target: production
     container_name: dotnet_server
     # Contains environment variables for MAIL_ACCOUNT, MAIL_PASSWORD, JWT_SECRET_KEY, GOOGLE_API_KEY
     env_file:
@@ -45,7 +46,8 @@ services:
   react:
     build:
       context: ./client
-      target: ${COMPOSE_PROFILES:-development}
+      # target: development
+      target: production
     container_name: react_pms
     depends_on:
       - dotnet-server
@@ -60,3 +62,4 @@ services:
 
 volumes:
   postgres-data-pms:
+
