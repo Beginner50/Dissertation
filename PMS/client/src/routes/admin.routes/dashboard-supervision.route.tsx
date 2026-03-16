@@ -1,9 +1,11 @@
 import { Paper } from "@mui/material";
 import { ProjectList } from "../../components/project.components/project-list.component";
+import ProjectModal from "../../components/base.components/modal.component";
 import ProjectSupervisionTable from "../../components/project.components/project-supervision-table.component";
 import { theme } from "../../lib/theme";
 import type {
   DeliverableFile,
+  ModalState,
   OutletContext,
   Project,
   ProjectSupervisionFormData,
@@ -12,23 +14,25 @@ import type {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { useAuth } from "../../providers/auth.provider";
-import ProjectModal, {
-  type ModalState as ProjectModalState,
-} from "../../components/project.components/project-modal.component";
 import base64js from "base64-js";
 import TableLayout from "../../components/base.components/table-layout.component";
-import { useOutletContext } from "react-router";
+import { useOutletContext, useSearchParams } from "react-router";
 import { extractErrorMessage } from "../../lib/utils";
 
 export default function DashboardSupervisionRoute() {
   const { setErrorMessage } = useOutletContext<OutletContext>();
+  const [searchParams] = useSearchParams();
 
   const { authorizedAPI } = useAuth();
-  const [limit, setLimit] = useState(5);
+
+  const [limit] = useState<number>(() => {
+    const pageSize = Number(searchParams.get("page-size"));
+    return !isNaN(pageSize) && pageSize != 0 ? pageSize : 5;
+  });
   const [offset, setOffset] = useState(0);
 
   const [projectSupervisionModalState, setProjectSupervisionModalState] =
-    useState<ProjectModalState>({
+    useState<ModalState>({
       mode: "create",
       open: false,
     });
@@ -38,8 +42,8 @@ export default function DashboardSupervisionRoute() {
       projectID: 0,
       title: "",
       description: "",
-      student: undefined,
-      supervisor: undefined,
+      studentEmail: "",
+      supervisorEmail: "",
     });
 
   /* ---------------------------------------------------------------------------------- */
@@ -89,8 +93,8 @@ export default function DashboardSupervisionRoute() {
       projectID: 0,
       title: "",
       description: "",
-      student: undefined,
-      supervisor: undefined,
+      studentEmail: "",
+      supervisorEmail: "",
     });
     setProjectSupervisionModalState({
       ...projectSupervisionModalState,
@@ -100,7 +104,11 @@ export default function DashboardSupervisionRoute() {
   };
 
   const handleEditProjectClick = (selectedProject: Project) => {
-    setProjectSupervisionModalData(selectedProject);
+    setProjectSupervisionModalData({
+      ...selectedProject,
+      supervisorEmail: selectedProject.supervisor?.email ?? "",
+      studentEmail: selectedProject.student?.email ?? "",
+    });
     setProjectSupervisionModalState({
       ...projectSupervisionModalState,
       mode: "edit",
@@ -109,7 +117,11 @@ export default function DashboardSupervisionRoute() {
   };
 
   const handleArchiveProjectClick = (selectedProject: Project) => {
-    setProjectSupervisionModalData(selectedProject);
+    setProjectSupervisionModalData({
+      ...selectedProject,
+      supervisorEmail: selectedProject.supervisor?.email ?? "",
+      studentEmail: selectedProject.student?.email ?? "",
+    });
     setProjectSupervisionModalState({
       ...projectSupervisionModalState,
       mode: "archive",
@@ -118,7 +130,11 @@ export default function DashboardSupervisionRoute() {
   };
 
   const handleRestoreProjectClick = (selectedProject: Project) => {
-    setProjectSupervisionModalData(selectedProject);
+    setProjectSupervisionModalData({
+      ...selectedProject,
+      supervisorEmail: selectedProject.supervisor?.email ?? "",
+      studentEmail: selectedProject.student?.email ?? "",
+    });
     setProjectSupervisionModalState({
       ...projectSupervisionModalState,
       mode: "restore",
@@ -129,28 +145,19 @@ export default function DashboardSupervisionRoute() {
   /* ---------------------------------------------------------------------------------- */
 
   const handleTitleChange = useCallback((title: string) => {
-    setProjectSupervisionModalData((p) => ({ ...p, title: title }));
+    setProjectSupervisionModalData((p) => ({ ...p, title }));
   }, []);
 
   const handleDescriptionChange = useCallback((description: string) => {
-    setProjectSupervisionModalData((p) => ({
-      ...p,
-      description: description,
-    }));
+    setProjectSupervisionModalData((p) => ({ ...p, description }));
   }, []);
 
-  const handleSupervisorChange = useCallback((selectedSupervisor?: User) => {
-    setProjectSupervisionModalData((p) => ({
-      ...p,
-      supervisor: selectedSupervisor,
-    }));
+  const handleSupervisorEmailChange = useCallback((supervisorEmail: string) => {
+    setProjectSupervisionModalData((p) => ({ ...p, supervisorEmail }));
   }, []);
 
-  const handleStudentChange = useCallback((selectedStudent?: User) => {
-    setProjectSupervisionModalData((p) => ({
-      ...p,
-      student: selectedStudent,
-    }));
+  const handleStudentEmailChange = useCallback((studentEmail: string) => {
+    setProjectSupervisionModalData((p) => ({ ...p, studentEmail }));
   }, []);
 
   /* ---------------------------------------------------------------------------------- */
@@ -162,8 +169,8 @@ export default function DashboardSupervisionRoute() {
         url: `api/projects`,
         data: {
           ...projectSupervisionModalData,
-          supervisorID: projectSupervisionModalData.supervisor?.userID,
-          studentID: projectSupervisionModalData.student?.userID,
+          supervisorEmail: projectSupervisionModalData.supervisorEmail,
+          studentEmail: projectSupervisionModalData.studentEmail,
         },
         invalidateQueryKeys: [["projects", limit, offset]],
       },
@@ -192,8 +199,8 @@ export default function DashboardSupervisionRoute() {
         url: `api/projects/${projectSupervisionModalData.projectID}`,
         data: {
           ...projectSupervisionModalData,
-          supervisorID: projectSupervisionModalData.supervisor?.userID,
-          studentID: projectSupervisionModalData.student?.userID,
+          supervisorEmail: projectSupervisionModalData.supervisorEmail,
+          studentEmail: projectSupervisionModalData.studentEmail,
         },
         invalidateQueryKeys: [["projects", limit, offset]],
       },
@@ -295,22 +302,20 @@ export default function DashboardSupervisionRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const students = users?.items.filter((u) => u.role == "student" && !u.isDeleted) ?? [];
-  const supervisors =
-    users?.items.filter((u) => u.role == "supervisor" && !u.isDeleted) ?? [];
-
   const formDataIncomplete = (() => {
     switch (projectSupervisionModalState.mode) {
       case "create":
       case "edit":
         return !(
           projectSupervisionModalData.title.trim() &&
-          projectSupervisionModalData.student?.userID &&
-          projectSupervisionModalData.supervisor?.userID
+          projectSupervisionModalData.studentEmail.trim() &&
+          projectSupervisionModalData.supervisorEmail.trim()
         );
       case "archive":
       case "restore":
         return false;
+      default:
+        return true;
     }
   })();
 
@@ -355,49 +360,53 @@ export default function DashboardSupervisionRoute() {
       </TableLayout>
 
       <ProjectModal open={projectSupervisionModalState.open}>
-        <ProjectModal.Header mode={projectSupervisionModalState.mode} />
+        <ProjectModal.Header mode={projectSupervisionModalState.mode} item="Project" />
         {projectSupervisionModalState.mode == "create" ||
         projectSupervisionModalState.mode == "edit" ? (
           <ProjectModal.Fields>
             {projectSupervisionModalState.mode == "edit" && (
-              <ProjectModal.ProjectID projectID={projectSupervisionModalData.projectID} />
+              <ProjectModal.TextField
+                label="ProjectID"
+                value={projectSupervisionModalData.projectID}
+                disabled
+              />
             )}
-            <ProjectModal.ProjectTitle
-              title={projectSupervisionModalData.title}
-              handleTitleChange={handleTitleChange}
+            <ProjectModal.TextField
+              label="Project Title"
+              value={projectSupervisionModalData.title}
+              handleValueChange={handleTitleChange}
             />
-            <ProjectModal.ProjectDescription
-              description={projectSupervisionModalData.description ?? ""}
-              handleDescriptionChange={handleDescriptionChange}
+            <ProjectModal.TextField
+              label="Description"
+              value={projectSupervisionModalData.description ?? ""}
+              handleValueChange={handleDescriptionChange}
             />
-            <ProjectModal.UserSelect
-              label="Student"
-              selectedUser={projectSupervisionModalData.student}
-              users={students}
-              handleUserChange={handleStudentChange}
+            <ProjectModal.TextField
+              label="Supervisor Email"
+              value={projectSupervisionModalData.supervisorEmail ?? ""}
+              handleValueChange={handleSupervisorEmailChange}
             />
-            <ProjectModal.UserSelect
-              label="Supervisor"
-              selectedUser={projectSupervisionModalData.supervisor}
-              users={supervisors}
-              handleUserChange={handleSupervisorChange}
+            <ProjectModal.TextField
+              label="Student Email"
+              value={projectSupervisionModalData.studentEmail ?? ""}
+              handleValueChange={handleStudentEmailChange}
             />
           </ProjectModal.Fields>
         ) : projectSupervisionModalState.mode == "archive" ? (
-          <ProjectModal.ArchiveWarning />
+          <ProjectModal.Warning message="This project will be archived. To revert this action, contact the administrator." />
         ) : (
-          <ProjectModal.RestoreWarning />
+          <ProjectModal.Warning message="This project will be restored from archive." />
         )}
 
         <ProjectModal.Actions
-          isLoading={mutation.status == "pending"}
           mode={projectSupervisionModalState.mode}
-          isValid={!formDataIncomplete}
+          disabled={formDataIncomplete}
+          loading={mutation.status == "pending"}
           handleCancelClick={handleCancelClick}
-          handleCreateProject={handleCreateProject}
-          handleEditProject={handleEditProject}
-          handleArchiveProject={handleArchiveProject}
-          handleRestoreProject={handleRestoreProject}
+          handleCreateItem={handleCreateProject}
+          handleEditItem={handleEditProject}
+          handleArchiveItem={handleArchiveProject}
+          handleRestoreItem={handleRestoreProject}
         />
       </ProjectModal>
     </Paper>

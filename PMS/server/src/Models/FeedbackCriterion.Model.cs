@@ -11,6 +11,6 @@ public class FeedbackCriterion
 
     public required long TaskID { get; set; }
     [ForeignKey("TaskID")]
-    public ProjectTask Task { get; init; }
+    public ProjectTask? Task { get; init; }
 
 }

@@ -117,6 +117,7 @@ UserTable.Row = ({
   const isDeleted = !!user.isDeleted;
   return (
     <TableRow
+      data-item-id={user.userID}
       hover={!isDeleted}
       sx={{
         opacity: isDeleted ? 0.5 : 1,

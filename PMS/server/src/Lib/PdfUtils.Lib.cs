@@ -126,9 +126,9 @@ public class PDFUtils
                     var studentEmail = row.Cell(columnMap["Student Email"]).GetValue<string>()?.Trim();
                     var supervisorEmail = row.Cell(columnMap["Supervisor Email"]).GetValue<string>()?.Trim();
 
-                    if (string.IsNullOrEmpty(studentEmail) || !(new EmailAddressAttribute().IsValid(studentEmail)))
+                    if (string.IsNullOrEmpty(studentEmail) || !new EmailAddressAttribute().IsValid(studentEmail))
                         throw new Exception($"Row {row.RowNumber()}: Invalid Student Email Format!");
-                    if (string.IsNullOrEmpty(supervisorEmail) || !(new EmailAddressAttribute().IsValid(supervisorEmail)))
+                    if (string.IsNullOrEmpty(supervisorEmail) || !new EmailAddressAttribute().IsValid(supervisorEmail))
                         throw new Exception($"Row {row.RowNumber()}: Invalid Supervisor Email Format!");
 
                     extractedProjects.Add(new ExtractProjectDTO

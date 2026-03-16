@@ -1,6 +1,6 @@
 import { Box, Container } from "@mui/material";
 import Header from "../../components/header.components/header.component";
-import { Navigate, Outlet } from "react-router";
+import { Navigate, Outlet, useSearchParams } from "react-router";
 import { useAuth } from "../../providers/auth.provider";
 import AdminBar from "../../components/header.components/admin-bar.component";
 import { useState, type Dispatch, type SetStateAction } from "react";
@@ -13,6 +13,7 @@ export default function AdminRoutesLayout() {
 
   if (!isAuthenticated) return <Navigate to={"/sign-in"} />;
 
+  const [searchParams] = useSearchParams();
   const [errorMessage, setErrorMessage] = useState("");
 
   return (
@@ -37,9 +38,12 @@ export default function AdminRoutesLayout() {
       <Container maxWidth="lg" sx={{ py: 2 }}>
         <AdminBar>
           <AdminBar.Navigation>
-            <AdminBar.NavItem to="/admin-dashboard/users" label="Users" />
             <AdminBar.NavItem
-              to="/admin-dashboard/supervision-list"
+              to={`/admin-dashboard/users?${searchParams.toString()}`}
+              label="Users"
+            />
+            <AdminBar.NavItem
+              to={`/admin-dashboard/supervision-list?${searchParams.toString()}`}
               label="Supervision List"
             />
           </AdminBar.Navigation>

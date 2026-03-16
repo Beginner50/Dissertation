@@ -20,6 +20,14 @@ export default class SignInPage {
   async signIn(email: string, password: string) {
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
+
+    const responsePromise = this.page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/users/login") && response.status() === 200,
+    );
+
     await this.signInButton.click();
+    const response = await responsePromise;
+    return await response.json();
   }
 }

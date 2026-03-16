@@ -1,17 +1,10 @@
-import type { Locator, Page } from "@playwright/test";
-import ProjectsPage from "./projects.page";
-import SchedulerPage from "./scheduler.page";
+import { expect, type Locator, type Page } from "@playwright/test";
+import ProjectsPOM from "./projects.pom";
+import SchedulerPOM from "./scheduler.pom";
 import TasksPage from "./tasks.page";
 import TaskDetailsPage from "./taskDetails.page";
 
-/*
-  To more accurately represent the has-a relationship between a layout
-  route and the actual page routes, composition has been used to model this.
-
-  The individual pages can then be accessed from the layout route by the
-  corresponding methods to access them.
-*/
-export default class NormalLayoutPage {
+export default class NormalLayoutPOM {
   readonly page: Page;
 
   readonly brandLink: Locator;
@@ -34,35 +27,33 @@ export default class NormalLayoutPage {
     this.error = page.getByRole("alert");
   }
 
+  async waitUntilLoaded() {
+    await this.page.waitForURL(/(projects|scheduler)/);
+  }
+
   async clickProjects() {
     await this.projectsNav.click();
+    await this.page.waitForURL(/projects/i);
+    return new ProjectsPOM(this.page);
   }
 
   async clickScheduler() {
     await this.schedulerNav.click();
+    await this.page.waitForURL(/scheduler/i);
+    return new SchedulerPOM(this.page);
   }
 
   async clickSignOut() {
     await this.signOutButton.click();
   }
 
+  async expectErrorValueAndCloseError(value: RegExp) {
+    await expect(this.error).toBeVisible();
+    await expect(this.error).toHaveText(value);
+    await this.error.getByRole("button", { name: /close/i }).click();
+  }
+
   async getBreadcrumbText() {
     return this.breadcrumbs.textContent();
-  }
-
-  projects() {
-    return new ProjectsPage(this.page);
-  }
-
-  scheduler() {
-    return new SchedulerPage(this.page);
-  }
-
-  tasks() {
-    return new TasksPage(this.page);
-  }
-
-  taskDetails() {
-    return new TaskDetailsPage(this.page);
   }
 }

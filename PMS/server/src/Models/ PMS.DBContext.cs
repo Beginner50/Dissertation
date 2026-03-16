@@ -29,7 +29,6 @@ public class PMSDbContext : DbContext
     public DbSet<Project> Projects { get; set; }
     public DbSet<Meeting> Meetings { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
-    public DbSet<Notification> Notifications { get; set; }
     public DbSet<ProjectTask> Tasks { get; set; }
     public DbSet<Deliverable> Deliverables { get; set; }
     public DbSet<FeedbackCriterion> FeedbackCriterias { get; set; }

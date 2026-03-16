@@ -28,17 +28,12 @@ services:
       - POSTGRES_DB=pms-test
       - POSTGRES_HOST=postgres-test
       - ASPNETCORE_URLS=http://+:5081 # Tell .NET Host to listen to all network interfaces (0.0.0.0) outside the container
+      - DISABLE_MAIL=true
     depends_on:
       postgres-test:
         condition: service_healthy
     ports:
       - "5081:5081"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5081/health"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 5s 
 
   react-test:
     build:

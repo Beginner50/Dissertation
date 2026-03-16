@@ -14,7 +14,6 @@ public class ProjectTaskService
     private readonly ILogger logger;
     private readonly ProjectService projectService;
     private readonly MailService mailService;
-    private readonly NotificationService notificationService;
     private readonly ReminderService reminderService;
     private readonly PMSDbContext dbContext;
     public ProjectTaskService(
@@ -22,14 +21,12 @@ public class ProjectTaskService
         PMSDbContext dbContext,
         ProjectService projectService,
         MailService mailService,
-        NotificationService notificationService,
         ReminderService reminderService)
     {
         this.logger = logger;
         this.dbContext = dbContext;
         this.projectService = projectService;
         this.mailService = mailService;
-        this.notificationService = notificationService;
         this.reminderService = reminderService;
     }
 
@@ -136,15 +133,10 @@ public class ProjectTaskService
                 dbContext.Tasks.Add(newTask);
                 await dbContext.SaveChangesAsync();
 
-                if (project.StudentID != null)
-                {
-                    await notificationService.CreateTaskNotification(
-                        project.Supervisor, project.Student, newTask, NotificationType.TASK_CREATED);
-                    await reminderService.CreateTaskReminder(
-                        project.Supervisor, project.Student, newTask);
-                    mailService.CreateAndEnqueueTaskMail(
-                        project.Supervisor, project.Student, newTask, MailType.TASK_ASSIGNED);
-                }
+                await reminderService.CreateTaskReminder(
+                    project.Supervisor!, project.Student!, newTask);
+                mailService.CreateAndEnqueueTaskMail(
+                    project.Supervisor!, project.Student!, newTask, MailType.TASK_ASSIGNED);
 
                 await transaction.CommitAsync();
             }
@@ -195,17 +187,11 @@ public class ProjectTaskService
 
             await dbContext.SaveChangesAsync();
 
-            if (task.Project.StudentID != null)
+            if (dueDateUpdated)
             {
-                await notificationService.CreateTaskNotification(
-                    project.Supervisor, project.Student, task, NotificationType.TASK_UPDATED);
-
-                if (dueDateUpdated)
-                {
-                    await reminderService.UpdateTaskReminder(task);
-                    mailService.CreateAndEnqueueTaskMail(
-                        project.Supervisor, project.Student, task, MailType.TASK_UPDATED);
-                }
+                await reminderService.UpdateTaskReminder(task);
+                mailService.CreateAndEnqueueTaskMail(
+                    project.Supervisor!, project.Student!, task, MailType.TASK_UPDATED);
             }
 
             await transaction.CommitAsync();
@@ -240,20 +226,14 @@ public class ProjectTaskService
         {
             try
             {
-                if (task.Project.StudentID != null)
-                {
-                    await notificationService.CreateTaskNotification(
-                        project.Supervisor, project.Student, task, NotificationType.TASK_DELETED);
-                    await reminderService.DeleteTaskReminder(task);
-                    mailService.CreateAndEnqueueTaskMail(
-                        project.Supervisor, project.Student, task, MailType.TASK_DELETED);
-                }
+                await reminderService.DeleteTaskReminder(task);
+                mailService.CreateAndEnqueueTaskMail(
+                    project.Supervisor!, project.Student!, task, MailType.TASK_DELETED);
 
                 dbContext.Remove(task);
                 await dbContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
-
             }
             catch (Exception)
             {

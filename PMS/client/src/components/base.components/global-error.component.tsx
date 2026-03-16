@@ -18,7 +18,7 @@ export const GlobalError = ({
         onClose={onClose}
         variant="filled"
         data-testid="global-error"
-        sx={{ width: "100%", boxShadow: 6 }}>
+        sx={{ width: "100%", boxShadow: 6, whiteSpace: "pre-line" }}>
         <AlertTitle>System Error</AlertTitle>
         {message}
       </Alert>

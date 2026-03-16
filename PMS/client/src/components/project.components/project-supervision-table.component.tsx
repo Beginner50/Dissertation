@@ -99,6 +99,7 @@ export default function ProjectSupervisionTable({
 
                 return (
                   <TableRow
+                    data-item-id={project.projectID}
                     key={project.projectID}
                     hover
                     sx={{ opacity: hasDeletedUser ? 0.7 : 1 }}>
@@ -124,13 +125,14 @@ export default function ProjectSupervisionTable({
                     </TableCell>
 
                     <TableCell align="right">
-                      <ProjectSupervisionTable.Actions
-                        project={project}
-                        hasDeletedUser={hasDeletedUser}
-                        onEdit={() => handleEditClick(project)}
-                        onArchive={() => handleArchiveClick(project)}
-                        onRestore={() => handleRestoreClick(project)}
-                      />
+                      {!hasDeletedUser && (
+                        <ProjectSupervisionTable.Actions
+                          project={project}
+                          onEdit={() => handleEditClick(project)}
+                          onArchive={() => handleArchiveClick(project)}
+                          onRestore={() => handleRestoreClick(project)}
+                        />
+                      )}
                     </TableCell>
                   </TableRow>
                 );
@@ -164,30 +166,15 @@ ProjectSupervisionTable.UserCell = ({ user }: { user?: User }) => {
 
 ProjectSupervisionTable.Actions = ({
   project,
-  hasDeletedUser,
   onEdit,
   onArchive,
   onRestore,
 }: {
   project: Project;
-  hasDeletedUser: boolean;
   onEdit: () => void;
   onArchive: () => void;
   onRestore: () => void;
 }) => {
-  if (hasDeletedUser) {
-    return (
-      <Tooltip
-        title="This project cannot be edited due to one or more users of the project being deleted"
-        arrow
-        placement="left">
-        <IconButton size="small" sx={{ color: theme.status.missing }}>
-          <Info />
-        </IconButton>
-      </Tooltip>
-    );
-  }
-
   return (
     <ProjectSupervisionTable.MenuButton
       isArchived={project.isArchived}

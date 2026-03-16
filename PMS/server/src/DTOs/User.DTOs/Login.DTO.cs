@@ -1,10 +1,11 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace PMS.DTOs;
 
 public class LoginDTO
 {
-    [EmailAddress(ErrorMessage = "Invalid Email Address Format!")]
-    public string Email { get; set; }
-    public string Password { get; set; }
+    [EmailAddress]
+    public required string Email { get; set; }
+    public required string Password { get; set; }
 }

@@ -8,9 +8,9 @@ using PMS.Services;
 public class AIJob
 {
     public long JobID { get; set; }
-    public Content Content { get; set; }
-    public GenerateContentConfig Config { get; set; }
-    public string Response { get; set; }
+    public required Content Content { get; set; }
+    public required GenerateContentConfig Config { get; set; }
+    public string Response { get; set; } = "";
 }
 
 public class AIWorker : BackgroundService

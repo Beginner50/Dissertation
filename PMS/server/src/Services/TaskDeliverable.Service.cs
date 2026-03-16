@@ -16,7 +16,6 @@ public class TaskDeliverableService
     private readonly PMSDbContext dbContext;
     private readonly ProjectService projectService;
     private readonly ProjectTaskService projectTaskService;
-    private readonly NotificationService notificationService;
     private readonly ReminderService reminderService;
     private readonly ILogger<TaskDeliverableService> logger;
 
@@ -24,7 +23,6 @@ public class TaskDeliverableService
         PMSDbContext dbContext,
         ProjectService projectService,
         ProjectTaskService projectTaskService,
-        NotificationService notificationService,
         ReminderService reminderService,
         ILogger<TaskDeliverableService> logger
     )
@@ -32,7 +30,6 @@ public class TaskDeliverableService
         this.dbContext = dbContext;
         this.projectService = projectService;
         this.projectTaskService = projectTaskService;
-        this.notificationService = notificationService;
         this.reminderService = reminderService;
         this.logger = logger;
     }
@@ -121,13 +118,25 @@ public class TaskDeliverableService
             SubmittedByID = userID,
         };
 
-        dbContext.Deliverables.Add(deliverable);
-        await dbContext.SaveChangesAsync();
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
+        {
+            try
+            {
+                dbContext.Deliverables.Add(deliverable);
+                await dbContext.SaveChangesAsync();
 
-        task.StagedDeliverableID = deliverable.DeliverableID;
-        await dbContext.SaveChangesAsync();
+                task.StagedDeliverableID = deliverable.DeliverableID;
+                await dbContext.SaveChangesAsync();
 
-        return deliverable;
+                await transaction.CommitAsync();
+                return deliverable;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 
     public async Task RemoveStagedDeliverable(long userID, long projectID, long taskID)
@@ -150,14 +159,6 @@ public class TaskDeliverableService
 
     public async Task SubmitStagedDeliverable(long userID, long projectID, long taskID)
     {
-        var project = await projectService.GetProject(
-            userID,
-            projectID,
-            selector: p => p,
-            queryExtension: p => p.Include(p => p.Student)
-                                  .Include(p => p.Supervisor)
-        );
-
         var task = await projectTaskService.GetProjectTask(
             userID,
             projectID,
@@ -191,16 +192,11 @@ public class TaskDeliverableService
                              .ExecuteDeleteAsync();
 
                 await dbContext.SaveChangesAsync();
-
-                await notificationService.CreateTaskNotification(
-                    project.Supervisor, project.Student, task, NotificationType.DELIVERABLE_SUBMITTED);
-
                 await transaction.CommitAsync();
             }
-            catch (Exception)
+            catch
             {
                 await transaction.RollbackAsync();
-                throw;
             }
         }
     }

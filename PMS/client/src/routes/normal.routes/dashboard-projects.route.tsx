@@ -1,40 +1,38 @@
 import { ProjectList } from "../../components/project.components/project-list.component";
-import { ReminderList } from "../../components/notification-reminder.components/reminder-list.component";
+import { ReminderList } from "../../components/reminder.components/reminder-list.component";
 import type {
-  Notification,
+  ModalState,
   OutletContext,
   Project,
   ProjectFormData,
   Reminder,
   User,
 } from "../../lib/types";
+import ProjectModal from "../../components/base.components/modal.component";
 import { useCallback, useState } from "react";
-import ProjectModal, {
-  type ModalMode,
-  type ModalState as ProjectModalState,
-} from "../../components/project.components/project-modal.component";
-import { SlidingActivityCard } from "../../components/base.components/sliding-activity-card.component";
-import { NotificationList } from "../../components/notification-reminder.components/notification-list.component";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../providers/auth.provider";
 import { Box } from "@mui/material";
 import Pagination from "../../components/base.components/pagination.component";
 import ProjectListEntry from "../../components/project.components/project-list-entry.component";
-import { useOutletContext } from "react-router";
+import { useOutletContext, useSearchParams } from "react-router";
 import { extractErrorMessage } from "../../lib/utils";
 
 export default function DashboardProjectsRoute() {
+  const [searchParams] = useSearchParams();
   const { setErrorMessage } = useOutletContext<OutletContext>();
 
   /* ------------------------------- React Hooks --------------------------------------- */
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
 
-  const [projectListLimit, setProjectListLimit] = useState(4);
+  const [projectListLimit] = useState(() => {
+    const pageSize = Number(searchParams.get("page-size"));
+    return !isNaN(pageSize) && pageSize != 0 ? pageSize : 4;
+  });
   const [projectListOffset, setProjectListOffset] = useState(0);
-  const [step, setStep] = useState(0);
 
-  const [projectModalState, setProjectModalState] = useState<ProjectModalState>({
+  const [projectModalState, setProjectModalState] = useState<ModalState>({
     // mode: "create",
     mode: "edit",
     open: false,
@@ -118,20 +116,6 @@ export default function DashboardProjectsRoute() {
     },
     retry: 1,
     refetchInterval: 1000 * 60, // 1 minute
-  });
-
-  const { data: notifications, isLoading: notificationsLoading } = useQuery({
-    queryKey: [user.userID, "notifications"],
-    queryFn: async (): Promise<Notification[]> =>
-      await authorizedAPI.get(`api/users/${user.userID}/notifications`).json(),
-    select: (data: any[]): Notification[] => {
-      return data.map((n) => ({
-        ...n,
-        timestamp: new Date(n.timestamp),
-      }));
-    },
-    retry: 1,
-    refetchInterval: 1000 * 60 * 5, // 5 minutes
   });
 
   /* ---------------------------------------------------------------------------------- */
@@ -246,6 +230,8 @@ export default function DashboardProjectsRoute() {
         return !(projectModalData.projectID && projectModalData.title);
       case "archive":
         return false;
+      default:
+        return true;
     }
   })();
 
@@ -265,13 +251,7 @@ export default function DashboardProjectsRoute() {
         }}>
         {/* Left Section - Projects */}
         <ProjectList>
-          <ProjectList.Header>
-            {/* {user.role == "supervisor" && (
-              <ProjectList.CreateProjectButton
-                handleCreateProjectClick={handleCreateProjectClick}
-              />
-            )} */}
-          </ProjectList.Header>
+          <ProjectList.Header />
 
           <ProjectList.Content>
             {projectsLoading ? (
@@ -283,6 +263,7 @@ export default function DashboardProjectsRoute() {
                 <ProjectListEntry
                   key={project.projectID}
                   project={project}
+                  url={`/projects/${project.projectID}/tasks?${searchParams.toString()}`}
                   menuEnabled={user.role === "supervisor"}
                   onEdit={() => handleEditProjectClick(project)}
                   onArchive={() => handleArchiveProjectClick(project)}
@@ -299,55 +280,48 @@ export default function DashboardProjectsRoute() {
           />
         </ProjectList>
 
-        {/* Right Section - Sliding Activity (Reminder + Notifications) */}
-        <SlidingActivityCard>
-          <SlidingActivityCard.Content activeStep={step}>
-            <NotificationList notifications={notifications ?? []} />
-            <ReminderList reminders={reminders ?? []} />
-          </SlidingActivityCard.Content>
-
-          <SlidingActivityCard.Navigation
-            activeStep={step}
-            onNext={() => setStep(1)}
-            onBack={() => setStep(0)}
-            reminderCount={reminders?.length ?? 0}
-          />
-        </SlidingActivityCard>
+        {/* Right Section - Reminders  */}
+        <ReminderList reminders={reminders ?? []} />
       </Box>
 
       {/* Project Modal */}
       <ProjectModal open={projectModalState.open}>
-        <ProjectModal.Header mode={projectModalState.mode} />
-
+        <ProjectModal.Header mode={projectModalState.mode} item="Project" />
         {
           // projectModalState.mode === "create" ||
           projectModalState.mode === "edit" ? (
             <ProjectModal.Fields>
               {projectModalState.mode == "edit" && (
-                <ProjectModal.ProjectID projectID={projectModalData?.projectID ?? 0} />
+                <ProjectModal.TextField
+                  label="ProjectID"
+                  value={projectModalData.projectID}
+                />
               )}
-              <ProjectModal.ProjectTitle
-                title={projectModalData?.title ?? ""}
-                handleTitleChange={handleTitleChange}
+              <ProjectModal.TextField
+                label="Title"
+                value={projectModalData.title}
+                handleValueChange={handleTitleChange}
               />
-              <ProjectModal.ProjectDescription
-                description={projectModalData?.description ?? ""}
-                handleDescriptionChange={handleDescriptionChange}
+              <ProjectModal.TextField
+                label="Description"
+                value={projectModalData.description ?? ""}
+                handleValueChange={handleDescriptionChange}
+                multiline
+                rows={3}
               />
             </ProjectModal.Fields>
           ) : (
-            <ProjectModal.ArchiveWarning />
+            <ProjectModal.Warning message="This action cannot be undone by the supervisor! Contact your administrator to restore an archived project." />
           )
         }
 
         <ProjectModal.Actions
           mode={projectModalState.mode}
-          isLoading={mutation.status === "pending"}
-          isValid={!formDataIncomplete}
+          disabled={formDataIncomplete}
+          loading={mutation.status == "pending"}
           handleCancelClick={handleCancelClick}
-          // handleCreateProject={handleCreateProject}
-          handleEditProject={handleEditProject}
-          handleArchiveProject={handleArchiveProject}
+          handleEditItem={handleEditProject}
+          handleArchiveItem={handleArchiveProject}
         />
       </ProjectModal>
     </>

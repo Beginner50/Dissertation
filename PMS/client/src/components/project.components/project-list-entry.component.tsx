@@ -18,17 +18,20 @@ import MenuButton from "../base.components/menu-button.component";
 
 export default function ProjectListEntry({
   project,
+  url,
   menuEnabled,
   onEdit,
   onArchive,
 }: {
   project: Project;
+  url: string;
   menuEnabled: boolean;
   onEdit: () => void;
   onArchive: () => void;
 }) {
   return (
     <ListItem
+      data-item-id={project.projectID}
       sx={{
         display: "flex",
         flexDirection: "row",
@@ -48,7 +51,7 @@ export default function ProjectListEntry({
       }}>
       <ProjectListEntry.Link
         title={project.title}
-        url={`/projects/${project.projectID}/tasks`}
+        url={url}
         student={project?.student}
         supervisor={project?.supervisor}
       />

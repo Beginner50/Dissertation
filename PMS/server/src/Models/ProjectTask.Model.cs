@@ -21,11 +21,11 @@ public class ProjectTask
 
     public required long ProjectID { get; set; }
     [ForeignKey("ProjectID")]
-    public Project Project { get; init; }
+    public Project? Project { get; init; }
 
     public required long AssignedByID { get; set; }
     [ForeignKey("AssignedByID")]
-    public User AssignedBy { get; init; }
+    public User? AssignedBy { get; init; }
 
 
     /*

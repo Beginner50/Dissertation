@@ -113,18 +113,20 @@ export default function SchedulerRoute() {
     setMeetingFormData((prev) => ({ ...prev, description: val }));
   };
 
-  const handleStartChange = (start: Date) => {
-    setMeetingFormData((prev) => ({
-      ...prev,
-      start: start,
-    }));
+  const handleStartChange = (start: Date | null) => {
+    if (start != null)
+      setMeetingFormData((prev) => ({
+        ...prev,
+        start: start,
+      }));
   };
 
-  const handleEndChange = (end: Date) => {
-    setMeetingFormData((prev) => ({
-      ...prev,
-      end: end,
-    }));
+  const handleEndChange = (end: Date | null) => {
+    if (end != null)
+      setMeetingFormData((prev) => ({
+        ...prev,
+        end: end,
+      }));
   };
 
   const handleProjectChange = (project: Project) => {

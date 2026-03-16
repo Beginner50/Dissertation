@@ -1,3 +1,4 @@
+import path from "path";
 import { defineConfig, devices } from "@playwright/test";
 
 /**
@@ -12,7 +13,7 @@ import { defineConfig, devices } from "@playwright/test";
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: "./src",
+  testDir: ".",
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -35,12 +36,18 @@ export default defineConfig({
     baseURL: "http://localhost:3000",
   },
   outputDir: "test-results",
-
+  globalSetup: path.join(__dirname, "src/setup"),
+  globalTeardown: path.join(__dirname, "src/teardown"),
   /* Configure projects for major browsers */
   projects: [
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: "Users-Setup",
+      testMatch: /src.01.*\.spec\.ts/,
+      // use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "Project-Setup",
+      testMatch: /src.02.*\.spec\.ts/,
     },
 
     // {
@@ -75,10 +82,10 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: `docker compose -f ${path.join(__dirname, "..", "docker-compose.test.yaml")} down -v && docker compose -f ${path.join(__dirname, "..", "docker-compose.test.yaml")} up --build`,
-    url: "http://localhost:3000",
-    timeout: 120 * 1000,
-    reuseExistingServer: false,
-  },
+  // webServer: {
+  //   cwd: path.resolve(".."),
+  //   url: "http://localhost:5081/api/health",
+  //   timeout: 120 * 1000,
+  //   reuseExistingServer: true,
+  // },
 });

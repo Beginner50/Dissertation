@@ -13,7 +13,7 @@ export default class ModalPOM {
     this.title = this.dialog.getByRole("heading", { level: 2 });
     this.cancelButton = this.dialog.getByRole("button", { name: /Cancel/i });
     this.primaryButton = this.dialog.getByRole("button", {
-      name: /Create|Save|Edit|Delete|Submit|Archive/i,
+      name: /Create|Save|Edit|Delete|Submit|Archive|Restore/i,
     });
   }
 

@@ -142,14 +142,11 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            if (createProjectDTO.SupervisorID == null)
-                throw new Exception("No Project Supervisor Provided!");
-
             await projectService.CreateProject(
                 title: createProjectDTO.Title,
                 description: createProjectDTO.Description,
-                supervisorID: (long)createProjectDTO.SupervisorID,
-                studentID: createProjectDTO.StudentID
+                supervisorEmail: createProjectDTO.SupervisorEmail,
+                studentEmail: createProjectDTO.StudentEmail
             );
             return NoContent();
 
@@ -160,29 +157,29 @@ public class ProjectsController : ControllerBase
         }
     }
 
-    [Route("api/users/{userID}/projects")]
-    [HttpPost]
-    [Authorize(Policy = "Ownership", Roles = "supervisor")]
-    public async Task<IActionResult> CreateProject(
-        [FromRoute] long userID,
-        [FromBody] CreateProjectDTO createProjectDTO
-    )
-    {
-        try
-        {
-            await projectService.CreateProject(
-                title: createProjectDTO.Title,
-                description: createProjectDTO.Description,
-                supervisorID: userID
-            );
-            return NoContent();
+    // [Route("api/users/{userID}/projects")]
+    // [HttpPost]
+    // [Authorize(Policy = "Ownership", Roles = "supervisor")]
+    // public async Task<IActionResult> CreateProject(
+    //     [FromRoute] long userID,
+    //     [FromBody] CreateProjectDTO createProjectDTO
+    // )
+    // {
+    //     try
+    //     {
+    //         await projectService.CreateProject(
+    //             title: createProjectDTO.Title,
+    //             description: createProjectDTO.Description,
+    //             supervisorID: userID
+    //         );
+    //         return NoContent();
 
-        }
-        catch (Exception e)
-        {
-            return Conflict(e.Message);
-        }
-    }
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         return Conflict(e.Message);
+    //     }
+    // }
 
     [Route("api/projects/{projectID}")]
     [HttpPut]
@@ -197,8 +194,8 @@ public class ProjectsController : ControllerBase
                 projectID,
                 title: editProjectDTO.Title,
                 description: editProjectDTO.Description,
-                studentID: editProjectDTO.StudentID,
-                supervisorID: editProjectDTO.SupervisorID,
+                studentEmail: editProjectDTO.StudentEmail,
+                supervisorEmail: editProjectDTO.SupervisorEmail,
                 isArchived: editProjectDTO.IsArchived
             );
             return NoContent();

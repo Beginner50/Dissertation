@@ -13,20 +13,17 @@ public class FeedbackService
 {
     private readonly PMSDbContext dbContext;
     private readonly ProjectTaskService projectTaskService;
-    private readonly NotificationService notificationService;
     private readonly ILogger<FeedbackService> logger;
 
     public FeedbackService(
         PMSDbContext dbContext,
         ProjectTaskService projectTaskService,
-        NotificationService notificationService,
         ILogger<FeedbackService> logger
     )
     {
         this.dbContext = dbContext;
         this.logger = logger;
         this.projectTaskService = projectTaskService;
-        this.notificationService = notificationService;
     }
 
     public async Task<T> GetFeedbackCriterion<T>(
@@ -117,27 +114,8 @@ public class FeedbackService
             TaskID = taskID,
         };
 
-        using (var transaction = await dbContext.Database.BeginTransactionAsync())
-        {
-            try
-            {
-                await dbContext.AddAsync(newCriterion);
-                await dbContext.SaveChangesAsync();
-
-                await notificationService.CreateTaskNotification(
-                    task.Project.Supervisor,
-                    task.Project.Student,
-                    task,
-                    NotificationType.FEEDBACK_PROVIDED);
-
-                await transaction.CommitAsync();
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
+        await dbContext.AddAsync(newCriterion);
+        await dbContext.SaveChangesAsync();
     }
 
     public async Task EditFeedbackCriterion

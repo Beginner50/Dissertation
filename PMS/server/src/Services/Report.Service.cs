@@ -6,6 +6,8 @@ using PMS.Models;
 
 namespace PMS.Services;
 
+
+
 public class ReportService
 {
     private readonly PMSDbContext dbContext;
@@ -14,23 +16,58 @@ public class ReportService
         this.dbContext = dbContext;
     }
 
+    private async Task<Dictionary<string, long>> ExtractAndValidateEmailUserIDMap(
+        List<string> extractedStudentEmails,
+        List<string> extractedSupervisorEmails
+    )
+    {
+        var allEmails = extractedStudentEmails.Union(extractedSupervisorEmails).ToList();
+
+        var users = await dbContext.Users
+            .NotDeleted()
+            .Where(u => allEmails.Contains(u.Email))
+            .ToListAsync();
+
+        var studentMap = users
+            .Where(u => u.Role == "student")
+            .ToDictionary(u => u.Email,
+                          u => u.UserID);
+
+        var supervisorMap = users
+            .Where(u => u.Role == "supervisor")
+            .ToDictionary(u => u.Email, u => u.UserID);
+
+        foreach (var email in extractedStudentEmails)
+        {
+            if (!studentMap.ContainsKey(email))
+                throw new Exception($"Student '{email}' Not Found!");
+        }
+
+        foreach (var email in extractedSupervisorEmails)
+        {
+            if (!supervisorMap.ContainsKey(email))
+                throw new Exception($"Supervisor '{email}' Not Found!");
+        }
+
+        foreach (var entry in supervisorMap)
+        {
+            studentMap.TryAdd(entry.Key, entry.Value);
+        }
+
+        return studentMap;
+    }
+
     public async Task IngestProjectSupervisionList(string filename, byte[] fileData, string contentType)
     {
         if (!Sanitization.IsValidExcel(fileData))
             throw new Exception("File Is Not Valid Excel!");
 
         var extractedProjects = PDFUtils.IngestProjectSupervisionList(filename, fileData, contentType);
-        var extractedProjectEmails = extractedProjects.Select(d => d.StudentEmail)
-            .Union(extractedProjects.Select(d => d.SupervisorEmail))
-            .Distinct()
-            .ToList();
+        var extractedStudentEmails = extractedProjects.Select(d => d.StudentEmail).ToList();
+        var extractedSupervisorEmails = extractedProjects.Select(d => d.SupervisorEmail).ToList();
         var extractedProjectTitles = extractedProjects.Select(d => d.Title).ToList();
 
-        var emailUserIDMap = await dbContext.Users
-            .Where(u => extractedProjectEmails.Contains(u.Email))
-            .ToDictionaryAsync(u => u.Email, u => u.UserID);
-        if (emailUserIDMap.Count < extractedProjectEmails.Count)
-            throw new Exception("Not All Users In The List Exist!");
+        var emailUserIDMap = await ExtractAndValidateEmailUserIDMap(extractedStudentEmails, extractedSupervisorEmails);
 
         var existingProjects = await dbContext.Projects
             .Where(p => extractedProjectTitles.Contains(p.Title))

@@ -146,6 +146,7 @@ FeedbackCriteriaTable.Row = ({
   return (
     <>
       <TableRow
+        data-item-id={c.feedbackCriterionID}
         hover
         sx={{
           backgroundColor: c.status === "met" ? "rgba(76, 175, 80, 0.02)" : "inherit",

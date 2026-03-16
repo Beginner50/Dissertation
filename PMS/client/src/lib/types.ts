@@ -19,6 +19,12 @@ export type OutletContext = {
   setErrorMessage: Dispatch<SetStateAction<string>>;
 };
 
+export type ModalActions = "create" | "edit" | "delete" | "archive" | "restore";
+export type ModalState = {
+  mode: Partial<ModalActions>;
+  open: boolean;
+};
+
 export type User = {
   userID: number;
   role: "student" | "supervisor" | "admin";
@@ -44,8 +50,8 @@ export type Project = {
 export type ProjectFormData = Pick<Project, "projectID" | "title" | "description">;
 export type ProjectSupervisionFormData = Pick<
   Project,
-  "projectID" | "title" | "description" | "supervisor" | "student"
->;
+  "projectID" | "title" | "description"
+> & { supervisorEmail: string; studentEmail: string };
 
 export type Task = {
   taskID: number;
@@ -114,13 +120,5 @@ export type Reminder = {
   type: "meeting" | "task";
   remindAt: Date;
   message: string;
-  recipientID: number;
-};
-
-export type Notification = {
-  notificationID: number;
-  type: "meeting" | "task";
-  description: string;
-  timestamp: Date;
   recipientID: number;
 };

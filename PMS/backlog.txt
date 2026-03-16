@@ -1,4 +1,9 @@
 Pending Tasks
+  UML Updates:
+    - Remove Notification Class
+    - Remove if condition on studentID for task CRUD
+
+
   Improve progress log report generation
 
   UI Fixes:

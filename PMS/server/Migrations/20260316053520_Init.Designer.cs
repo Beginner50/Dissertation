@@ -12,7 +12,7 @@ using PMS.DatabaseContext;
 namespace PMS.Migrations
 {
     [DbContext(typeof(PMSDbContext))]
-    [Migration("20260224120525_Init")]
+    [Migration("20260316053520_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -132,35 +132,6 @@ namespace PMS.Migrations
                     b.ToTable("Meetings");
                 });
 
-            modelBuilder.Entity("PMS.Models.Notification", b =>
-                {
-                    b.Property<long>("NotificationID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("NotificationID"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<long>("RecipientID")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("NotificationID");
-
-                    b.HasIndex("RecipientID");
-
-                    b.ToTable("Notifications");
-                });
-
             modelBuilder.Entity("PMS.Models.Project", b =>
                 {
                     b.Property<long>("ProjectID")
@@ -176,10 +147,10 @@ namespace PMS.Migrations
                     b.Property<bool>("IsArchived")
                         .HasColumnType("boolean");
 
-                    b.Property<long?>("StudentID")
+                    b.Property<long>("StudentID")
                         .HasColumnType("bigint");
 
-                    b.Property<long?>("SupervisorID")
+                    b.Property<long>("SupervisorID")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Title")
@@ -390,26 +361,19 @@ namespace PMS.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("PMS.Models.Notification", b =>
-                {
-                    b.HasOne("PMS.Models.User", "Recipient")
-                        .WithMany("Notifications")
-                        .HasForeignKey("RecipientID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Recipient");
-                });
-
             modelBuilder.Entity("PMS.Models.Project", b =>
                 {
                     b.HasOne("PMS.Models.User", "Student")
                         .WithMany("ConductedProjects")
-                        .HasForeignKey("StudentID");
+                        .HasForeignKey("StudentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("PMS.Models.User", "Supervisor")
                         .WithMany("SupervisedProjects")
-                        .HasForeignKey("SupervisorID");
+                        .HasForeignKey("SupervisorID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Student");
 
@@ -451,7 +415,8 @@ namespace PMS.Migrations
                 {
                     b.HasOne("PMS.Models.Meeting", "Meeting")
                         .WithMany()
-                        .HasForeignKey("MeetingID");
+                        .HasForeignKey("MeetingID")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("PMS.Models.User", "Recipient")
                         .WithMany("Reminders")
@@ -461,7 +426,8 @@ namespace PMS.Migrations
 
                     b.HasOne("PMS.Models.ProjectTask", "Task")
                         .WithMany("Reminders")
-                        .HasForeignKey("TaskID");
+                        .HasForeignKey("TaskID")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Meeting");
 
@@ -493,8 +459,6 @@ namespace PMS.Migrations
                     b.Navigation("AttendedMeetings");
 
                     b.Navigation("ConductedProjects");
-
-                    b.Navigation("Notifications");
 
                     b.Navigation("OrganizedMeetings");
 

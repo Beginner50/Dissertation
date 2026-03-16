@@ -9,7 +9,8 @@ import {
   TextField,
 } from "@mui/material";
 import type { Project } from "../../lib/types";
-import { mergeDateTime, toLocalTimeString } from "../../lib/utils";
+import { LocalizationProvider, TimePicker } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 export function BookMeetingForm({ children }: { children: React.ReactNode }) {
   return (
@@ -45,36 +46,38 @@ BookMeetingForm.TimePickers = ({
 }: {
   start: Date;
   end: Date;
-  onStartChange: (start: Date) => void;
-  onEndChange: (end: Date) => void;
+  onStartChange: (start: Date | null) => void;
+  onEndChange: (end: Date | null) => void;
 }) => {
   return (
-    <Box display="flex" sx={{ gap: "1rem" }}>
-      <TextField
-        label="Start Time"
-        type="time"
-        value={toLocalTimeString(start)}
-        onChange={(e) => {
-          const newTimePart = e.target.value;
-          const newStartDate = mergeDateTime(start, newTimePart, "time");
-          onStartChange(newStartDate);
-        }}
-        fullWidth
-        size="small"
-      />
-      <TextField
-        label="End Time"
-        type="time"
-        value={toLocalTimeString(end)}
-        onChange={(e) => {
-          const newTimePart = e.target.value;
-          const newEndDate = mergeDateTime(end, newTimePart, "time");
-          onEndChange(newEndDate);
-        }}
-        fullWidth
-        size="small"
-      />
-    </Box>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Box display="flex" gap={2}>
+        <TimePicker
+          label="Start Time"
+          value={start}
+          onChange={onStartChange}
+          slotProps={{
+            textField: {
+              size: "small",
+              fullWidth: true,
+            },
+          }}
+        />
+
+        <TimePicker
+          label="End Time"
+          value={end}
+          onChange={onEndChange}
+          minTime={start}
+          slotProps={{
+            textField: {
+              size: "small",
+              fullWidth: true,
+            },
+          }}
+        />
+      </Box>
+    </LocalizationProvider>
   );
 };
 

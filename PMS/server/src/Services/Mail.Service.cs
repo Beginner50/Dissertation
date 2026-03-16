@@ -84,16 +84,19 @@ public class MailService
     private readonly MailQueue mailQueue;
     private readonly string mailAccount;
     private readonly string mailPassword;
+    private readonly bool disableMail;
+
     private static readonly string MailFooter = """
         <span style="color: red;"> This is an automated reminder from Project Management System (PMS).
         Please do not reply to this email.</span><br/><br/>
     """;
 
-    public MailService(MailQueue mailQueue, string mailAccount, string mailPassword)
+    public MailService(MailQueue mailQueue, string mailAccount, string mailPassword, bool disableMail)
     {
         this.mailQueue = mailQueue;
         this.mailAccount = mailAccount;
         this.mailPassword = mailPassword;
+        this.disableMail = disableMail;
     }
 
     public void CreateAndEnqueueMeetingMail(User organizer, User attendee, Meeting meeting, MailType mailType)
@@ -258,6 +261,8 @@ public class MailService
     public async Task DequeueAndSendMail(CancellationToken cancellationToken)
     {
         var mail = await mailQueue.DequeueMail(cancellationToken);
+        if (disableMail)
+            return;
 
         using var client = new SmtpClient("smtp.gmail.com", 587)
         {
@@ -266,7 +271,7 @@ public class MailService
         };
         try
         {
-            await client.SendMailAsync(mail);
+            await client.SendMailAsync(mail, cancellationToken);
         }
         catch (Exception)
         {

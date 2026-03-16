@@ -81,7 +81,6 @@ public class AIComplianceService
     private readonly AIJobQueue AIProcessingQueue;
     private readonly ProjectTaskService projectTaskService;
     private readonly FeedbackService feedbackService;
-    private readonly NotificationService notificationService;
     private readonly MailService mailService;
     private readonly ILogger<AIComplianceService> logger;
 
@@ -91,7 +90,6 @@ public class AIComplianceService
         AIJobQueue AIProcessingQueue,
         ProjectTaskService projectTaskService,
         FeedbackService feedbackService,
-        NotificationService notificationService,
         MailService mailService,
         ILogger<AIComplianceService> logger)
     {
@@ -100,7 +98,6 @@ public class AIComplianceService
         this.AIProcessingQueue = AIProcessingQueue;
         this.projectTaskService = projectTaskService;
         this.feedbackService = feedbackService;
-        this.notificationService = notificationService;
         this.mailService = mailService;
         this.logger = logger;
     }
@@ -204,36 +201,15 @@ public class AIComplianceService
                                                                             .ThenInclude(p => p.Student)
                                           );
 
-        using (var transaction = await dbContext.Database.BeginTransactionAsync())
-        {
-            try
-            {
-                await feedbackService.EditFeedbackCriteria(job.JobID, updatedFeedbackCriteria);
-                await notificationService.CreateTaskNotification(
-                                          supervisor: task.Project.Supervisor,
-                                          student: task.Project.Student,
-                                          task: task,
-                                          NotificationType.TASK_COMPLIANCE_CHECK_COMPLETION
-                                      );
-                mailService.CreateAndEnqueueTaskMail(
-                                        supervisor: task.Project.Supervisor,
-                                        student: task.Project.Student,
-                                        task: task,
-                                        MailType.TASK_COMPLIANCE_CHECK_COMPLETION
-                                    );
+        await feedbackService.EditFeedbackCriteria(job.JobID, updatedFeedbackCriteria);
+        mailService.CreateAndEnqueueTaskMail(
+                                supervisor: task.Project.Supervisor,
+                                student: task.Project.Student,
+                                task: task,
+                                MailType.TASK_COMPLIANCE_CHECK_COMPLETION
+                            );
 
-                await transaction.CommitAsync();
-
-                AIProcessingQueue.SetJobStatus(job.JobID, "completed");
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-
-                AIProcessingQueue.SetJobStatus(job.JobID, "failed");
-                throw;
-            }
-        }
+        AIProcessingQueue.SetJobStatus(job.JobID, "completed");
     }
 
     public string PollAIComplianceJob(long taskID)

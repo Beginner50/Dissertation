@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "../providers/auth.provider";
 import { Box } from "@mui/material";
 import Header from "../components/header.components/header.component";
@@ -7,6 +7,8 @@ import { SignIn } from "../components/auth.components/sign-in.component";
 
 export default function SignInRoute() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
   const { signIn } = useAuth();
 
   const [authData, setAuthData] = useState({ email: "", password: "" });
@@ -31,7 +33,7 @@ export default function SignInRoute() {
     setLoading(true);
     try {
       await signIn(authData);
-      navigate("/");
+      navigate(`/?${searchParams.toString()}`);
     } catch (err) {
       setError("Sign-in failed. Check your credentials.");
       setAuthData((prev) => ({ ...prev, password: "" }));

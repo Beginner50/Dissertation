@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import AdminUsersPage from "./adminUsers.page";
-import AdminSupervisionPage from "./adminSupervision.page";
+import AdminUsersPage from "./adminUsers.pom";
+import AdminSupervisionPage from "./adminSupervision.pom";
 
 /*
   To more accurately represent the has-a relationship between a layout

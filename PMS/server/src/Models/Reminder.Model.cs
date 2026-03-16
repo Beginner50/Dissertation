@@ -11,7 +11,7 @@ public class Reminder
 
     public required long RecipientID { get; set; }
     [ForeignKey("RecipientID")]
-    public User Recipient { get; init; }
+    public User? Recipient { get; init; }
 
     public long? MeetingID { get; set; }
     [ForeignKey("MeetingID")]

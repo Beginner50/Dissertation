@@ -43,10 +43,10 @@ public class Project
     public required string Description { get; set; }
     public required bool IsArchived { get; set; }
 
-    public long? StudentID { get; set; }
+    public required long StudentID { get; set; }
     [ForeignKey("StudentID")]
     public User? Student { get; set; }
-    public long? SupervisorID { get; set; }
+    public required long SupervisorID { get; set; }
     [ForeignKey("SupervisorID")]
     public User? Supervisor { get; set; }
 

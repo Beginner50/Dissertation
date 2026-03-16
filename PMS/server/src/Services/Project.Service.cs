@@ -47,13 +47,15 @@ public static class ProjectQueryExtensions
 
 public class ProjectService
 {
-    protected readonly PMSDbContext dbContext;
-    protected readonly ILogger<ProjectService> logger;
+    private readonly PMSDbContext dbContext;
+    private readonly UserService userService;
+    private readonly ILogger<ProjectService> logger;
 
-    public ProjectService(PMSDbContext dbContext, ILogger<ProjectService> logger)
+    public ProjectService(PMSDbContext dbContext, UserService userService, ILogger<ProjectService> logger)
     {
         this.dbContext = dbContext;
         this.logger = logger;
+        this.userService = userService;
     }
 
     // https://learn.microsoft.com/en-us/dotnet/api/system.linq.iqueryable?view=net-10.0
@@ -130,10 +132,29 @@ public class ProjectService
             offset: offset
         );
     }
+    public async Task CreateProject(
+           string title, string supervisorEmail, string studentEmail, string? description = ""
+       )
+    {
+        var supervisor = await userService.GetUserByEmail(
+            supervisorEmail,
+            selector: u => u,
+            queryExtension: q => q.Where(u => u.Role == "supervisor")
+            )
+            ?? throw new Exception($"Supervisor {supervisorEmail} Not Found!");
+
+        var student = await userService.GetUserByEmail(
+            studentEmail,
+            selector: u => u,
+            queryExtension: q => q.Where(u => u.Role == "student")
+            )
+            ?? throw new Exception($"Student {studentEmail} Not Found!");
+
+        await CreateProject(supervisor.UserID, student.UserID, title, description);
+    }
 
     public async Task CreateProject(
-        long supervisorID, string title, string? description = "", long? studentID = null
-    )
+        long supervisorID, long studentID, string title, string? description = "")
     {
         var newProject = new Project
         {
@@ -149,8 +170,34 @@ public class ProjectService
     }
 
     public async Task EditProject(
+            long projectID, string? title, string? description,
+            string? supervisorEmail, string? studentEmail, bool? isArchived = null,
+            Func<IQueryable<Project>, IQueryable<Project>>? queryExtension = null
+        )
+    {
+        User? supervisor = null, student = null;
+
+        if (supervisorEmail != null && supervisorEmail != "")
+            supervisor = await userService.GetUserByEmail(
+                supervisorEmail,
+                selector: u => u,
+                queryExtension: q => q.Where(u => u.Role == "supervisor")
+                )
+                ?? throw new Exception($"Supervisor {supervisorEmail} Not Found!");
+        if (studentEmail != null && studentEmail != "")
+            student = await userService.GetUserByEmail(
+                studentEmail,
+                selector: u => u,
+                queryExtension: q => q.Where(u => u.Role == "student")
+            )
+            ?? throw new Exception($"Student {studentEmail} Not Found!");
+
+        await EditProject(projectID, title, description, student?.UserID, supervisor?.UserID, isArchived);
+    }
+
+    public async Task EditProject(
         long projectID, string? title, string? description,
-        long? studentID = null, long? supervisorID = null, bool? isArchived = null,
+         long? supervisorID = null, long? studentID = null, bool? isArchived = null,
         Func<IQueryable<Project>, IQueryable<Project>>? queryExtension = null
     )
     {
@@ -214,13 +261,13 @@ public class ProjectService
             selector: p => p,
             queryExtension: p => p.Include(p => p.Student)
                                   .Include(p => p.Supervisor)
-        );
+        ) ?? throw new Exception("Project Not Found!");
 
         if ((project?.Supervisor != null && project.Supervisor.IsDeleted)
             || (project?.Student != null && project.Student.IsDeleted))
             throw new UnauthorizedAccessException("Cannot Restore Project With Deleted Users!");
 
-        project.IsArchived = false;
+        project!.IsArchived = false;
 
         await dbContext.SaveChangesAsync();
     }

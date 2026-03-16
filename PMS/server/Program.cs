@@ -110,6 +110,7 @@ var symmetricKey = new SymmetricSecurityKey(
 );
 var mailAccount = builder.Configuration["MAIL_ACCOUNT"] ?? "EMAIL_HERE";
 var mailPassword = builder.Configuration["MAIL_PASSWORD"] ?? "PASSWORD_HERE";
+var disableMail = bool.Parse(builder.Configuration["DISABLE_MAIL"] ?? "false");
 
 /*
 Instructs the web application to extract the JWT from the bearer header of the
@@ -222,7 +223,7 @@ builder.Services.AddSingleton<IAuthorizationHandler, OwnershipHandler>();
 builder.Services.AddSingleton<Client>(); // Gemini client
 builder.Services.AddSingleton<AIJobQueue>();
 builder.Services.AddSingleton<TokenService>(new TokenService(symmetricKey));
-builder.Services.AddSingleton<MailService>(new MailService(new MailQueue(), mailAccount, mailPassword));
+builder.Services.AddSingleton<MailService>(new MailService(new MailQueue(), mailAccount, mailPassword, disableMail));
 
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<UserService>();
@@ -232,7 +233,6 @@ builder.Services.AddScoped<TaskDeliverableService>();
 builder.Services.AddScoped<FeedbackService>();
 builder.Services.AddScoped<MeetingService>();
 builder.Services.AddScoped<ReminderService>();
-builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<AIComplianceService>();
 
 builder.Services.AddHostedService<MailWorker>();

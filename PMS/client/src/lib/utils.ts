@@ -43,7 +43,7 @@ export const extractErrorMessage = async (err: any) => {
     const parsedError = JSON.parse(error);
 
     if (parsedError?.errors) {
-      return Object.values(parsedError.errors).flat().join(", ");
+      return Object.values(parsedError.errors).flat().join("\n");
     }
     return parsedError.message;
   } catch (e: any) {

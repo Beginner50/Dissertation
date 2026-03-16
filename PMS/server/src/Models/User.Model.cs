@@ -40,9 +40,6 @@ public class User
     [InverseProperty("Recipient")]
     public List<Reminder> Reminders { get; } = [];
 
-    [InverseProperty("Recipient")]
-    public List<Notification> Notifications { get; } = [];
-
     [InverseProperty("AssignedBy")]
     public List<ProjectTask> AssignedTasks { get; } = [];
 

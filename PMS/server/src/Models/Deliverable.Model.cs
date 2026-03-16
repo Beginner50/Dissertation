@@ -13,10 +13,10 @@ public class Deliverable
     public required long TaskID { get; set; }
     [ForeignKey("TaskID")]
     [InverseProperty("AllDeliverables")]
-    public ProjectTask Task { get; init; }
+    public ProjectTask? Task { get; init; }
 
     public required long SubmittedByID { get; set; }
     [ForeignKey("SubmittedByID")]
-    public User SubmittedBy { get; init; }
+    public User? SubmittedBy { get; init; }
 
 }

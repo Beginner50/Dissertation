@@ -1,27 +1,34 @@
-import { useContext, useState, type Dispatch, type SetStateAction } from "react";
-import { Container, Typography, Button, Stack, Box, Paper } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
+import { useState } from "react";
+import { Paper } from "@mui/material";
+import UserModal from "../../components/base.components/modal.component";
 import { useAuth } from "../../providers/auth.provider";
-import type { DeliverableFile, OutletContext, User, UserFormData } from "../../lib/types";
+import type {
+  DeliverableFile,
+  ModalState,
+  OutletContext,
+  User,
+  UserFormData,
+} from "../../lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import UserTable from "../../components/user.components/user-table.component";
-import UserModal from "../../components/user.components/user-modal.component";
-import type { ModalState as UserModalState } from "../../components/user.components/user-modal.component";
 import { theme } from "../../lib/theme";
 import base64js from "base64-js";
 import TableLayout from "../../components/base.components/table-layout.component";
-import { GlobalError } from "../../components/base.components/global-error.component";
-import { useOutletContext } from "react-router";
+import { useOutletContext, useSearchParams } from "react-router";
 import { extractErrorMessage } from "../../lib/utils";
 
 export default function DashboardUsersRoute() {
   const { authorizedAPI } = useAuth();
   const { setErrorMessage } = useOutletContext<OutletContext>();
 
-  const [userLimit, setUserLimit] = useState(5);
+  const [searchParams] = useSearchParams();
+  const [userLimit] = useState<number>(() => {
+    const pageSize = Number(searchParams.get("page-size"));
+    return !isNaN(pageSize) && pageSize != 0 ? pageSize : 5;
+  });
   const [userOffset, setUserOffset] = useState(0);
 
-  const [userModalState, setUserModalState] = useState<UserModalState>({
+  const [userModalState, setUserModalState] = useState<ModalState>({
     mode: "create",
     open: false,
   });
@@ -123,7 +130,7 @@ export default function DashboardUsersRoute() {
       {
         onSuccess: () => setUserModalState({ ...userModalState, open: false }),
         onError: async (err: any) => {
-          const msg = await err?.response?.text();
+          const msg = await extractErrorMessage(err);
           setErrorMessage(msg || "Failed to create user.");
           setUserModalState({ ...userModalState, open: false });
         },
@@ -199,15 +206,22 @@ export default function DashboardUsersRoute() {
   const formDataIncomplete = (() => {
     switch (userModalState.mode) {
       case "create":
+        return !(
+          userModalData.name.trim() &&
+          userModalData.email.trim() &&
+          userModalData.password.trim() &&
+          userModalData.role
+        );
       case "edit":
         return !(
-          userModalData.name &&
-          userModalData.email &&
-          userModalData.password &&
+          userModalData.name.trim() &&
+          userModalData.email.trim() &&
           userModalData.role
         );
       case "delete":
         return false;
+      default:
+        return true;
     }
   })();
 
@@ -248,41 +262,48 @@ export default function DashboardUsersRoute() {
       </Paper>
 
       <UserModal open={userModalState.open}>
-        <UserModal.Header mode={userModalState.mode} />
+        <UserModal.Header mode={userModalState.mode} item={"User"} />
         {userModalState.mode != "delete" ? (
           <UserModal.Fields>
             {userModalState.mode == "edit" && (
-              <UserModal.UserID userID={userModalData.userID} />
+              <UserModal.TextField label="UserID" value={userModalData.userID} disabled />
             )}
-            <UserModal.Name
-              name={userModalData.name}
-              handleNameChange={handleNameChange}
+            <UserModal.TextField
+              label="Full Name"
+              value={userModalData.name}
+              handleValueChange={handleNameChange}
             />
-            <UserModal.Email
-              email={userModalData.email}
-              handleEmailChange={handleEmailChange}
+            <UserModal.TextField
+              label="Email Address"
+              value={userModalData.email}
+              handleValueChange={handleEmailChange}
             />
             {userModalState.mode == "create" && (
-              <UserModal.Password
-                password={userModalData.password}
-                handlePasswordChange={handlePasswordChange}
+              <UserModal.TextField
+                label="Password"
+                value={userModalData.password}
+                handleValueChange={handlePasswordChange}
               />
             )}
-            <UserModal.Role
-              role={userModalData.role}
-              handleRoleChange={handleRoleChange}
+            <UserModal.Select
+              label="Role"
+              currentOption={userModalData.role}
+              options={{ Supervisor: "supervisor", Student: "student" }}
+              handleOptionChange={handleRoleChange}
             />
           </UserModal.Fields>
         ) : (
-          <UserModal.DeleteWarning />
+          <UserModal.Warning message="This action is permanent and cannot be undone!" />
         )}
+
         <UserModal.Actions
           mode={userModalState.mode}
-          isValid={!formDataIncomplete}
+          disabled={formDataIncomplete}
+          loading={mutation.status == "pending"}
           handleCancelClick={handleCancelClick}
-          handleCreateUser={handleCreateUser}
-          handleEditUser={handleEditUser}
-          handleDeleteUser={handleDeleteUser}
+          handleCreateItem={handleCreateUser}
+          handleEditItem={handleEditUser}
+          handleDeleteItem={handleDeleteUser}
         />
       </UserModal>
     </>

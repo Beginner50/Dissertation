@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 
-export default class SchedulerPage {
+export default class SchedulerPOM {
   readonly page: Page;
   readonly calendar: Locator;
   readonly bookMeetingHeader: Locator;

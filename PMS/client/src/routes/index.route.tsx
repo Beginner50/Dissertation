@@ -1,4 +1,4 @@
-import { Navigate } from "react-router";
+import { Navigate, useSearchParams } from "react-router";
 import { useAuth } from "../providers/auth.provider";
 
 /*
@@ -30,14 +30,17 @@ import { useAuth } from "../providers/auth.provider";
 */
 export default function IndexRoute() {
   const { authState } = useAuth();
+  const [searchParameters] = useSearchParams();
 
   if (!authState.isAuthenticated) {
     return <Navigate to="/sign-in" replace />;
   }
 
   if (authState.user?.role === "admin") {
-    return <Navigate to="/admin-dashboard/users" replace />;
+    return (
+      <Navigate to={`/admin-dashboard/users?${searchParameters.toString()}`} replace />
+    );
   }
 
-  return <Navigate to="/projects" replace />;
+  return <Navigate to={`/projects?${searchParameters.toString()}`} replace />;
 }

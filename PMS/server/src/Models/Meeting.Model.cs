@@ -13,13 +13,13 @@ public class Meeting
 
     public required long OrganizerID { get; set; }
     [ForeignKey("OrganizerID")]
-    public User Organizer { get; init; }
+    public User? Organizer { get; init; }
 
     public required long AttendeeID { get; set; }
     [ForeignKey("AttendeeID")]
-    public User Attendee { get; init; }
+    public User? Attendee { get; init; }
 
     public required long TaskID { get; set; }
     [ForeignKey("TaskID")]
-    public ProjectTask Task { get; init; }
+    public ProjectTask? Task { get; init; }
 }

@@ -31,28 +31,6 @@ namespace PMS.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Notifications",
-                columns: table => new
-                {
-                    NotificationID = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Type = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    RecipientID = table.Column<long>(type: "bigint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Notifications", x => x.NotificationID);
-                    table.ForeignKey(
-                        name: "FK_Notifications_Users_RecipientID",
-                        column: x => x.RecipientID,
-                        principalTable: "Users",
-                        principalColumn: "UserID",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Projects",
                 columns: table => new
                 {
@@ -61,8 +39,8 @@ namespace PMS.Migrations
                     Title = table.Column<string>(type: "text", nullable: false),
                     Description = table.Column<string>(type: "text", nullable: false),
                     IsArchived = table.Column<bool>(type: "boolean", nullable: false),
-                    StudentID = table.Column<long>(type: "bigint", nullable: true),
-                    SupervisorID = table.Column<long>(type: "bigint", nullable: true)
+                    StudentID = table.Column<long>(type: "bigint", nullable: false),
+                    SupervisorID = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -71,12 +49,14 @@ namespace PMS.Migrations
                         name: "FK_Projects_Users_StudentID",
                         column: x => x.StudentID,
                         principalTable: "Users",
-                        principalColumn: "UserID");
+                        principalColumn: "UserID",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Projects_Users_SupervisorID",
                         column: x => x.SupervisorID,
                         principalTable: "Users",
-                        principalColumn: "UserID");
+                        principalColumn: "UserID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -225,12 +205,14 @@ namespace PMS.Migrations
                         name: "FK_Reminders_Meetings_MeetingID",
                         column: x => x.MeetingID,
                         principalTable: "Meetings",
-                        principalColumn: "MeetingID");
+                        principalColumn: "MeetingID",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Reminders_Tasks_TaskID",
                         column: x => x.TaskID,
                         principalTable: "Tasks",
-                        principalColumn: "ProjectTaskID");
+                        principalColumn: "ProjectTaskID",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Reminders_Users_RecipientID",
                         column: x => x.RecipientID,
@@ -273,11 +255,6 @@ namespace PMS.Migrations
                 name: "IX_Meetings_TaskID",
                 table: "Meetings",
                 column: "TaskID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Notifications_RecipientID",
-                table: "Notifications",
-                column: "RecipientID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_StudentID",
@@ -342,9 +319,6 @@ namespace PMS.Migrations
 
             migrationBuilder.DropTable(
                 name: "FeedbackCriterias");
-
-            migrationBuilder.DropTable(
-                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "Reminders");

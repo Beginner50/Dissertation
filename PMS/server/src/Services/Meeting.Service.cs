@@ -30,7 +30,6 @@ public class MeetingService
     private readonly ProjectService projectService;
     private readonly ProjectTaskService projectTaskService;
     private readonly MailService mailService;
-    private readonly NotificationService notificationService;
     private readonly ReminderService reminderService;
     private readonly ILogger<MeetingService> logger;
     public MeetingService(
@@ -38,7 +37,6 @@ public class MeetingService
         ProjectService projectService,
         ProjectTaskService projectTaskService,
         MailService mailService,
-        NotificationService notificationService,
         ReminderService reminderService,
         ILogger<MeetingService> logger)
     {
@@ -46,7 +44,6 @@ public class MeetingService
         this.projectService = projectService;
         this.projectTaskService = projectTaskService;
         this.mailService = mailService;
-        this.notificationService = notificationService;
         this.reminderService = reminderService;
         this.logger = logger;
     }
@@ -130,8 +127,6 @@ public class MeetingService
                                           .Include(m => m.Attendee)
                 );
 
-                await notificationService.CreateMeetingNotification(
-                    meeting.Organizer, meeting.Attendee, meeting, NotificationType.MEETING_BOOKED);
                 await reminderService.CreateMeetingReminders(
                     meeting.Organizer, meeting.Attendee, meeting);
                 mailService.CreateAndEnqueueMeetingMail(
@@ -178,8 +173,6 @@ public class MeetingService
                                           .Include(m => m.Attendee)
                 );
 
-                await notificationService.CreateMeetingNotification(
-                    meeting.Organizer, meeting.Attendee, meeting, NotificationType.MEETING_CANCELLED);
                 await reminderService.DeleteMeetingReminders(meeting);
                 mailService.CreateAndEnqueueMeetingMail(
                     meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_CANCELLED);
@@ -200,67 +193,37 @@ public class MeetingService
 
     public async Task AcceptMeeting(long attendeeID, long meetingID)
     {
-        using (var transaction = await dbContext.Database.BeginTransactionAsync())
-        {
-            try
-            {
-                var meeting = await GetSupervisorMeeting(
-                    meetingID,
-                    selector: m => m,
-                    queryExtension: m => m.IsAttendee(attendeeID)
-                                          .Include(m => m.Organizer)
-                                          .Include(m => m.Attendee)
-                );
+        var meeting = await GetSupervisorMeeting(
+            meetingID,
+            selector: m => m,
+            queryExtension: m => m.IsAttendee(attendeeID)
+                                  .Include(m => m.Organizer)
+                                  .Include(m => m.Attendee)
+        );
 
-                meeting.IsAccepted = true;
-                await dbContext.SaveChangesAsync();
+        meeting.IsAccepted = true;
+        await dbContext.SaveChangesAsync();
 
-                await notificationService.CreateMeetingNotification(
-                    meeting.Organizer, meeting.Attendee, meeting, NotificationType.MEETING_ACCEPTED);
-                mailService.CreateAndEnqueueMeetingMail(
-                    meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_ACCEPTED);
-
-                await transaction.CommitAsync();
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
+        mailService.CreateAndEnqueueMeetingMail(
+            meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_ACCEPTED);
     }
 
     public async Task RejectMeeting(long attendeeID, long meetingID)
     {
-        using (var transaction = await dbContext.Database.BeginTransactionAsync())
-        {
-            try
-            {
-                var meeting = await GetSupervisorMeeting(
-                    meetingID,
-                    selector: m => m,
-                    queryExtension: m => m.IsAttendee(attendeeID)
-                                          .Include(m => m.Organizer)
-                                          .Include(m => m.Attendee)
-                );
+        var meeting = await GetSupervisorMeeting(
+            meetingID,
+            selector: m => m,
+            queryExtension: m => m.IsAttendee(attendeeID)
+                                  .Include(m => m.Organizer)
+                                  .Include(m => m.Attendee)
+        );
 
-                await notificationService.CreateMeetingNotification(
-                    meeting.Organizer, meeting.Attendee, meeting, NotificationType.MEETING_REJECTED);
-                await reminderService.DeleteMeetingReminders(meeting);
-                mailService.CreateAndEnqueueMeetingMail(
-                    meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_REJECTED);
+        await reminderService.DeleteMeetingReminders(meeting);
+        mailService.CreateAndEnqueueMeetingMail(
+            meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_REJECTED);
 
-                dbContext.Remove(meeting);
-                await dbContext.SaveChangesAsync();
-
-                await transaction.CommitAsync();
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
+        dbContext.Remove(meeting);
+        await dbContext.SaveChangesAsync();
     }
 
     public static string GetMeetingStatus(bool isAccepted, DateTime end)
