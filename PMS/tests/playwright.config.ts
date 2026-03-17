@@ -37,17 +37,25 @@ export default defineConfig({
   },
   outputDir: "test-results",
   globalSetup: path.join(__dirname, "src/setup"),
-  globalTeardown: path.join(__dirname, "src/teardown"),
   /* Configure projects for major browsers */
   projects: [
     {
       name: "Users-Setup",
-      testMatch: /src.01.*\.spec\.ts/,
+      testMatch: /src.*admin.*users.*\.spec\.ts/,
       // use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "Project-Setup",
-      testMatch: /src.02.*\.spec\.ts/,
+      testMatch: /src.*admin.*supervision.*\.spec\.ts/,
+    },
+    {
+      name: "Projects-Dashboard",
+      testMatch: /src.*projects.*\.spec\.ts/,
+      // use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "Tasks-Dashboard",
+      testMatch: /src.*tasks.*.spec\.ts/,
     },
 
     // {

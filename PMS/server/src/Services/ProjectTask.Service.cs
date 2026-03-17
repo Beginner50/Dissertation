@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -105,6 +106,9 @@ public class ProjectTaskService
         DateTime dueDate
     )
     {
+        if (dueDate < DateTime.Now)
+            throw new Exception("Invalid Due Date!");
+
         var project = await projectService.GetProject(
                 userID,
                 projectID,
@@ -156,6 +160,9 @@ public class ProjectTaskService
         string? description, DateTime? dueDate, bool? isLocked
     )
     {
+        if (dueDate < DateTime.Now)
+            throw new Exception("Invalid Due Date!");
+
         var project = await projectService.GetProject(
             userID,
             projectID,
@@ -222,11 +229,21 @@ public class ProjectTaskService
             taskQueryExtension: t => t.Where(t => t.AssignedByID == userID)
         );
 
+        if (task.SubmittedDeliverableID != null)
+            throw new Exception("Cannot Delete Task with Submission!");
+
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
             try
             {
-                await reminderService.DeleteTaskReminder(task);
+                if (task.StagedDeliverableID != null)
+                {
+                    var stagedDeliverableID = task.StagedDeliverableID;
+                    task.StagedDeliverableID = null;
+                    await dbContext.Deliverables.Where(d => d.DeliverableID == stagedDeliverableID)
+                                                .ExecuteDeleteAsync();
+                }
+
                 mailService.CreateAndEnqueueTaskMail(
                     project.Supervisor!, project.Student!, task, MailType.TASK_DELETED);
 

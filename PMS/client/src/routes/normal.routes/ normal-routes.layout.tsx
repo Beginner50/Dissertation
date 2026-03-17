@@ -6,6 +6,7 @@ import Breadcrumbs from "../../components/header.components/breadcrumbs.componen
 import { useQuery } from "@tanstack/react-query";
 import type { Project, User } from "../../lib/types";
 import { useState } from "react";
+import { GlobalError } from "../../components/base.components/global-error.component";
 
 /*
   This is a layout route for the part of the website visible to ordinary users
@@ -40,6 +41,8 @@ export default function NormalRoutesLayout() {
 
   return (
     <>
+      <GlobalError message={errorMessage} onClose={() => setErrorMessage("")} />
+
       <Header>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Header.Brand title="Project Management System" />

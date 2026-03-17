@@ -1,6 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import RowPOM from "./row.pom";
-import TasksPage from "../normal.pom/tasks.page";
+import TasksPOM from "../normal.pom/tasks.page";
 import TaskDetailsPage from "../normal.pom/taskDetails.page";
 
 export default class InteractiveRowPOM extends RowPOM {
@@ -14,7 +14,7 @@ export default class InteractiveRowPOM extends RowPOM {
   async clickProjectLink() {
     await this.row.getByRole("link").first().click();
     await this.page.waitForURL(/tasks/i);
-    return new TasksPage(this.page);
+    return new TasksPOM(this.page);
   }
 
   async clickTaskLink() {

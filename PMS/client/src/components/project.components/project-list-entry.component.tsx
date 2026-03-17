@@ -32,6 +32,7 @@ export default function ProjectListEntry({
   return (
     <ListItem
       data-item-id={project.projectID}
+      data-testid={project.title}
       sx={{
         display: "flex",
         flexDirection: "row",

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Threading.Channels;
 using PMS.Models;
+using UglyToad.PdfPig.Logging;
 
 namespace PMS.Services;
 
@@ -81,6 +82,7 @@ public class MailQueue
 
 public class MailService
 {
+    private ILogger<MailService> logger;
     private readonly MailQueue mailQueue;
     private readonly string mailAccount;
     private readonly string mailPassword;
@@ -91,12 +93,13 @@ public class MailService
         Please do not reply to this email.</span><br/><br/>
     """;
 
-    public MailService(MailQueue mailQueue, string mailAccount, string mailPassword, bool disableMail)
+    public MailService(MailQueue mailQueue, string mailAccount, string mailPassword, bool disableMail, ILogger<MailService> logger)
     {
         this.mailQueue = mailQueue;
         this.mailAccount = mailAccount;
         this.mailPassword = mailPassword;
         this.disableMail = disableMail;
+        this.logger = logger;
     }
 
     public void CreateAndEnqueueMeetingMail(User organizer, User attendee, Meeting meeting, MailType mailType)
@@ -272,6 +275,7 @@ public class MailService
         try
         {
             await client.SendMailAsync(mail, cancellationToken);
+            logger.LogInformation("Email sent successfully in background.");
         }
         catch (Exception)
         {

@@ -1,6 +1,8 @@
 import test, { expect, request } from "@playwright/test";
 import SignInPage from "./pom/signIn.pom";
 import NormalLayoutPOM from "./pom/normal.pom/normalLayout.pom";
+import RowPOM from "./pom/components/row.pom";
+import InteractiveRowPOM from "./pom/components/interactive-row.pom";
 
 /* 
   FR5/FR6
@@ -41,7 +43,7 @@ test.describe("Supervisor/Student - Projects Homepage (Project List)", () => {
     test("C.1.1. Supervisor can view projects + Menu Button Visible", async () => {
       const projectsDashboard = await normalLayout.clickProjects();
 
-      await projectsDashboard.list.getFirstCollectionEntry(
+      await projectsDashboard.list.getFirstCollectionInteractiveEntryByTestID(
         "project_unsuccessful_updates",
       );
     });
@@ -50,14 +52,20 @@ test.describe("Supervisor/Student - Projects Homepage (Project List)", () => {
       const projectsDashboard = await normalLayout.clickProjects();
 
       const row =
-        await projectsDashboard.list.getFirstCollectionEntry("projectC_to_update");
+        await projectsDashboard.list.getFirstCollectionInteractiveEntryByTestID(
+          "projectC_to_update",
+        );
       const modal = await row.performAction("Edit");
       await modal.setField(/Title/i, "projectC_updated");
       await modal.submit();
 
-      await projectsDashboard.list.getFirstCollectionEntry("projectC_updated");
+      await projectsDashboard.list.getFirstCollectionInteractiveEntryByTestID(
+        "projectC_updated",
+      );
       await expect(
-        projectsDashboard.list.getFirstCollectionEntryLocator("projectC_to_update"),
+        projectsDashboard.list.getFirstCollectionEntryLocatorByTestID(
+          "projectC_to_update",
+        ),
       ).not.toBeVisible();
     });
 
@@ -65,12 +73,16 @@ test.describe("Supervisor/Student - Projects Homepage (Project List)", () => {
       const projectsDashboard = await normalLayout.clickProjects();
 
       const row =
-        await projectsDashboard.list.getFirstCollectionEntry("projectC_to_archive");
+        await projectsDashboard.list.getFirstCollectionInteractiveEntryByTestID(
+          "projectC_to_archive",
+        );
       const modal = await row.performAction("Archive");
       await modal.submit();
 
       await expect(
-        projectsDashboard.list.getFirstCollectionEntryLocator("projectC_to_archive"),
+        projectsDashboard.list.getFirstCollectionEntryLocatorByTestID(
+          "projectC_to_archive",
+        ),
       ).not.toBeVisible();
     });
   });
@@ -95,17 +107,19 @@ test.describe("Supervisor/Student - Projects Homepage (Project List)", () => {
     test("C.2.1. Student can view project + Menu Button Disabled", async () => {
       const projectsDashboard = await normalLayout.clickProjects();
 
-      await projectsDashboard.list.getFirstCollectionEntry(
-        "projectC_unsuccessful_updates",
+      const row = await projectsDashboard.list.getFirstCollectionInteractiveEntryByTestID(
+        "project_unsuccessful_updates",
       );
+      await expect(row.menuButton).not.toBeVisible();
     });
 
-    test("C.2.2. Unsuccessful Project Update", async () => {
+    test("C.2.2. Unsuccessful Project Update", async ({ page }) => {
       const projectsDashboard = await normalLayout.clickProjects();
 
-      const row = await projectsDashboard.list.getFirstCollectionEntry(
-        "projectC_unsuccessful_updates",
+      const row = await projectsDashboard.list.getFirstCollectionInteractiveEntryByTestID(
+        "project_unsuccessful_updates",
       );
+
       const projectID = await row.getItemID();
       const authorizedAPI = await request.newContext();
 
@@ -118,17 +132,18 @@ test.describe("Supervisor/Student - Projects Homepage (Project List)", () => {
           },
         },
       );
-      expect(response.status()).toBe(400);
+      expect(response.status()).toBe(403);
 
       await authorizedAPI.dispose();
     });
 
-    test("C.2.3. Unsuccessful Project Archive", async () => {
+    test("C.2.3. Unsuccessful Project Archive", async ({ page }) => {
       const projectsDashboard = await normalLayout.clickProjects();
 
-      const row = await projectsDashboard.list.getFirstCollectionEntry(
-        "projectC_unsuccessful_updates",
+      const row = await projectsDashboard.list.getFirstCollectionInteractiveEntryByTestID(
+        "project_unsuccessful_updates",
       );
+
       const projectID = await row.getItemID();
       const authorizedAPI = await request.newContext();
 
@@ -140,17 +155,18 @@ test.describe("Supervisor/Student - Projects Homepage (Project List)", () => {
           },
         },
       );
-      expect(response.status()).toBe(400);
+      expect(response.status()).toBe(403);
 
       await authorizedAPI.dispose();
     });
 
-    test("C.3.1. Successful Navigation on Project Click", async ({ page }) => {
+    test("C.3.1. Successful Navigation on Project Click", async () => {
       const projectsDashboard = await normalLayout.clickProjects();
 
-      const row = await projectsDashboard.list.getFirstCollectionInteractiveEntry(
-        "projectC_unsuccessful_updates",
+      const row = await projectsDashboard.list.getFirstCollectionInteractiveEntryByTestID(
+        "project_unsuccessful_updates",
       );
+
       await row.clickProjectLink();
     });
   });

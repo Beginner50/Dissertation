@@ -19,7 +19,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box } from "@mui/material";
 import { useAuth } from "../../providers/auth.provider";
 import TableLayout from "../../components/base.components/table-layout.component";
-import type { ModalMode } from "../../components/project.components/project-modal.component";
 import { preventContextMenu } from "@fullcalendar/core/internal";
 import { extractErrorMessage } from "../../lib/utils";
 

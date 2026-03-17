@@ -24,7 +24,6 @@ public class MailWorker : BackgroundService
             try
             {
                 await mailService.DequeueAndSendMail(stoppingToken);
-                logger.LogInformation("Email sent successfully in background.");
             }
             catch (OperationCanceledException) { }
             catch (Exception)

@@ -42,6 +42,7 @@ Header.NavItem = ({ to, label }: { to: string; label: string }) => {
 
   return (
     <NavLink
+      data-testid="navlink"
       to={to}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

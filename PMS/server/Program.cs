@@ -223,7 +223,9 @@ builder.Services.AddSingleton<IAuthorizationHandler, OwnershipHandler>();
 builder.Services.AddSingleton<Client>(); // Gemini client
 builder.Services.AddSingleton<AIJobQueue>();
 builder.Services.AddSingleton<TokenService>(new TokenService(symmetricKey));
-builder.Services.AddSingleton<MailService>(new MailService(new MailQueue(), mailAccount, mailPassword, disableMail));
+builder.Services.AddSingleton<MailService>(sp => new MailService(
+    new MailQueue(), mailAccount, mailPassword, disableMail, sp.GetRequiredService<ILogger<MailService>>()
+));
 
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<UserService>();

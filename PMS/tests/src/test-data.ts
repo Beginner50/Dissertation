@@ -178,3 +178,46 @@ export const PROJECTS_TO_CREATE = [
     supervisorEmail: "user_main_supervisor@uni.com",
   },
 ];
+
+export const TASKS_TO_CREATE = [
+  {
+    title: "task_to_update",
+    description: "This task will be renamed",
+    dueDate: new Date(Date.now() + 1000 * 3600 * 24).toISOString(), // Tomorrow
+  },
+  {
+    title: "task_unsuccessful_updates",
+    description: "Attempting to set this to a past date",
+    dueDate: new Date(Date.now() + 1000 * 3600 * 24).toISOString(),
+  },
+  {
+    title: "task_delete_successful",
+    description: "This task should be removed successfully",
+    dueDate: new Date(Date.now() + 1000 * 3600 * 24).toISOString(),
+  },
+  {
+    title: "task_delete_unsuccessful",
+    description: "This task has associated meeting records",
+    dueDate: new Date(Date.now() + 1000 * 3600 * 24).toISOString(),
+  },
+  {
+    title: "task_overdue",
+    description: "Deadline is exactly now",
+    dueDate: new Date().toISOString(),
+  },
+  {
+    title: "task_completed_before_deadline",
+    description: "Task submitted 5 seconds before deadline",
+    dueDate: new Date(Date.now() + 5000).toISOString(), // 5 seconds after current datetime
+  },
+  {
+    title: "task_for_submission",
+    description: "Pending task awaiting file upload",
+    dueDate: new Date(Date.now() + 1000 * 3600 * 24).toISOString(),
+  },
+  {
+    title: "task_has_meeting",
+    description: "Pending task awaiting file upload",
+    dueDate: new Date(Date.now() + 1000 * 3600 * 24).toISOString(),
+  },
+];

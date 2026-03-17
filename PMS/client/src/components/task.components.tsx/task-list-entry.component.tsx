@@ -36,6 +36,7 @@ export default function TaskListEntry({
   return (
     <ListItem
       data-item-id={task.taskID}
+      data-testid={task.title}
       sx={{
         display: "flex",
         flexDirection: "row",

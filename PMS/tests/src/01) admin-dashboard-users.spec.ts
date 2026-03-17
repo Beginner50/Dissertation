@@ -45,7 +45,8 @@ test.describe("Admin Dashboard - Users", () => {
     adminLayout = new AdminLayoutPage(page);
 
     await page.goto("/sign-in?page-size=100");
-    accessToken = await signIn.signIn("admin@uni.com", "password");
+    const authData = await signIn.signIn("admin@uni.com", "password");
+    accessToken = authData.token;
 
     await adminLayout.waitUntilLoaded();
   });
@@ -198,7 +199,6 @@ test.describe("Admin Dashboard - Users", () => {
         data: invalidUser,
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
         },
       });
 

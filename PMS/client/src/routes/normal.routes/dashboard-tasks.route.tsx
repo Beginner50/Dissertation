@@ -138,6 +138,7 @@ export default function DashboardTasksRoute() {
   /* ---------------------------------------------------------------------------------- */
 
   const handleCreateTask = () => {
+    console.log("Stared Create");
     mutation.mutate(
       {
         method: "post",
