@@ -240,6 +240,7 @@ public class ProjectTaskService
                 {
                     var stagedDeliverableID = task.StagedDeliverableID;
                     task.StagedDeliverableID = null;
+                    await dbContext.SaveChangesAsync();
                     await dbContext.Deliverables.Where(d => d.DeliverableID == stagedDeliverableID)
                                                 .ExecuteDeleteAsync();
                 }

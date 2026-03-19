@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
 import Header from "../../components/header.components/header.component";
-import { Navigate, Outlet, useLocation, useParams } from "react-router";
+import { Navigate, Outlet, useLocation, useParams, useSearchParams } from "react-router";
 import { useAuth } from "../../providers/auth.provider";
 import Breadcrumbs from "../../components/header.components/breadcrumbs.component";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ import { GlobalError } from "../../components/base.components/global-error.compo
      inside the <Outlet /> element.
 */
 export default function NormalRoutesLayout() {
+  const [searchParams] = useSearchParams();
   const { authState, authorizedAPI } = useAuth();
   const { projectID, taskID } = useParams();
   const { pathname } = useLocation();
@@ -47,8 +48,14 @@ export default function NormalRoutesLayout() {
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Header.Brand title="Project Management System" />
           <Header.Navigation>
-            <Header.NavItem to="/projects" label="Projects" />
-            <Header.NavItem to="/scheduler" label="Scheduler" />
+            <Header.NavItem
+              to={`/projects?${searchParams.toString()}`}
+              label="Projects"
+            />
+            <Header.NavItem
+              to={`/scheduler?${searchParams.toString()}`}
+              label="Scheduler"
+            />
           </Header.Navigation>
         </Box>
         <Header.Actions>

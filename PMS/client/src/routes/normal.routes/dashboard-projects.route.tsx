@@ -317,7 +317,7 @@ export default function DashboardProjectsRoute() {
 
         <ProjectModal.Actions
           mode={projectModalState.mode}
-          disabled={formDataIncomplete}
+          disabled={formDataIncomplete || mutation.isPending}
           loading={mutation.status == "pending"}
           handleCancelClick={handleCancelClick}
           handleEditItem={handleEditProject}

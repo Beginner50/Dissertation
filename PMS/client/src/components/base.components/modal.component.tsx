@@ -137,6 +137,9 @@ Modal.DateTimePicker = ({
           textField: {
             size: "small",
             fullWidth: true,
+            inputProps: {
+              "data-testid": "datetime_picker",
+            },
           },
         }}
       />

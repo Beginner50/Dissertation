@@ -36,6 +36,26 @@ export default class ModalPOM {
     await expect(listbox).not.toBeVisible();
   }
 
+  async setDatetimeField(value: Date) {
+    const container = this.dialog.locator(".MuiPickersInputBase-sectionsContainer");
+
+    const monthSection = container.getByRole("spinbutton", { name: /month/i });
+    await monthSection.click();
+
+    const formatted = new Intl.DateTimeFormat("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    })
+      .format(value)
+      .replace(/[^0-9AP]/gi, "");
+
+    await this.page.keyboard.type(formatted);
+  }
+
   async submit() {
     await expect(this.primaryButton).toBeEnabled();
     await this.primaryButton.click();

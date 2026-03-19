@@ -203,12 +203,12 @@ export const TASKS_TO_CREATE = [
   {
     title: "task_overdue",
     description: "Deadline is exactly now",
-    dueDate: new Date().toISOString(),
+    dueDate: new Date(Date.now() + 5000).toISOString(),
   },
   {
-    title: "task_completed_before_deadline",
-    description: "Task submitted 5 seconds before deadline",
-    dueDate: new Date(Date.now() + 5000).toISOString(), // 5 seconds after current datetime
+    title: "task_completed",
+    description: "Task submitted",
+    dueDate: new Date(Date.now() + 5000).toISOString(),
   },
   {
     title: "task_for_submission",

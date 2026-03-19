@@ -1,11 +1,16 @@
 import { ProjectDetails } from "../../components/project.components/project-details.component";
 import { TaskList } from "../../components/task.components.tsx/task-list.component";
-import { useOutletContext, useParams } from "react-router";
-import type { OutletContext, Project, Task, TaskFormData, User } from "../../lib/types";
+import { useOutletContext, useParams, useSearchParams } from "react-router";
+import type {
+  ModalState,
+  OutletContext,
+  Project,
+  Task,
+  TaskFormData,
+  User,
+} from "../../lib/types";
 import { useCallback, useState } from "react";
-import TaskModal, {
-  type ModalState,
-} from "../../components/task.components.tsx/task-modal.component";
+import TaskModal from "../../components/base.components/modal.component";
 import { useAuth } from "../../providers/auth.provider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box } from "@mui/material";
@@ -15,11 +20,15 @@ import { extractErrorMessage } from "../../lib/utils";
 
 export default function DashboardTasksRoute() {
   const { setErrorMessage } = useOutletContext<OutletContext>();
+  const [searchParams] = useSearchParams();
 
   const { authState, authorizedAPI } = useAuth();
   const user = authState.user as User;
 
-  const [taskListLimit, setTaskListLimit] = useState(4);
+  const [taskListLimit, setTaskListLimit] = useState(() => {
+    const pageSize = Number(searchParams.get("page-size"));
+    return !isNaN(pageSize) && pageSize != 0 ? pageSize : 4;
+  });
   const [taskListOffset, setTaskListOffset] = useState(0);
 
   const [taskModalState, setTaskModalState] = useState<ModalState>({
@@ -131,8 +140,8 @@ export default function DashboardTasksRoute() {
   const handleDescriptionChange = useCallback((description: string) => {
     setTaskModalData((t) => ({ ...t, description: description }));
   }, []);
-  const handleDueDateChange = useCallback((dueDate: Date) => {
-    setTaskModalData((t) => ({ ...t, dueDate: dueDate }));
+  const handleDueDateChange = useCallback((dueDate: Date | null) => {
+    if (dueDate != null) setTaskModalData((t) => ({ ...t, dueDate: dueDate }));
   }, []);
 
   /* ---------------------------------------------------------------------------------- */
@@ -326,28 +335,31 @@ export default function DashboardTasksRoute() {
 
       {/* Task Modal */}
       <TaskModal open={taskModalState.open}>
-        <TaskModal.Header mode={taskModalState.mode} />
+        <TaskModal.Header mode={taskModalState.mode} item="Task" />
 
         {taskModalState.mode != "delete" ? (
           <TaskModal.Fields>
             {taskModalState.mode == "edit" && (
-              <TaskModal.TaskID taskID={taskModalData.taskID} />
+              <TaskModal.TextField label={"taskID"} value={taskModalData.taskID} />
             )}
-            <TaskModal.TaskTitle
-              title={taskModalData.title ?? ""}
-              handleTitleChange={handleTitleChange}
+            <TaskModal.TextField
+              label={"title"}
+              value={taskModalData.title ?? ""}
+              handleValueChange={handleTitleChange}
             />
-            <TaskModal.TaskDescription
-              description={taskModalData.description ?? ""}
-              handleDescriptionChange={handleDescriptionChange}
+            <TaskModal.TextField
+              label={"description"}
+              value={taskModalData.description ?? ""}
+              handleValueChange={handleDescriptionChange}
             />
-            <TaskModal.DueDate
-              dueDate={taskModalData.dueDate}
-              handleDueDateChange={handleDueDateChange}
+            <TaskModal.DateTimePicker
+              label="Due Date"
+              value={taskModalData.dueDate}
+              handleValueChange={handleDueDateChange}
             />
           </TaskModal.Fields>
         ) : (
-          <TaskModal.DeleteWarning />
+          <TaskModal.Warning message="This action is permanent and cannot be undone!" />
         )}
 
         <TaskModal.Actions
@@ -355,9 +367,9 @@ export default function DashboardTasksRoute() {
           loading={mutation.status === "pending"}
           disabled={formDataIncomplete || mutation.isPending}
           handleCancelClick={handleCancelClick}
-          handleCreateTask={handleCreateTask}
-          handleEditTask={handleEditTask}
-          handleDeleteTask={handleDeleteTask}
+          handleCreateItem={handleCreateTask}
+          handleEditItem={handleEditTask}
+          handleDeleteItem={handleDeleteTask}
         />
       </TaskModal>
     </>
