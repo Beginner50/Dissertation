@@ -42,8 +42,8 @@ export type Project = {
   title: string;
   description?: string;
   isArchived: boolean;
-  student?: User;
-  supervisor?: User;
+  students: User[];
+  supervisors: User[];
   tasks?: Pick<Task, "taskID" | "title">[];
 };
 

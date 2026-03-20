@@ -26,6 +26,7 @@ namespace PMS.DatabaseContext;
 public class PMSDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
+    public DbSet<ProjectSupervision> ProjectSupervision { get; set; }
     public DbSet<Project> Projects { get; set; }
     public DbSet<Meeting> Meetings { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
@@ -58,6 +59,22 @@ public class PMSDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<ProjectSupervision>()
+            .HasKey(s => new { s.SupervisorID, s.StudentID, s.ProjectID });
+
+        modelBuilder.Entity<ProjectSupervision>()
+            .HasOne(ps => ps.Project)
+            .WithMany(p => p.Supervisions)
+            .HasForeignKey(ps => ps.ProjectID);
+        modelBuilder.Entity<ProjectSupervision>()
+            .HasOne(ps => ps.Supervisor)
+            .WithMany()
+            .HasForeignKey(ps => ps.SupervisorID);
+        modelBuilder.Entity<ProjectSupervision>()
+            .HasOne(ps => ps.Student)
+            .WithMany()
+            .HasForeignKey(ps => ps.StudentID);
 
         modelBuilder.Entity<Reminder>()
                 .HasOne(r => r.Meeting)

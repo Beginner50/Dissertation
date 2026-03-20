@@ -1,11 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using System.Reflection.PortableExecutable;
-using System.Text;
 using ClosedXML.Excel;
 using PMS.DTOs;
 using PMS.Models;
-using Scalar.AspNetCore;
-using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.Fonts.Standard14Fonts;
@@ -16,7 +12,7 @@ namespace PMS.Lib;
 // More information on PDFpig: https://www.nuget.org/packages/PdfPig/0.1.14-alpha-20251224-7c4f5
 public class PDFUtils
 {
-    public static byte[] GenerateProgressLogReport(Project project, List<ProjectTask> projectTasksWithMeetings)
+    public static byte[] GenerateProgressLogReport(Project project)
     {
         var builder = new PdfDocumentBuilder();
 
@@ -36,13 +32,13 @@ public class PDFUtils
         y -= 25;
 
         // Stakeholders
-        page.AddText($"Student: {project.Student?.Name} ({project.Student?.UserID})", 11, new PdfPoint(x, y), font);
+        page.AddText($"Student: {project.Supervisions[0].Student?.Name} ({project.Supervisions[0].Student?.UserID})", 11, new PdfPoint(x, y), font);
         y -= 15;
-        page.AddText($"Supervisor: {project.Supervisor?.Name} ({project.Supervisor?.UserID})", 11, new PdfPoint(x, y), font);
+        page.AddText($"Supervisor: {project.Supervisions[0].Supervisor?.Name} ({project.Supervisions[0].Supervisor?.UserID})", 11, new PdfPoint(x, y), font);
         y -= 30;
 
         // Tasks and Meetings
-        foreach (var task in projectTasksWithMeetings)
+        foreach (var task in project.Tasks)
         {
             // Reset page if low on space
             if (y < 100) { page = builder.AddPage(PageSize.A4); y = 790; }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
 using PMS.DTOs;
@@ -17,10 +18,11 @@ public class ReportService
     }
 
     private async Task<Dictionary<string, long>> ExtractAndValidateEmailUserIDMap(
-        List<string> extractedStudentEmails,
-        List<string> extractedSupervisorEmails
+        List<ExtractProjectDTO> extractedProjects
     )
     {
+        var extractedStudentEmails = extractedProjects.Select(d => d.StudentEmail).ToList();
+        var extractedSupervisorEmails = extractedProjects.Select(d => d.SupervisorEmail).ToList();
         var allEmails = extractedStudentEmails.Union(extractedSupervisorEmails).ToList();
 
         var users = await dbContext.Users
@@ -63,31 +65,52 @@ public class ReportService
             throw new Exception("File Is Not Valid Excel!");
 
         var extractedProjects = PDFUtils.IngestProjectSupervisionList(filename, fileData, contentType);
-        var extractedStudentEmails = extractedProjects.Select(d => d.StudentEmail).ToList();
-        var extractedSupervisorEmails = extractedProjects.Select(d => d.SupervisorEmail).ToList();
-        var extractedProjectTitles = extractedProjects.Select(d => d.Title).ToList();
-
-        var emailUserIDMap = await ExtractAndValidateEmailUserIDMap(extractedStudentEmails, extractedSupervisorEmails);
+        var emailUserIDMap = await ExtractAndValidateEmailUserIDMap(extractedProjects);
 
         var existingProjects = await dbContext.Projects
-            .Where(p => extractedProjectTitles.Contains(p.Title))
-            .ToListAsync();
-        var newProjects = extractedProjects
+                                    .Where(p => extractedProjects.Select(e => e.Title)
+                                                                 .Contains(p.Title))
+                                    .ToListAsync();
+        var projectsToCreate = extractedProjects
             .ExceptBy(existingProjects.Select(p => p.Title), p => p.Title)
-            .Select(d => new Project
-            {
-                Title = d.Title,
-                Description = d.Description,
-                IsArchived = false,
-                StudentID = emailUserIDMap[d.StudentEmail],
-                SupervisorID = emailUserIDMap[d.SupervisorEmail]
-            })
             .ToList();
 
-        if (newProjects.Count > 0)
+
+        if (projectsToCreate.Count > 0)
         {
-            await dbContext.Projects.AddRangeAsync(newProjects);
-            await dbContext.SaveChangesAsync();
+            using (var transaction = await dbContext.Database.BeginTransactionAsync())
+            {
+                try
+                {
+
+                    var newProjects = projectsToCreate.Select(ps => new Project
+                    {
+                        Title = ps.Title,
+                        Description = ps.Description,
+                        IsArchived = false
+                    })
+                    .ToList();
+
+                    await dbContext.Projects.AddRangeAsync(newProjects);
+                    await dbContext.SaveChangesAsync();
+
+                    var supervisions = projectsToCreate.Select(data => new ProjectSupervision
+                    {
+                        ProjectID = newProjects.First(p => p.Title == data.Title).ProjectID,
+                        StudentID = emailUserIDMap[data.StudentEmail],
+                        SupervisorID = emailUserIDMap[data.SupervisorEmail]
+                    }).ToList();
+
+                    await dbContext.ProjectSupervision.AddRangeAsync(supervisions);
+                    await dbContext.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                }
+            }
         }
     }
 
@@ -110,25 +133,30 @@ public class ReportService
         await dbContext.SaveChangesAsync();
     }
 
+    /*
+        Allow report generation for Archived Projects
+    */
     public async Task<FileDTO> GenerateProgressLogReport(long userID, long projectID)
     {
-        var tasksWithMeetings = await dbContext.Tasks
-                                    .Include(t => t.Project)
-                                        .ThenInclude(p => p.Student)
-                                    .Include(t => t.Project)
-                                        .ThenInclude(p => p.Supervisor)
-                                    .Include(t => t.Meetings)
-                                    .Where(t => t.ProjectID == projectID &&
-                                            t.Project.SupervisorID == userID || t.Project.StudentID == userID)
-                                    .OrderBy(t => t.AssignedDate)
-                                    .ToListAsync();
+        var project = await dbContext.ProjectSupervision
+                                                    .AsSplitQuery()
+                                                    .ContainsMember(userID)
+                                                    .Select(ps => ps.Project!)
+                                                    .Where(p => p.ProjectID == projectID)
+                                                    .Include(p => p.Supervisions)
+                                                        .ThenInclude(s => s.Student)
+                                                    .Include(p => p.Supervisions)
+                                                        .ThenInclude(s => s.Supervisor)
+                                                    .Include(p => p.Tasks.OrderBy(t => t.AssignedDate))
+                                                        .ThenInclude(t => t.Meetings)
+                                                    .FirstOrDefaultAsync()
+                                        ?? throw new Exception("Project Not Found!");
 
-        if (tasksWithMeetings.Count == 0)
+        if (project.Tasks.Count == 0)
             throw new UnauthorizedAccessException("Tasks Not Found!");
 
-        var project = tasksWithMeetings[0].Project;
+        var pdfData = PDFUtils.GenerateProgressLogReport(project);
 
-        var pdfData = PDFUtils.GenerateProgressLogReport(project, tasksWithMeetings);
         return new FileDTO
         {
             Filename = Sanitization.SanitizeFilename($"{project.Title}_ProgressLog_{DateTime.UtcNow:dd/MM/yyyy}"),

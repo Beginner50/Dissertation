@@ -97,7 +97,7 @@ public class ReminderService
             Message = $"{supervisor.Name} has created a new task: {task.Title}",
             RemindAt = task.DueDate,
             Type = "task",
-            RecipientID = (long)student.UserID,
+            RecipientID = student.UserID,
             TaskID = task.ProjectTaskID,
         };
 
@@ -106,20 +106,26 @@ public class ReminderService
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task UpdateTaskReminder(ProjectTask task)
+    public async Task UpdateTaskReminders(ProjectTask task)
     {
-        var reminder = await dbContext.Reminders.Where(r => r.TaskID == task.ProjectTaskID)
-                                                .FirstOrDefaultAsync()
+        var reminders = await dbContext.Reminders.Where(r => r.TaskID == task.ProjectTaskID)
+                                                .ToListAsync()
                                                 ?? throw new Exception("Reminder Not Found");
 
-        reminder.RemindAt = task.DueDate;
+        reminders.ForEach(reminder =>
+        {
+            reminder.RemindAt = task.DueDate;
+        });
 
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task DeleteTaskReminder(ProjectTask task)
-    {
-        await dbContext.Reminders.Where(r => r.TaskID == task.ProjectTaskID)
-                                 .ExecuteDeleteAsync();
-    }
+    /*
+        Deletion is already handled by CASCADE DELETE
+    */
+    // public async Task DeleteTaskReminder(ProjectTask task)
+    // {
+    //     await dbContext.Reminders.Where(r => r.TaskID == task.ProjectTaskID)
+    //                              .ExecuteDeleteAsync();
+    // }
 }

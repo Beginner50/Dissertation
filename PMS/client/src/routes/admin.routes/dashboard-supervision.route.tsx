@@ -106,8 +106,8 @@ export default function DashboardSupervisionRoute() {
   const handleEditProjectClick = (selectedProject: Project) => {
     setProjectSupervisionModalData({
       ...selectedProject,
-      supervisorEmail: selectedProject.supervisor?.email ?? "",
-      studentEmail: selectedProject.student?.email ?? "",
+      supervisorEmail: selectedProject.supervisors[0]?.email ?? "",
+      studentEmail: selectedProject.students[0]?.email ?? "",
     });
     setProjectSupervisionModalState({
       ...projectSupervisionModalState,
@@ -119,8 +119,8 @@ export default function DashboardSupervisionRoute() {
   const handleArchiveProjectClick = (selectedProject: Project) => {
     setProjectSupervisionModalData({
       ...selectedProject,
-      supervisorEmail: selectedProject.supervisor?.email ?? "",
-      studentEmail: selectedProject.student?.email ?? "",
+      supervisorEmail: selectedProject.supervisors[0]?.email ?? "",
+      studentEmail: selectedProject.students[0]?.email ?? "",
     });
     setProjectSupervisionModalState({
       ...projectSupervisionModalState,
@@ -132,8 +132,8 @@ export default function DashboardSupervisionRoute() {
   const handleRestoreProjectClick = (selectedProject: Project) => {
     setProjectSupervisionModalData({
       ...selectedProject,
-      supervisorEmail: selectedProject.supervisor?.email ?? "",
-      studentEmail: selectedProject.student?.email ?? "",
+      supervisorEmail: selectedProject.supervisors[0]?.email ?? "",
+      studentEmail: selectedProject.students[0]?.email ?? "",
     });
     setProjectSupervisionModalState({
       ...projectSupervisionModalState,

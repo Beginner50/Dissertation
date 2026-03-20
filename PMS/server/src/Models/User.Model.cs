@@ -25,12 +25,6 @@ public class User
 
         A Navigation Property does not actually exist in the database table
     */
-    [InverseProperty("Supervisor")]
-    public List<Project> SupervisedProjects { get; } = [];
-
-    [InverseProperty("Student")]
-    public List<Project> ConductedProjects { get; } = [];
-
     [InverseProperty("Organizer")]
     public List<Meeting> OrganizedMeetings { get; } = [];
 

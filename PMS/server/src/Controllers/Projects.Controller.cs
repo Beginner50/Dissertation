@@ -5,6 +5,7 @@ using Google.GenAI.Types;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing.Matching;
 using Microsoft.EntityFrameworkCore;
 using PMS.DTOs;
 using PMS.Models;
@@ -23,28 +24,27 @@ public class ProjectsController : ControllerBase
         Title = p.Title,
         IsArchived = p.IsArchived,
         Description = p.Description,
-        Supervisor = p.Supervisor != null ? new UserLookupDTO
+        Supervisors = p.Supervisions.Select(ps => new UserLookupDTO
         {
-            UserID = p.Supervisor.UserID,
-            Name = p.Supervisor.Name,
-            Email = p.Supervisor.Email,
-            IsDeleted = p.Supervisor.IsDeleted
-        } : null,
-        Student = p.Student != null ? new UserLookupDTO
+            UserID = ps.SupervisorID,
+            Name = ps.Supervisor.Name,
+            Email = ps.Supervisor.Email,
+            IsDeleted = ps.Supervisor.IsDeleted
+        }),
+        Students = p.Supervisions.Select(ps => new UserLookupDTO
         {
-            UserID = p.Student.UserID,
-            Name = p.Student.Name,
-            Email = p.Student.Email,
-            IsDeleted = p.Student.IsDeleted
-        } : null,
+            UserID = ps.StudentID,
+            Name = ps.Student.Name,
+            Email = ps.Student.Email,
+            IsDeleted = ps.Student.IsDeleted
+        }),
         Tasks = p.Tasks
-                    .OrderByDescending(t => t.AssignedDate)
-                    .Select(t => new ProjectTaskLookupDTO
-                    {
-                        TaskID = t.ProjectTaskID,
-                        Title = t.Title
-                    })
-                    .ToList()
+                .OrderByDescending(t => t.AssignedDate)
+                .Select(t => new ProjectTaskLookupDTO
+                {
+                    TaskID = t.ProjectTaskID,
+                    Title = t.Title
+                })
     };
 
     public ProjectsController(ProjectService projectService, ReportService reportService)
@@ -67,15 +67,16 @@ public class ProjectsController : ControllerBase
 
             var (items, totalCount) = await projectService.GetProjectsWithCount(
                 selector: projectSelector,
-                queryExtension: p => p.AsSplitQuery(),
                 limit: limit,
                 offset: offset
+
             );
+
             return Ok(new { Items = items, TotalCount = totalCount });
         }
         catch (Exception e)
         {
-            return NotFound(e.Message);
+            return StatusCode(500, e.Message);
         }
     }
 
@@ -92,8 +93,8 @@ public class ProjectsController : ControllerBase
         {
             if (limit > 100) limit = 100;
             var (items, totalCount) = await projectService.GetProjectsWithCount(
+                userID,
                 selector: projectSelector,
-                queryExtension: p => p.AsSplitQuery().NotArchived().ContainsMember(userID),
                 limit: limit,
                 offset: offset
             );
@@ -106,7 +107,7 @@ public class ProjectsController : ControllerBase
         }
         catch (Exception e)
         {
-            return NotFound(e.Message);
+            return StatusCode(500, e.Message);
         }
     }
 
@@ -122,8 +123,7 @@ public class ProjectsController : ControllerBase
         {
             var project = await projectService.GetProject(
                 projectID,
-                selector: projectSelector,
-                queryExtension: p => p.AsSplitQuery().ContainsMember(userID)
+                selector: projectSelector
             );
             return Ok(project);
         }

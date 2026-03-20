@@ -1,11 +1,7 @@
 using System.Linq.Expressions;
 using System.Security;
-using System.Text.Json;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using PMS.DatabaseContext;
-using PMS.DTOs;
-using PMS.Lib;
 using PMS.Models;
 
 namespace PMS.Services;
@@ -14,47 +10,43 @@ namespace PMS.Services;
 public class TaskDeliverableService
 {
     private readonly PMSDbContext dbContext;
-    private readonly ProjectService projectService;
     private readonly ProjectTaskService projectTaskService;
-    private readonly ReminderService reminderService;
     private readonly ILogger<TaskDeliverableService> logger;
 
     public TaskDeliverableService(
         PMSDbContext dbContext,
-        ProjectService projectService,
         ProjectTaskService projectTaskService,
-        ReminderService reminderService,
         ILogger<TaskDeliverableService> logger
     )
     {
         this.dbContext = dbContext;
-        this.projectService = projectService;
         this.projectTaskService = projectTaskService;
-        this.reminderService = reminderService;
         this.logger = logger;
     }
 
     public async Task<T> GetStagedDeliverable<T>(
-        long userID, long projectID, long taskID,
+        long studentID, long projectID, long taskID,
         Expression<Func<Deliverable, T>> selector,
         Func<IQueryable<Deliverable>, IQueryable<Deliverable>>? deliverableQueryExtension = null,
         Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
         Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null
     )
     {
-        IQueryable<Project> projectQuery = dbContext.Projects
-                            .NotArchived()
-                            .ContainsMember(userID);
-        projectQuery = projectQueryExtension?.Invoke(projectQuery) ?? projectQuery;
+        var task = await projectTaskService.GetProjectTask(
+            studentID,
+            projectID,
+            taskID,
+            selector: t => t,
+            projectSupervisionQueryExtension: q => q.ContainsStudent(studentID),
+            projectQueryExtension: projectQueryExtension,
+            taskQueryExtension: taskQueryExtension
+        );
 
-        IQueryable<ProjectTask> taskQuery = dbContext.Tasks
-                            .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID)
-                            .Where(t => projectQuery.Any(p => p.ProjectID == t.ProjectID));
-        taskQuery = taskQueryExtension?.Invoke(taskQuery) ?? taskQuery;
-
-        IQueryable<Deliverable> deliverableQuery = dbContext.Deliverables
-                            .Where(d => taskQuery.Any(t => t.StagedDeliverableID == d.DeliverableID));
-        deliverableQuery = deliverableQueryExtension?.Invoke(deliverableQuery) ?? deliverableQuery;
+        IQueryable<Deliverable> deliverableQuery = dbContext.Tasks
+                    .Where(t => t.ProjectTaskID == task.ProjectTaskID)
+                    .Select(t => t.StagedDeliverable!);
+        if (deliverableQueryExtension != null)
+            deliverableQuery = deliverableQueryExtension(deliverableQuery);
 
         return await deliverableQuery
             .Select(selector)
@@ -70,19 +62,20 @@ public class TaskDeliverableService
         Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null
     )
     {
-        IQueryable<Project> projectQuery = dbContext.Projects
-                            .NotArchived()
-                            .ContainsMember(userID);
-        projectQuery = projectQueryExtension?.Invoke(projectQuery) ?? projectQuery;
+        var task = await projectTaskService.GetProjectTask(
+            userID,
+            projectID,
+            taskID,
+            selector: t => t,
+            projectQueryExtension: projectQueryExtension,
+            taskQueryExtension: taskQueryExtension
+        );
 
-        IQueryable<ProjectTask> taskQuery = dbContext.Tasks
-                            .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID)
-                            .Where(t => projectQuery.Any(p => p.ProjectID == t.ProjectID));
-        taskQuery = taskQueryExtension?.Invoke(taskQuery) ?? taskQuery;
-
-        IQueryable<Deliverable> deliverableQuery = dbContext.Deliverables
-                            .Where(d => taskQuery.Any(t => t.SubmittedDeliverableID == d.DeliverableID));
-        deliverableQuery = deliverableQueryExtension?.Invoke(deliverableQuery) ?? deliverableQuery;
+        IQueryable<Deliverable> deliverableQuery = dbContext.Tasks
+                    .Where(t => t.ProjectTaskID == taskID)
+                    .Select(t => t.StagedDeliverable!);
+        if (deliverableQueryExtension != null)
+            deliverableQuery = deliverableQueryExtension(deliverableQuery);
 
         return await deliverableQuery
             .Select(selector)
@@ -103,9 +96,9 @@ public class TaskDeliverableService
             projectID,
             taskID,
             selector: t => t,
+            projectSupervisionQueryExtension: q => q.ContainsStudent(userID),
             taskQueryExtension: t => t.Include(t => t.SubmittedDeliverable)
-                                      .Include(t => t.FeedbackCriterias),
-            projectQueryExtension: p => p.ContainsStudent(userID)
+                                      .Include(t => t.FeedbackCriterias)
         );
 
         var deliverable = new Deliverable
@@ -146,7 +139,8 @@ public class TaskDeliverableService
             userID,
             projectID,
             taskID,
-            selector: t => t
+            selector: t => t,
+            projectSupervisionQueryExtension: q => q.ContainsStudent(userID)
         );
 
         task.StagedDeliverableID = null;
@@ -164,7 +158,7 @@ public class TaskDeliverableService
             projectID,
             taskID,
             selector: t => t,
-            projectQueryExtension: p => p.ContainsStudent(userID),
+            projectSupervisionQueryExtension: q => q.ContainsStudent(userID),
             taskQueryExtension: t => t.Include(t => t.FeedbackCriterias)
         );
 

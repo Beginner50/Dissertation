@@ -94,7 +94,7 @@ export default function ProjectSupervisionTable({
             ) : (
               projects.map((project) => {
                 const hasDeletedUser = !!(
-                  project.student?.isDeleted || project.supervisor?.isDeleted
+                  project.students[0]?.isDeleted || project.supervisors[0]?.isDeleted
                 );
 
                 return (
@@ -108,8 +108,8 @@ export default function ProjectSupervisionTable({
                     </TableCell>
                     <TableCell sx={{ fontWeight: 500 }}>{project.title}</TableCell>
 
-                    <ProjectSupervisionTable.UserCell user={project.student} />
-                    <ProjectSupervisionTable.UserCell user={project.supervisor} />
+                    <ProjectSupervisionTable.UserCell user={project.students[0]} />
+                    <ProjectSupervisionTable.UserCell user={project.supervisors[0]} />
 
                     <TableCell>
                       <Chip

@@ -8,7 +8,7 @@ public class GetProjectDTO
     public required string Title { get; set; }
     public string? Description { get; set; }
     public required bool IsArchived { get; set; }
-    public UserLookupDTO? Supervisor { get; set; }
-    public UserLookupDTO? Student { get; set; }
-    public List<ProjectTaskLookupDTO> Tasks { get; set; } = [];
+    public IEnumerable<UserLookupDTO> Supervisors { get; set; } = [];
+    public IEnumerable<UserLookupDTO> Students { get; set; } = [];
+    public IEnumerable<ProjectTaskLookupDTO> Tasks { get; set; } = [];
 }

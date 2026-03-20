@@ -69,23 +69,23 @@ public class MeetingService
         Func<IQueryable<Meeting>, IQueryable<Meeting>>? queryExtension = null
     )
     {
-        var supervisor = (await projectService.GetProjectsWithCount(
-            userID,
-            selector: p => p.Supervisor,
-            queryExtension: p => p.Include(p => p.Supervisor.AttendedMeetings)
-                                  .Include(p => p.Supervisor.OrganizedMeetings)
-        )).items.ToList()[0];
+        var supervisorIDs = await dbContext.ProjectSupervision
+                                        .ContainsMember(userID)
+                                        .Where(ps => dbContext.Projects.Where(p => p.ProjectID == ps.ProjectID)
+                                                                       .NotArchived()
+                                                                       .Any())
+                                        .Select(ps => ps.Supervisor!)
+                                        .Select(u => u.UserID)
+                                        .ToListAsync();
 
-        var supervisorMeetingIDs = supervisor.OrganizedMeetings
-                                             .Concat(supervisor.AttendedMeetings)
-                                             .Select(m => m.MeetingID);
+        var meetingsQuery = dbContext.Meetings.Where(
+            m => supervisorIDs.Contains(m.OrganizerID) || supervisorIDs.Contains(m.AttendeeID)
+        );
+        if (queryExtension != null)
+            meetingsQuery = queryExtension(meetingsQuery);
 
-        var query = dbContext.Meetings
-                              .Where(m => supervisorMeetingIDs.Contains(m.MeetingID));
-        query = queryExtension?.Invoke(query) ?? query;
-
-        return await query.Select(selector)
-                          .ToListAsync();
+        return await meetingsQuery.Select(selector)
+                                  .ToListAsync();
     }
 
     public async Task BookMeeting(
@@ -98,7 +98,10 @@ public class MeetingService
             projectID,
             taskID,
             selector: t => t,
-            projectQueryExtension: p => p.MatchStudentAndSupervisor(organizerID, attendeeID)
+            projectSupervisionQueryExtension: q => q.Where(ps => (ps.SupervisorID == organizerID
+                                                                   && ps.StudentID == attendeeID)
+                                                                   || (ps.SupervisorID == attendeeID
+                                                                       && ps.StudentID == organizerID))
         );
 
         Meeting newMeeting;
@@ -128,9 +131,9 @@ public class MeetingService
                 );
 
                 await reminderService.CreateMeetingReminders(
-                    meeting.Organizer, meeting.Attendee, meeting);
+                    meeting.Organizer!, meeting.Attendee!, meeting);
                 mailService.CreateAndEnqueueMeetingMail(
-                    meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_SCHEDULED);
+                    meeting.Organizer!, meeting.Attendee!, meeting, MailType.MEETING_SCHEDULED);
 
                 await transaction.CommitAsync();
             }
@@ -175,7 +178,7 @@ public class MeetingService
 
                 await reminderService.DeleteMeetingReminders(meeting);
                 mailService.CreateAndEnqueueMeetingMail(
-                    meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_CANCELLED);
+                    meeting.Organizer!, meeting.Attendee!, meeting, MailType.MEETING_CANCELLED);
 
                 dbContext.Remove(meeting);
                 await dbContext.SaveChangesAsync();
@@ -205,7 +208,7 @@ public class MeetingService
         await dbContext.SaveChangesAsync();
 
         mailService.CreateAndEnqueueMeetingMail(
-            meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_ACCEPTED);
+            meeting.Organizer!, meeting.Attendee!, meeting, MailType.MEETING_ACCEPTED);
     }
 
     public async Task RejectMeeting(long attendeeID, long meetingID)
@@ -220,7 +223,7 @@ public class MeetingService
 
         await reminderService.DeleteMeetingReminders(meeting);
         mailService.CreateAndEnqueueMeetingMail(
-            meeting.Organizer, meeting.Attendee, meeting, MailType.MEETING_REJECTED);
+            meeting.Organizer!, meeting.Attendee!, meeting, MailType.MEETING_REJECTED);
 
         dbContext.Remove(meeting);
         await dbContext.SaveChangesAsync();

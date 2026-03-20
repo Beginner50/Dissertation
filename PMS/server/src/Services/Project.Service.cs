@@ -1,6 +1,8 @@
 using System.Linq.Expressions;
+using System.Text.Json;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.Internal;
 using PMS.DatabaseContext;
 using PMS.DTOs;
 using PMS.Lib;
@@ -14,34 +16,23 @@ public static class ProjectQueryExtensions
     {
         return query.Where(p => !p.IsArchived);
     }
-    public static IQueryable<Project> ContainsStudent(this IQueryable<Project> query, long userID)
+}
+
+public static class ProjectSupervisionQueryExtensions
+{
+    public static IQueryable<ProjectSupervision> ContainsMember(this IQueryable<ProjectSupervision> query, long userID)
     {
-        return query.Where(p => p.StudentID == userID);
+        return query.Where(ps => ps.StudentID == userID || ps.SupervisorID == userID);
     }
 
-    public static IQueryable<Project> ContainsSupervisor(this IQueryable<Project> query, long userID)
+    public static IQueryable<ProjectSupervision> ContainsSupervisor(this IQueryable<ProjectSupervision> query, long userID)
     {
-        return query.Where(p => p.SupervisorID == userID && !p.Supervisor.IsDeleted);
+        return query.Where(ps => ps.SupervisorID == userID);
     }
 
-    public static IQueryable<Project> ContainsMember(this IQueryable<Project> query, long userID)
+    public static IQueryable<ProjectSupervision> ContainsStudent(this IQueryable<ProjectSupervision> query, long userID)
     {
-        return query.Where(p => p.StudentID == userID || p.SupervisorID == userID);
-    }
-
-    public static IQueryable<Project> ContainsSupervisor(
-            this IQueryable<Project> query, long userID1, long userID2
-        )
-    {
-        return query.Where(p => p.SupervisorID == userID1 || p.SupervisorID == userID2);
-    }
-
-    public static IQueryable<Project> MatchStudentAndSupervisor(
-        this IQueryable<Project> query, long userID1, long userID2
-    )
-    {
-        return query.Where(p => (p.SupervisorID == userID1 && p.StudentID == userID2)
-                                || (p.SupervisorID == userID2 && p.StudentID == userID1));
+        return query.Where(ps => ps.StudentID == userID);
     }
 }
 
@@ -63,12 +54,12 @@ public class ProjectService
     public async Task<T> GetProject<T>(
          long projectID,
          Expression<Func<Project, T>> selector,
-         Func<IQueryable<Project>, IQueryable<Project>>? queryExtension = null
+         Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null
     )
     {
         var query = dbContext.Projects.Where(p => p.ProjectID == projectID);
-
-        query = queryExtension?.Invoke(query) ?? query;
+        if (projectQueryExtension != null)
+            query = projectQueryExtension(query);
 
         return await query
             .Select(selector)
@@ -80,26 +71,73 @@ public class ProjectService
         long userID,
         long projectID,
         Expression<Func<Project, T>> selector,
-        Func<IQueryable<Project>, IQueryable<Project>>? queryExtension = null
+        Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null,
+        Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null
       )
     {
-        return await GetProject(projectID, selector, queryExtension: p =>
-        {
-            var securityCheck = p.NotArchived()
-                                 .ContainsMember(userID);
-            return queryExtension != null ? queryExtension(securityCheck) : securityCheck;
-        });
+        IQueryable<ProjectSupervision> projectSupervisionQuery = dbContext.ProjectSupervision
+                                                    .Where(ps => ps.ProjectID == projectID)
+                                                    .ContainsMember(userID);
+        if (projectSupervisionQueryExtension != null)
+            projectSupervisionQuery = projectSupervisionQueryExtension(projectSupervisionQuery);
+
+        IQueryable<Project> projectQuery = projectSupervisionQuery
+                                                    .Select(ps => ps.Project!)
+                                                    .NotArchived()
+                                                    .Distinct();
+        if (projectQueryExtension != null)
+            projectQuery = projectQueryExtension(projectQuery);
+
+        return await projectQuery.Select(selector)
+                                 .FirstOrDefaultAsync()
+                                 ?? throw new UnauthorizedAccessException("Unauthorized Access or Project Not Found!");
     }
 
     public async Task<(IEnumerable<T> items, long totalCount)>
         GetProjectsWithCount<T>(
             Expression<Func<Project, T>> selector,
-            Func<IQueryable<Project>, IQueryable<Project>>? queryExtension = null,
+            Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null,
+            Func<IQueryable<Project>, IQueryable<Project>>? projectsQueryExtension = null,
             long limit = 5,
             long offset = 0
         )
     {
-        var projectsQuery = queryExtension?.Invoke(dbContext.Projects) ?? dbContext.Projects;
+        IQueryable<ProjectSupervision> projectSupervisionQuery = dbContext.ProjectSupervision;
+        if (projectSupervisionQueryExtension != null)
+            projectSupervisionQuery = projectSupervisionQueryExtension(projectSupervisionQuery);
+
+        IQueryable<Project> projectsQuery = projectSupervisionQuery.Select(ps => ps.Project!).Distinct();
+        if (projectsQueryExtension != null)
+            projectsQuery = projectsQueryExtension(projectsQuery);
+
+        var totalCount = await projectsQuery.LongCountAsync();
+
+        var projects = await projectsQuery
+            .OrderBy(p => p.ProjectID)
+            .Skip((int)offset)
+            .Take((int)limit)
+            .Select(selector)
+            .ToListAsync();
+
+        return (projects, totalCount);
+    }
+
+    public async Task<(IEnumerable<T> items, long totalCount)>
+        GetProjectsWithCount<T>(
+            long userID,
+            Expression<Func<Project, T>> selector,
+            Func<IQueryable<Project>, IQueryable<Project>>? projectsQueryExtension = null,
+            long limit = 5,
+            long offset = 0
+        )
+    {
+        IQueryable<Project> projectsQuery = dbContext.ProjectSupervision
+                                              .ContainsMember(userID)
+                                              .Select(ps => ps.Project!)
+                                              .NotArchived()
+                                              .Distinct();
+        if (projectsQueryExtension != null)
+            projectsQuery = projectsQueryExtension(projectsQuery);
 
         var totalCount = await projectsQuery.LongCountAsync();
 
@@ -112,26 +150,6 @@ public class ProjectService
         return (projects, totalCount);
     }
 
-    public async Task<(IEnumerable<T> items, long totalCount)>
-        GetProjectsWithCount<T>(
-            long userID,
-            Expression<Func<Project, T>> selector,
-            Func<IQueryable<Project>, IQueryable<Project>>? queryExtension = null,
-            long limit = 5,
-            long offset = 0
-        )
-    {
-        return await GetProjectsWithCount(
-            selector,
-            queryExtension: q =>
-            {
-                var securityCheck = q.NotArchived().ContainsMember(userID);
-                return queryExtension != null ? queryExtension(securityCheck) : securityCheck;
-            },
-            limit: limit,
-            offset: offset
-        );
-    }
     public async Task CreateProject(
            string title, string supervisorEmail, string studentEmail, string? description = ""
        )
@@ -156,17 +174,36 @@ public class ProjectService
     public async Task CreateProject(
         long supervisorID, long studentID, string title, string? description = "")
     {
-        var newProject = new Project
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
         {
-            Title = title,
-            Description = description ?? "",
-            IsArchived = false,
-            StudentID = studentID,
-            SupervisorID = supervisorID
-        };
+            try
+            {
+                var newProject = new Project
+                {
+                    Title = title,
+                    Description = description ?? "",
+                    IsArchived = false,
+                };
+                dbContext.Projects.Add(newProject);
+                await dbContext.SaveChangesAsync();
 
-        dbContext.Projects.Add(newProject);
-        await dbContext.SaveChangesAsync();
+                var newProjectSupervisionEntry = new ProjectSupervision
+                {
+                    SupervisorID = supervisorID,
+                    StudentID = studentID,
+                    ProjectID = newProject.ProjectID
+                };
+                dbContext.ProjectSupervision.Add(newProjectSupervisionEntry);
+                await dbContext.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 
     public async Task EditProject(
@@ -192,22 +229,40 @@ public class ProjectService
             )
             ?? throw new Exception($"Student {studentEmail} Not Found!");
 
-        await EditProject(projectID, title, description, student?.UserID, supervisor?.UserID, isArchived);
+        await EditProject(projectID, title, description,
+                          student?.UserID, supervisor?.UserID,
+                          isArchived);
     }
 
     public async Task EditProject(
         long projectID, string? title, string? description,
-         long? supervisorID = null, long? studentID = null, bool? isArchived = null,
-        Func<IQueryable<Project>, IQueryable<Project>>? queryExtension = null
+         long? supervisorID = null, long? studentID = null, bool? isArchived = null
     )
     {
-        var project = await GetProject(projectID, selector: p => p, queryExtension);
+        var project = await GetProject(
+            projectID, selector: p => p, projectQueryExtension: q => q.Include(p => p.Supervisions)
+        );
 
         project.Title = title ?? project.Title;
         project.Description = description ?? project.Description;
-        project.StudentID = studentID ?? project.StudentID;
-        project.SupervisorID = supervisorID ?? project.SupervisorID;
         project.IsArchived = isArchived ?? project.IsArchived;
+
+        if (supervisorID != null && studentID != null)
+        {
+            var projectSupervisionEntry = await dbContext.ProjectSupervision
+                                                .Where(ps => ps.ProjectID == projectID)
+                                                .FirstOrDefaultAsync()
+                                                ?? throw new Exception("Project Supervision Entry Not Found!");
+            dbContext.Remove(projectSupervisionEntry);
+
+            var newEntry = new ProjectSupervision
+            {
+                SupervisorID = (long)supervisorID,
+                StudentID = (long)studentID,
+                ProjectID = projectID
+            };
+            dbContext.ProjectSupervision.Add(newEntry);
+        }
 
         await dbContext.SaveChangesAsync();
     }
@@ -217,15 +272,12 @@ public class ProjectService
          Func<IQueryable<Project>, IQueryable<Project>>? queryExtension = null
      )
     {
-        await EditProject(
-            projectID,
-            title: title,
-            description: description,
-            queryExtension: q =>
-            {
-                var securityCheck = q.NotArchived().ContainsSupervisor(supervisorID);
-                return queryExtension != null ? queryExtension(securityCheck) : securityCheck;
-            });
+        var project = await GetProject(supervisorID, projectID, selector: p => p, queryExtension);
+
+        project.Title = title ?? project.Title;
+        project.Description = description ?? project.Description;
+
+        await dbContext.SaveChangesAsync();
     }
 
     public async Task ArchiveProject(
@@ -234,9 +286,7 @@ public class ProjectService
     )
     {
         var project = await GetProject(projectID, selector: p => p, queryExtension);
-
         project.IsArchived = true;
-
         await dbContext.SaveChangesAsync();
     }
 
@@ -246,11 +296,9 @@ public class ProjectService
          Func<IQueryable<Project>, IQueryable<Project>>? queryExtension = null
      )
     {
-        await ArchiveProject(projectID, queryExtension: q =>
-            {
-                var securityCheck = q.NotArchived().ContainsSupervisor(supervisorID);
-                return queryExtension != null ? queryExtension(securityCheck) : securityCheck;
-            });
+        var project = await GetProject(supervisorID, projectID, selector: p => p, queryExtension);
+        project.IsArchived = true;
+        await dbContext.SaveChangesAsync();
     }
 
     // Reserved for admin endpoints
@@ -259,12 +307,15 @@ public class ProjectService
         var project = await GetProject(
             projectID,
             selector: p => p,
-            queryExtension: p => p.Include(p => p.Student)
-                                  .Include(p => p.Supervisor)
+            projectQueryExtension: p => p.Include(p => p.Supervisions)
+                                    .ThenInclude(ps => ps.Student)
+                                  .Include(p => p.Supervisions)
+                                    .ThenInclude(ps => ps.Supervisor)
         ) ?? throw new Exception("Project Not Found!");
 
-        if ((project?.Supervisor != null && project.Supervisor.IsDeleted)
-            || (project?.Student != null && project.Student.IsDeleted))
+        bool containsDeletedUser = project.Supervisions.Any(ps => ps.Student!.IsDeleted
+                                                            || ps.Supervisor!.IsDeleted);
+        if (containsDeletedUser)
             throw new UnauthorizedAccessException("Cannot Restore Project With Deleted Users!");
 
         project!.IsArchived = false;

@@ -26,67 +26,85 @@ public class FeedbackService
         this.projectTaskService = projectTaskService;
     }
 
+    // Reserved for AI compliance
+    public async Task<IEnumerable<FeedbackCriterion>> GetFeedbackCriteria(
+        long taskID,
+        Func<IQueryable<FeedbackCriterion>, IQueryable<FeedbackCriterion>>? feedbackQueryExtension = null,
+        Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null
+    )
+    {
+        IQueryable<ProjectTask> taskQuery = dbContext.Tasks
+                                    .Where(t => t.ProjectTaskID == taskID);
+        if (taskQueryExtension != null)
+            taskQuery = taskQueryExtension(taskQuery);
+
+        IQueryable<FeedbackCriterion> feedbackQuery = taskQuery.SelectMany(t => t.FeedbackCriterias);
+        if (feedbackQueryExtension != null)
+            feedbackQuery = feedbackQueryExtension(feedbackQuery);
+
+        return await feedbackQuery.ToListAsync();
+    }
+
+    public async Task<IEnumerable<T>> GetFeedbackCriteria<T>(
+        long userID, long projectID, long taskID,
+        Expression<Func<FeedbackCriterion, T>> selector,
+        Func<IQueryable<FeedbackCriterion>, IQueryable<FeedbackCriterion>>? feedbackQueryExtension = null,
+        Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
+        Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null,
+        Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null
+    )
+    {
+        var task = await projectTaskService.GetProjectTask(
+            userID,
+            projectID,
+            taskID,
+            selector: t => t,
+            projectSupervisionQueryExtension: projectSupervisionQueryExtension,
+            projectQueryExtension: projectQueryExtension,
+            taskQueryExtension: taskQueryExtension
+        );
+
+        IQueryable<FeedbackCriterion> feedbackQuery = dbContext.Tasks
+                                            .Where(t => t.ProjectTaskID == task.ProjectTaskID)
+                                            .SelectMany(t => t.FeedbackCriterias!);
+        if (feedbackQueryExtension != null)
+            feedbackQuery = feedbackQueryExtension(feedbackQuery);
+
+        return await feedbackQuery
+            .Select(selector)
+            .ToListAsync()
+            ?? throw new UnauthorizedAccessException("Unauthorized Access or Feedback Criteria Not Found!");
+    }
     public async Task<T> GetFeedbackCriterion<T>(
         long userID, long projectID, long taskID, long feedbackCriterionID,
         Expression<Func<FeedbackCriterion, T>> selector,
         Func<IQueryable<FeedbackCriterion>, IQueryable<FeedbackCriterion>>? feedbackQueryExtension = null,
         Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
-        Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null
+        Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null,
+        Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null
     )
     {
-        IQueryable<Project> projectQuery = dbContext.Projects
-                                .NotArchived()
-                                .ContainsMember(userID);
-        projectQuery = projectQueryExtension?.Invoke(projectQuery) ?? projectQuery;
+        var task = await projectTaskService.GetProjectTask(
+            userID,
+            projectID,
+            taskID,
+            selector: t => t,
+            projectSupervisionQueryExtension: projectSupervisionQueryExtension,
+            projectQueryExtension: projectQueryExtension,
+            taskQueryExtension: taskQueryExtension
+        );
 
-        IQueryable<ProjectTask> taskQuery = dbContext.Tasks
-                                .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID)
-                                .Where(t => projectQuery.Any(p => p.ProjectID == t.ProjectID));
-        taskQuery = taskQueryExtension?.Invoke(taskQuery) ?? taskQuery;
+        IQueryable<FeedbackCriterion> feedbackQuery = dbContext.Tasks
+                                            .Where(t => t.ProjectTaskID == task.ProjectTaskID)
+                                            .SelectMany(t => t.FeedbackCriterias!)
+                                            .Where(c => c.FeedbackCriterionID == feedbackCriterionID);
+        if (feedbackQueryExtension != null)
+            feedbackQuery = feedbackQueryExtension(feedbackQuery);
 
-        IQueryable<FeedbackCriterion> query = dbContext.FeedbackCriterias
-                    .Where(f => f.FeedbackCriterionID == feedbackCriterionID)
-                    .Where(f => taskQuery.Any(t => t.ProjectTaskID == f.TaskID));
-        query = feedbackQueryExtension?.Invoke(query) ?? query;
-
-        return await query
+        return await feedbackQuery
             .Select(selector)
             .FirstOrDefaultAsync()
-            ?? throw new UnauthorizedAccessException("Unauthorized Access or Feedback Criterion Not Found!");
-    }
-
-    public async Task<IEnumerable<FeedbackCriterion>> GetFeedbackCriteria(
-        long taskID,
-        Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
-        Func<IQueryable<FeedbackCriterion>, IQueryable<FeedbackCriterion>>? feedbackQueryExtension = null
-    )
-    {
-        IQueryable<ProjectTask> taskQuery = dbContext.Tasks
-                                    .Where(t => t.ProjectTaskID == taskID);
-        taskQuery = taskQueryExtension?.Invoke(taskQuery) ?? taskQuery;
-
-        IQueryable<FeedbackCriterion> feedbackQuery = dbContext.FeedbackCriterias
-                                        .Where(c => taskQuery.Any(t => t.ProjectTaskID == c.TaskID));
-        feedbackQuery = feedbackQueryExtension?.Invoke(feedbackQuery) ?? feedbackQuery;
-
-        return await feedbackQuery.ToListAsync();
-    }
-
-    public async Task<IEnumerable<FeedbackCriterion>> GetFeedbackCriteria(
-        long userID, long projectID, long taskID,
-        Func<IQueryable<FeedbackCriterion>, IQueryable<FeedbackCriterion>>? feedbackQueryExtension = null
-    )
-    {
-        IQueryable<Project> projectQuery = dbContext.Projects
-                                .NotArchived()
-                                .ContainsMember(userID);
-
-        return await GetFeedbackCriteria(
-            taskID,
-            taskQueryExtension: q => q.Where(t => t.ProjectID == projectID &&
-                                                  projectQuery.Any(p => p.ProjectID == t.ProjectID)),
-            feedbackQueryExtension: feedbackQueryExtension
-        );
+            ?? throw new UnauthorizedAccessException("Unauthorized Access or Feedback Criteria Not Found!");
     }
 
     public async Task CreateFeedbackCriterion
@@ -98,10 +116,6 @@ public class FeedbackService
             taskID,
             selector: t => t,
             taskQueryExtension: t => t.Where(t => t.AssignedByID == userID)
-                                      .Include(t => t.Project)
-                                        .ThenInclude(p => p.Supervisor)
-                                      .Include(t => t.Project)
-                                        .ThenInclude(p => p.Student)
         );
 
         if (task.SubmittedDeliverableID == null)
@@ -166,7 +180,7 @@ public class FeedbackService
             taskID,
             feedbackCriterionID,
             selector: f => f,
-            projectQueryExtension: p => p.ContainsStudent(userID)
+            projectSupervisionQueryExtension: q => q.ContainsStudent(userID)
         )
         ?? throw new UnauthorizedAccessException("Feedback Criterion Not Found!");
 

@@ -3,11 +3,6 @@ import RowPOM from "./row.pom";
 import InteractiveRowPOM from "./interactive-row.pom";
 
 export default class CollectionPOM {
-  getFirstCollectionEntryByTestID(
-    arg0: string,
-  ): InteractiveRowPOM | PromiseLike<InteractiveRowPOM> {
-    throw new Error("Method not implemented.");
-  }
   readonly page: Page;
   readonly container: Locator;
   readonly itemSelectorRole: "tr" | "listitem";

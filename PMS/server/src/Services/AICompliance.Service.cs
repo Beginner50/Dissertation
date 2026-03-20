@@ -193,21 +193,27 @@ public class AIComplianceService
                 ?? throw new Exception("Could Not Obtain AI Feedback!");
 
         var task = await projectTaskService.GetProjectTask(
-                                              job.JobID,
-                                              selector: t => t,
-                                              taskQueryExtension: q => q.Include(t => t.Project)
-                                                                            .ThenInclude(p => p.Supervisor)
-                                                                        .Include(t => t.Project)
-                                                                            .ThenInclude(p => p.Student)
-                                          );
+                        job.JobID,
+                        selector: t => t,
+                        taskQueryExtension: q => q.Include(t => t.Project!)
+                                                    .ThenInclude(p => p.Supervisions)
+                                                        .ThenInclude(ps => ps.Supervisor)
+                                                  .Include(t => t.Project!)
+                                                    .ThenInclude(p => p.Supervisions)
+                                                        .ThenInclude(ps => ps.Supervisor)
+
+                    );
 
         await feedbackService.EditFeedbackCriteria(job.JobID, updatedFeedbackCriteria);
-        mailService.CreateAndEnqueueTaskMail(
-                                supervisor: task.Project.Supervisor,
-                                student: task.Project.Student,
+        foreach (var supervisionEntry in task.Project!.Supervisions)
+        {
+            mailService.CreateAndEnqueueTaskMail(
+                                supervisor: supervisionEntry.Supervisor!,
+                                student: supervisionEntry.Student!,
                                 task: task,
                                 MailType.TASK_COMPLIANCE_CHECK_COMPLETION
-                            );
+                        );
+        }
 
         AIProcessingQueue.SetJobStatus(job.JobID, "completed");
     }

@@ -28,7 +28,9 @@ public class FeedbackController : ControllerBase
     {
         try
         {
-            var feedbackCriteria = await feedbackService.GetFeedbackCriteria(userID, projectID, taskID);
+            var feedbackCriteria = await feedbackService.GetFeedbackCriteria(
+                    userID, projectID, taskID, selector: fc => fc
+            );
             return Ok(feedbackCriteria);
         }
         catch (Exception e)

@@ -53,8 +53,8 @@ export default function ProjectListEntry({
       <ProjectListEntry.Link
         title={project.title}
         url={url}
-        student={project?.student}
-        supervisor={project?.supervisor}
+        student={project?.students[0]}
+        supervisor={project?.supervisors[0]}
       />
 
       {menuEnabled && (

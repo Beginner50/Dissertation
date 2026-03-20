@@ -38,8 +38,7 @@ public class ProjectTaskService
             Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null
         )
     {
-        IQueryable<ProjectTask> query = dbContext.Tasks
-            .Where(t => t.ProjectTaskID == taskID);
+        IQueryable<ProjectTask> query = dbContext.Tasks.Where(t => t.ProjectTaskID == taskID);
         query = taskQueryExtension?.Invoke(query) ?? query;
 
         return await query
@@ -52,20 +51,24 @@ public class ProjectTaskService
         long userID, long projectID, long taskID,
         Expression<Func<ProjectTask, T>> selector,
         Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
-        Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null
+        Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null,
+        Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null
     )
     {
-        IQueryable<Project> projectQuery = dbContext.Projects
-                            .NotArchived()
-                            .ContainsMember(userID);
-        projectQuery = projectQueryExtension?.Invoke(projectQuery) ?? projectQuery;
+        var project = await projectService.GetProject(
+            userID,
+            projectID,
+            selector: p => p,
+            projectQueryExtension: projectQueryExtension,
+            projectSupervisionQueryExtension: projectSupervisionQueryExtension
+        );
 
-        IQueryable<ProjectTask> query = dbContext.Tasks
-            .Where(t => t.ProjectTaskID == taskID && t.ProjectID == projectID)
-            .Where(t => projectQuery.Any(p => p.ProjectID == t.ProjectID));
-        query = taskQueryExtension?.Invoke(query) ?? query;
+        IQueryable<ProjectTask> taskQuery = dbContext.Tasks.Where(t => t.ProjectTaskID == taskID
+                                                                       && t.ProjectID == project.ProjectID);
+        if (taskQueryExtension != null)
+            taskQuery = taskQueryExtension(taskQuery);
 
-        return await query
+        return await taskQuery
             .Select(selector)
             .FirstOrDefaultAsync()
             ?? throw new UnauthorizedAccessException("Unauthorized Access or Task Not Found!");
@@ -77,22 +80,26 @@ public class ProjectTaskService
             Expression<Func<ProjectTask, T>> selector,
             long limit = 5, long offset = 0,
             Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
-            Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null
+            Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null,
+        Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null
         )
     {
-        IQueryable<Project> projectQuery = dbContext.Projects
-                                                .NotArchived()
-                                                .ContainsMember(userID);
-        projectQuery = projectQueryExtension?.Invoke(projectQuery) ?? projectQuery;
+        var project = await projectService.GetProject(
+            userID,
+            projectID,
+            selector: p => p,
+            projectQueryExtension: projectQueryExtension,
+            projectSupervisionQueryExtension: projectSupervisionQueryExtension
+        );
 
-        var query = dbContext.Tasks
-                        .Where(t => t.ProjectID == projectID)
-                        .Where(t => projectQuery.Any(p => p.ProjectID == t.ProjectID))
-                        .OrderByDescending(t => t.DueDate);
+        IQueryable<ProjectTask> taskQuery = dbContext.Tasks.Where(t => t.ProjectID == project.ProjectID)
+                                                           .OrderByDescending(t => t.DueDate);
+        if (taskQueryExtension != null)
+            taskQuery = taskQueryExtension(taskQuery);
 
-        var count = await query.LongCountAsync();
+        var count = await taskQuery.LongCountAsync();
 
-        var tasks = await query
+        var tasks = await taskQuery
             .Select(selector)
             .Skip((int)offset)
             .Take((int)limit)
@@ -113,10 +120,11 @@ public class ProjectTaskService
                 userID,
                 projectID,
                 selector: p => p,
-                queryExtension: p => p.ContainsSupervisor(userID)
-                                      .Include(p => p.Student)
-                                      .Include(p => p.Supervisor)
-            );
+                projectQueryExtension: p => p.Include(p => p.Supervisions)
+                                                .ThenInclude(ps => ps.Supervisor)
+                                             .Include(p => p.Supervisions)
+                                                .ThenInclude(ps => ps.Student)
+        );
 
         ProjectTask newTask;
         using (var transaction = await dbContext.Database.BeginTransactionAsync())
@@ -137,10 +145,16 @@ public class ProjectTaskService
                 dbContext.Tasks.Add(newTask);
                 await dbContext.SaveChangesAsync();
 
-                await reminderService.CreateTaskReminder(
-                    project.Supervisor!, project.Student!, newTask);
-                mailService.CreateAndEnqueueTaskMail(
-                    project.Supervisor!, project.Student!, newTask, MailType.TASK_ASSIGNED);
+                foreach (var supervisionEntry in project.Supervisions)
+                {
+                    await reminderService.CreateTaskReminder(
+                        supervisionEntry.Supervisor!, supervisionEntry.Student!, newTask);
+                }
+                foreach (var supervisionEntry in project.Supervisions)
+                {
+                    mailService.CreateAndEnqueueTaskMail(
+                        supervisionEntry.Supervisor!, supervisionEntry.Student!, newTask, MailType.TASK_ASSIGNED);
+                }
 
                 await transaction.CommitAsync();
             }
@@ -167,8 +181,10 @@ public class ProjectTaskService
             userID,
             projectID,
             selector: p => p,
-            queryExtension: p => p.Include(p => p.Student)
-                                  .Include(p => p.Supervisor)
+            projectQueryExtension: p => p.Include(p => p.Supervisions)
+                                            .ThenInclude(ps => ps.Supervisor)
+                                         .Include(p => p.Supervisions)
+                                            .ThenInclude(ps => ps.Supervisor)
         );
 
         var task = await GetProjectTask(
@@ -196,9 +212,12 @@ public class ProjectTaskService
 
             if (dueDateUpdated)
             {
-                await reminderService.UpdateTaskReminder(task);
-                mailService.CreateAndEnqueueTaskMail(
-                    project.Supervisor!, project.Student!, task, MailType.TASK_UPDATED);
+                await reminderService.UpdateTaskReminders(task);
+                foreach (var supervisionEntry in project.Supervisions)
+                {
+                    mailService.CreateAndEnqueueTaskMail(
+                        supervisionEntry.Supervisor!, supervisionEntry.Student!, task, MailType.TASK_UPDATED);
+                }
             }
 
             await transaction.CommitAsync();
@@ -217,8 +236,10 @@ public class ProjectTaskService
             userID,
             projectID,
             selector: p => p,
-            queryExtension: p => p.Include(p => p.Supervisor)
-                                  .Include(p => p.Student)
+            projectQueryExtension: p => p.Include(p => p.Supervisions)
+                                            .ThenInclude(ps => ps.Supervisor)
+                                         .Include(p => p.Supervisions)
+                                            .ThenInclude(ps => ps.Student)
         );
 
         var task = await GetProjectTask(
@@ -244,9 +265,11 @@ public class ProjectTaskService
                     await dbContext.Deliverables.Where(d => d.DeliverableID == stagedDeliverableID)
                                                 .ExecuteDeleteAsync();
                 }
-
-                mailService.CreateAndEnqueueTaskMail(
-                    project.Supervisor!, project.Student!, task, MailType.TASK_DELETED);
+                foreach (var supervisionEntry in project.Supervisions)
+                {
+                    mailService.CreateAndEnqueueTaskMail(
+                        supervisionEntry.Supervisor!, supervisionEntry.Student!, task, MailType.TASK_DELETED);
+                }
 
                 dbContext.Remove(task);
                 await dbContext.SaveChangesAsync();

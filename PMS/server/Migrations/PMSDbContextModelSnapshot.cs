@@ -137,6 +137,9 @@ namespace PMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("ProjectID"));
 
+                    b.Property<DateTime>("AssignedDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
@@ -144,21 +147,11 @@ namespace PMS.Migrations
                     b.Property<bool>("IsArchived")
                         .HasColumnType("boolean");
 
-                    b.Property<long>("StudentID")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("SupervisorID")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("ProjectID");
-
-                    b.HasIndex("StudentID");
-
-                    b.HasIndex("SupervisorID");
 
                     b.ToTable("Projects");
                 });
@@ -301,6 +294,26 @@ namespace PMS.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ProjectSupervision", b =>
+                {
+                    b.Property<long>("SupervisorID")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("StudentID")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("ProjectID")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("SupervisorID", "StudentID", "ProjectID");
+
+                    b.HasIndex("ProjectID");
+
+                    b.HasIndex("StudentID");
+
+                    b.ToTable("ProjectSupervision");
+                });
+
             modelBuilder.Entity("PMS.Models.Deliverable", b =>
                 {
                     b.HasOne("PMS.Models.User", "SubmittedBy")
@@ -356,25 +369,6 @@ namespace PMS.Migrations
                     b.Navigation("Organizer");
 
                     b.Navigation("Task");
-                });
-
-            modelBuilder.Entity("PMS.Models.Project", b =>
-                {
-                    b.HasOne("PMS.Models.User", "Student")
-                        .WithMany("ConductedProjects")
-                        .HasForeignKey("StudentID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PMS.Models.User", "Supervisor")
-                        .WithMany("SupervisedProjects")
-                        .HasForeignKey("SupervisorID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Student");
-
-                    b.Navigation("Supervisor");
                 });
 
             modelBuilder.Entity("PMS.Models.ProjectTask", b =>
@@ -433,8 +427,37 @@ namespace PMS.Migrations
                     b.Navigation("Task");
                 });
 
+            modelBuilder.Entity("ProjectSupervision", b =>
+                {
+                    b.HasOne("PMS.Models.Project", "Project")
+                        .WithMany("Supervisions")
+                        .HasForeignKey("ProjectID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PMS.Models.User", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PMS.Models.User", "Supervisor")
+                        .WithMany()
+                        .HasForeignKey("SupervisorID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("Student");
+
+                    b.Navigation("Supervisor");
+                });
+
             modelBuilder.Entity("PMS.Models.Project", b =>
                 {
+                    b.Navigation("Supervisions");
+
                     b.Navigation("Tasks");
                 });
 
@@ -455,15 +478,11 @@ namespace PMS.Migrations
 
                     b.Navigation("AttendedMeetings");
 
-                    b.Navigation("ConductedProjects");
-
                     b.Navigation("OrganizedMeetings");
 
                     b.Navigation("Reminders");
 
                     b.Navigation("SubmittedDeliverables");
-
-                    b.Navigation("SupervisedProjects");
                 });
 #pragma warning restore 612, 618
         }

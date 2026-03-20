@@ -85,7 +85,7 @@ export default function SchedulerRoute() {
           searchParams: { limit: 50, offset: 0 },
         })
         .json(),
-    select: (data) => data.items.filter((p: Project) => p.student != null),
+    select: (data) => data.items.filter((p: Project) => p.students[0] != null),
     retry: 1,
   });
 
@@ -131,7 +131,9 @@ export default function SchedulerRoute() {
 
   const handleProjectChange = (project: Project) => {
     const attendeeID =
-      user.role === "supervisor" ? project.student?.userID : project.supervisor?.userID;
+      user.role === "supervisor"
+        ? project.students[0]?.userID
+        : project.supervisors[0]?.userID;
 
     setMeetingFormData((prev) => ({
       ...prev,
@@ -252,9 +254,12 @@ export default function SchedulerRoute() {
 
   const isFormValid = meetingFormData.projectID !== 0 && meetingFormData.taskID !== 0;
 
-  const attendee = userProjects?.find((p) => p.projectID === meetingFormData.projectID)?.[
-    user.role === "supervisor" ? "student" : "supervisor"
-  ];
+  const selectedProject = userProjects?.find(
+    (p) => p.projectID === meetingFormData.projectID,
+  );
+  const projectAttendees = selectedProject?.students.concat(selectedProject.supervisors);
+  const attendee = projectAttendees?.find((u) => u.userID == meetingFormData.attendeeID);
+
   const selectableTasks =
     userProjects?.find((p) => p.projectID === meetingFormData.projectID)?.tasks || [];
 

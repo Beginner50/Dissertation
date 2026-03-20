@@ -136,19 +136,40 @@ public class UserService
 
     public async Task DeleteUser(long userID)
     {
-        var user = await GetUser(
-            userID,
-            selector: u => u,
-            queryExtension: u => u.Include(u => u.SupervisedProjects)
-                                  .Include(u => u.ConductedProjects)
-        );
+        using (var transaction = await dbContext.Database.BeginTransactionAsync())
+        {
+            try
+            {
 
-        user.IsDeleted = true;
-        foreach (var project in user.SupervisedProjects.Concat(user.ConductedProjects))
-            project.IsArchived = true;
+                var user = await GetUser(
+                    userID,
+                    selector: u => u
+                );
+                var userProjects = await dbContext.ProjectSupervision
+                                        .ContainsMember(user.UserID)
+                                        .Select(ps => ps.Project!)
+                                        .Distinct()
+                                        .ToListAsync();
+                var userMeetings = await dbContext.Meetings
+                                        .IsParticipant(user.UserID)
+                                        .ToListAsync();
 
-        await dbContext.SaveChangesAsync();
-        await Logout(user.UserID);
+                user.IsDeleted = true;
+                foreach (var project in userProjects)
+                    project.IsArchived = true;
+                dbContext.Meetings.RemoveRange(userMeetings);
+
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                await Logout(user.UserID);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 
     public async Task<GetUserAuth> Login(string email, string password)
