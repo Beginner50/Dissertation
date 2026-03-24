@@ -9,7 +9,13 @@ participant "ReportService" as RS
 
 User -> PS : GetProject(userID, projectID)
 activate PS
-    note right of PS : Fetch active project that contain\nuserID as a member
+    note right of PS
+         Fetch project assignment entries containing 
+         projectID and userID as any member
+    end note
+    note right of PS
+         Fetch distinct project from project assignment entries 
+    end note
     alt project == null
         PS --> User: throw UnauthorizedAccessException
     end
@@ -18,9 +24,12 @@ deactivate PS
 
 User -> PS : GetProjectsWithCount(userID, limit, offset)
 activate PS
-    note right of PS 
-        Fetch active project that contain
-        userID as a member
+    note right of PS
+         Fetch project assignment entries containing 
+         userID as any member
+    end note
+    note right of PS
+         Fetch distinct projects from project assignment entries 
     end note
     PS --> User : (Project[], totalCount)
 deactivate PS
@@ -43,10 +52,10 @@ deactivate RS
 
 Supervisor -> PS : EditProject(supervisorID, projectID, title, description)
 activate PS
-    PS -> PS : project := GetProject(projectID)
+    PS -> PS : project := GetProject(supervisorID, projectID)
     
     note right of PS
-        Ensure project.SupervisorID = userID
+        Ensure project.SupervisorID = supervisorID
     end note
     
     note right of PS : Update project details 
@@ -55,10 +64,10 @@ deactivate PS
 
 Supervisor -> PS : ArchiveProject(supervisorID, projectID)
 activate PS
-    PS -> PS : project := GetProject(userID, projectID)
+    PS -> PS : project := GetProject(supervisorID, projectID)
     
     note right of PS
-        Ensure project.SupervisorID = userID
+        Ensure project.SupervisorID = supervisorID
     end note
     
     PS -> PS : project.IsArchived := true

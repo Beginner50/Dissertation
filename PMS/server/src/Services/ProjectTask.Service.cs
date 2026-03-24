@@ -52,7 +52,7 @@ public class ProjectTaskService
         Expression<Func<ProjectTask, T>> selector,
         Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
         Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null,
-        Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null
+        Func<IQueryable<ProjectAssignment>, IQueryable<ProjectAssignment>>? projectSupervisionQueryExtension = null
     )
     {
         var project = await projectService.GetProject(
@@ -81,7 +81,7 @@ public class ProjectTaskService
             long limit = 5, long offset = 0,
             Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
             Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null,
-        Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null
+        Func<IQueryable<ProjectAssignment>, IQueryable<ProjectAssignment>>? projectSupervisionQueryExtension = null
         )
     {
         var project = await projectService.GetProject(
@@ -120,9 +120,9 @@ public class ProjectTaskService
                 userID,
                 projectID,
                 selector: p => p,
-                projectQueryExtension: p => p.Include(p => p.Supervisions)
+                projectQueryExtension: p => p.Include(p => p.Assignments)
                                                 .ThenInclude(ps => ps.Supervisor)
-                                             .Include(p => p.Supervisions)
+                                             .Include(p => p.Assignments)
                                                 .ThenInclude(ps => ps.Student)
         );
 
@@ -145,12 +145,12 @@ public class ProjectTaskService
                 dbContext.Tasks.Add(newTask);
                 await dbContext.SaveChangesAsync();
 
-                foreach (var supervisionEntry in project.Supervisions)
+                foreach (var supervisionEntry in project.Assignments)
                 {
                     await reminderService.CreateTaskReminder(
                         supervisionEntry.Supervisor!, supervisionEntry.Student!, newTask);
                 }
-                foreach (var supervisionEntry in project.Supervisions)
+                foreach (var supervisionEntry in project.Assignments)
                 {
                     mailService.CreateAndEnqueueTaskMail(
                         supervisionEntry.Supervisor!, supervisionEntry.Student!, newTask, MailType.TASK_ASSIGNED);
@@ -181,9 +181,9 @@ public class ProjectTaskService
             userID,
             projectID,
             selector: p => p,
-            projectQueryExtension: p => p.Include(p => p.Supervisions)
+            projectQueryExtension: p => p.Include(p => p.Assignments)
                                             .ThenInclude(ps => ps.Supervisor)
-                                         .Include(p => p.Supervisions)
+                                         .Include(p => p.Assignments)
                                             .ThenInclude(ps => ps.Supervisor)
         );
 
@@ -213,7 +213,7 @@ public class ProjectTaskService
             if (dueDateUpdated)
             {
                 await reminderService.UpdateTaskReminders(task);
-                foreach (var supervisionEntry in project.Supervisions)
+                foreach (var supervisionEntry in project.Assignments)
                 {
                     mailService.CreateAndEnqueueTaskMail(
                         supervisionEntry.Supervisor!, supervisionEntry.Student!, task, MailType.TASK_UPDATED);
@@ -236,9 +236,9 @@ public class ProjectTaskService
             userID,
             projectID,
             selector: p => p,
-            projectQueryExtension: p => p.Include(p => p.Supervisions)
+            projectQueryExtension: p => p.Include(p => p.Assignments)
                                             .ThenInclude(ps => ps.Supervisor)
-                                         .Include(p => p.Supervisions)
+                                         .Include(p => p.Assignments)
                                             .ThenInclude(ps => ps.Student)
         );
 
@@ -265,7 +265,7 @@ public class ProjectTaskService
                     await dbContext.Deliverables.Where(d => d.DeliverableID == stagedDeliverableID)
                                                 .ExecuteDeleteAsync();
                 }
-                foreach (var supervisionEntry in project.Supervisions)
+                foreach (var supervisionEntry in project.Assignments)
                 {
                     mailService.CreateAndEnqueueTaskMail(
                         supervisionEntry.Supervisor!, supervisionEntry.Student!, task, MailType.TASK_DELETED);

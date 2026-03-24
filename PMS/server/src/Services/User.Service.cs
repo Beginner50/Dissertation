@@ -145,7 +145,7 @@ public class UserService
                     userID,
                     selector: u => u
                 );
-                var userProjects = await dbContext.ProjectSupervision
+                var userProjects = await dbContext.ProjectAssignment
                                         .ContainsMember(user.UserID)
                                         .Select(ps => ps.Project!)
                                         .Distinct()

@@ -6,7 +6,6 @@ actor "User\n(Student/Supervisor)" as U
 actor Supervisor
 participant "ProjectTaskService" as PTS
 participant "ProjectService" as PS
-participant "NotificationService" as NS
 participant "ReminderService" as RS
 participant "MailService" as MS
 
@@ -35,7 +34,6 @@ activate PTS
     create participant "newTask : ProjectTask" as NT
     note right of PTS : **Transaction Start**
     PTS -> NT : new ProjectTask(title, dueDate, projectID)
-    PTS -> NS : CreateTaskNotification(project.Supervisor, project.Student, newTask)
     PTS -> RS : CreateTaskReminder(project.Supervisor, project.Student, newTask)
     PTS -> MS : CreateAndEnqueueTaskMail(project.Supervisor, project.Student, newTask)
     note right of PTS : **Transaction Commit**
@@ -50,7 +48,6 @@ activate PTS
     
     note right of PTS : **Transaction Start**
     note right of PTS : Update task details 
-    PTS -> NS : CreateTaskNotification(project.Supervisor, project.Student, task)
     alt newDueDate != task.DueDate
         PTS -> RS : UpdateTaskReminder(newTask)
         PTS -> MS : CreateAndEnqueueTaskMail(project.Supervisor, project.Student, newTask)
@@ -66,10 +63,11 @@ activate PTS
     PTS -> PTS : task := GetProjectTask(userID, projectID, taskID)
     
     note right of PTS : **Transaction Start**
-    PTS -> NS : CreateTaskNotification(project.Supervisor, project.Student, task)
+    create participant "newTask : ProjectTask" as NT
     PTS -> RS : DeleteTaskReminder(task)
     PTS -> MS : CreateAndEnqueueTaskMail(project.Supervisor, project.Student, task)
-    note right of PTS : Delete task
+    PTS -> NT : Delete Task
+    destroy NT
     note right of PTS : **Transaction Commit**
 
     PTS --> Supervisor : void

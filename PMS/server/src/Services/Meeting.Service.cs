@@ -56,7 +56,8 @@ public class MeetingService
     {
         var query = dbContext.Meetings.Where(m => m.MeetingID == meetingID);
 
-        query = queryExtension?.Invoke(query) ?? query;
+        if (queryExtension != null)
+            query = queryExtension(query);
 
         return await query.Select(selector)
                           .FirstOrDefaultAsync()
@@ -69,7 +70,7 @@ public class MeetingService
         Func<IQueryable<Meeting>, IQueryable<Meeting>>? queryExtension = null
     )
     {
-        var supervisorIDs = await dbContext.ProjectSupervision
+        var supervisorIDs = await dbContext.ProjectAssignment
                                         .ContainsMember(userID)
                                         .Where(ps => dbContext.Projects.Where(p => p.ProjectID == ps.ProjectID)
                                                                        .NotArchived()

@@ -36,12 +36,21 @@ Admin -> US : DeleteUser(userID)
 activate US
     US -> US : user := GetUser(userID)
     note right of US
-        Include supervised and conducted projects
+        **Transaction Start**
+    end note
+    note right of US
+        Get User Projects
     end note
     note right of US : Set user.isDeleted = true
-    loop for each project in (supervised + conducted)
+    loop for each project in projects 
         note right of US : Set project.isArchived = true
     end
+    note right of US
+        Delete User Meetings
+    end note
+    note right of US
+        **Transaction Commit**
+    end note
     US -> US : Logout(userID)
     US --> Admin : void
 deactivate US
@@ -50,11 +59,6 @@ Admin -> US : GetAllUsersWithCount(limit, offset)
 activate US
     note right of US: Filter out Admin users
     US --> Admin : (User[], count)
-deactivate US
-
-Admin -> US : GetUsersByIds(userIDs)
-activate US
-    US --> Admin : User[]
 deactivate US
 
 @enduml

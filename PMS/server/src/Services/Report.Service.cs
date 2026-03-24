@@ -94,14 +94,14 @@ public class ReportService
                     await dbContext.Projects.AddRangeAsync(newProjects);
                     await dbContext.SaveChangesAsync();
 
-                    var supervisions = projectsToCreate.Select(data => new ProjectSupervision
+                    var supervisions = projectsToCreate.Select(data => new ProjectAssignment
                     {
                         ProjectID = newProjects.First(p => p.Title == data.Title).ProjectID,
                         StudentID = emailUserIDMap[data.StudentEmail],
                         SupervisorID = emailUserIDMap[data.SupervisorEmail]
                     }).ToList();
 
-                    await dbContext.ProjectSupervision.AddRangeAsync(supervisions);
+                    await dbContext.ProjectAssignment.AddRangeAsync(supervisions);
                     await dbContext.SaveChangesAsync();
 
                     await transaction.CommitAsync();
@@ -138,14 +138,14 @@ public class ReportService
     */
     public async Task<FileDTO> GenerateProgressLogReport(long userID, long projectID)
     {
-        var project = await dbContext.ProjectSupervision
+        var project = await dbContext.ProjectAssignment
                                                     .AsSplitQuery()
                                                     .ContainsMember(userID)
                                                     .Select(ps => ps.Project!)
                                                     .Where(p => p.ProjectID == projectID)
-                                                    .Include(p => p.Supervisions)
+                                                    .Include(p => p.Assignments)
                                                         .ThenInclude(s => s.Student)
-                                                    .Include(p => p.Supervisions)
+                                                    .Include(p => p.Assignments)
                                                         .ThenInclude(s => s.Supervisor)
                                                     .Include(p => p.Tasks.OrderBy(t => t.AssignedDate))
                                                         .ThenInclude(t => t.Meetings)

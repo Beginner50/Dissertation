@@ -8,7 +8,6 @@ participant "AIComplianceService" as ACS
 participant "ProjectTaskService" as PTS
 participant "AIJobQueue" as Q
 participant "FeedbackService" as FS
-participant "NotificationService" as NS
 participant "MailService" as MS
 
 Student -> ACS : CreateAndEnqueueAIComplianceJob(userID, projectID, taskID)
@@ -65,7 +64,6 @@ loop while !cancellationToken.IsCancellationRequested
         
         note right of ACS : **Transaction Start**
         ACS -> FS : EditFeedbackCriteria(job.JobID, results)
-        ACS -> NS : CreateTaskNotification(task.Supervisor, task.Student, task)
         ACS -> MS : CreateAndEnqueueTaskMail(task.Supervisor, task.Student, task)
         
         alt success

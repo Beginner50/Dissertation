@@ -7,7 +7,6 @@ actor "User (Student/Supervisor)" as U
 participant "TaskDeliverableService" as TDS
 participant "ProjectTaskService" as PTS
 participant "ProjectService" as PS
-participant "NotificationService" as NS
 
 Student -> TDS : UploadDeliverable(userID, projectID, taskID, file)
 activate TDS
@@ -23,24 +22,31 @@ activate TDS
     TDS --> Student : Deliverable
 deactivate TDS
 
+Student -> TDS : RemoveStagedDeliverable(userID, projectID, taskID)
+activate TDS
+    TDS -> PTS : task := GetProjectTask\n(userID, projectID, taskID)
+    
+    create participant "d : Deliverable" as D
+    note right of TDS : task.StagedDeliverableID := null
+    TDS ->  D: Delete Deliverable
+    destroy D
+        
+    TDS --> Student : void
+deactivate TDS
+
 Student -> TDS : SubmitStagedDeliverable(userID, projectID, taskID)
 activate TDS
     TDS -> PS : project := GetProject(userID, projectID)
     TDS -> PTS : task := GetProjectTask\n(userID, projectID, taskID)
     
-    alt task.IsLocked
-        TDS --> Student : throw InvalidOperationException
-    else task.StagedDeliverableID == null
-        TDS --> Student : throw InvalidOperationException
-    else feedback criteria not met
-        TDS --> Student : throw InvalidOperationException
+    alt task.IsLocked OR task.StagedDeliverable == null OR task.FeedbackCriteria Is Not Met
+        TDS --> Student : throw Exception
     else
         note right of TDS : **Transaction Start**
         note right of TDS : Remove Submitted Deliverable
         note right of TDS : task.SubmittedDeliverableID := task.StagedDeliverableID
         note right of TDS : task.StagedDeliverableID := null
         
-        TDS -> NS : CreateTaskNotification(supervisor, student, task)
         note right of TDS : **Transaction Commit**
         
         TDS --> Student : void
@@ -50,8 +56,7 @@ deactivate TDS
 U -> TDS : GetSubmittedDeliverable(userID, projectID, taskID)
 activate TDS
     note right of TDS
-        Verify user belongs to the project 
-        and fetch the submitted file
+        Ensure user is a member of the project 
     end note
     TDS --> U : Deliverable
 deactivate TDS
@@ -59,8 +64,7 @@ deactivate TDS
 Student -> TDS : GetStagedDeliverable(userID, projectID, taskID)
 activate TDS
     note right of TDS
-        Verify userID == project.StudentID
-        and fetch the staged file
+        Ensure user is the student member of the project
     end note
     TDS --> Student : Deliverable
 deactivate TDS

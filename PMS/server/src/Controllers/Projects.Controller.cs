@@ -24,14 +24,14 @@ public class ProjectsController : ControllerBase
         Title = p.Title,
         IsArchived = p.IsArchived,
         Description = p.Description,
-        Supervisors = p.Supervisions.Select(ps => new UserLookupDTO
+        Supervisors = p.Assignments.Select(ps => new UserLookupDTO
         {
             UserID = ps.SupervisorID,
             Name = ps.Supervisor.Name,
             Email = ps.Supervisor.Email,
             IsDeleted = ps.Supervisor.IsDeleted
         }),
-        Students = p.Supervisions.Select(ps => new UserLookupDTO
+        Students = p.Assignments.Select(ps => new UserLookupDTO
         {
             UserID = ps.StudentID,
             Name = ps.Student.Name,

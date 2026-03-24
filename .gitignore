@@ -1,3 +1,20 @@
+# --- .NET Server ---
+PMS/server/[Bb]in/
+PMS/server/[Oo]bj/
+*.user
+*.userosscache
+
+# --- Node.js (Client) ---
+PMS/client/node_modules/
+PMS/client/dist/
+
+# --- Testing (Playwright) ---
+# Your tree shows 'tests' is at the root level, next to 'PMS'
+tests/node_modules/
+tests/test-results/
+tests/playwright-report/
+
+# --- Environment & OS ---
 .env
 PMS/.env
-
+.DS_Store

@@ -5,18 +5,18 @@ skinparam SequenceMessageAlignment center
 actor User
 participant "MeetingService" as MS
 participant "ProjectTaskService" as PTS
-participant "NotificationService" as NS
 participant "ReminderService" as RS
 participant "MailService" as MLS
 
 User -> MS : GetSupervisorMeetings(userID)
 activate MS
-    MS -> PS : GetProjectsWithCount(userID)
-    note right of MS : Extract Supervisor from first project
-    
+    note right of MS
+      Fetch project assignment entries by userID
+    end note
+
     note right of MS
       Fetch all organized and
-      attended meetings
+      attended meetings of supervisor(s)
     end note
     
     MS --> User : Meeting[]
@@ -31,7 +31,6 @@ activate MS
     note right of MS : m.IsAccepted := false
     
     note right of MS : **Transaction Start**
-    MS -> NS : CreateMeetingNotification(m.Organizer, m.Attendee, m)
     MS -> RS : CreateMeetingReminders(m.Organizer, m.Attendee, m)
     MS -> MLS : CreateAndEnqueueMeetingMail(m.Organizer, m.Attendee, m)
     note right of MS : **Transaction Commit**
@@ -50,7 +49,6 @@ activate MS
     
     note right of MS : m.IsAccepted = true
     note right of MS : **Transaction Start**
-    MS -> NS : CreateMeetingNotification(m.Organizer, m.Attendee, m)
     MS -> MLS : CreateAndEnqueueMeetingMail(m.Organizer, m.Attendee, m)
     note right of MS : **Transaction Commit**
     
@@ -66,12 +64,13 @@ activate MS
         the meeting OrganizerID
     end note
     
+    create participant "m : Meeting" as M
     note right of MS : **Transaction Start**
-    MS -> NS : CreateMeetingNotification(m.Organizer, m.Attendee, m)
     MS -> RS : DeleteMeetingReminders(m)
     MS -> MLS : CreateAndEnqueueMeetingMail(m.Organizezr, m.Attendee, m)
+    MS -> M : Delete Meeting
+    destroy M
     
-    note right of MS : Delete meeting from system
     note right of MS : **Transaction Commit**
     
     MS --> User : void
@@ -86,12 +85,12 @@ activate MS
         the meeting AttendeeID
     end note
     
+    create participant "m : Meeting" as M
     note right of MS : **Transaction Start**
-    MS -> NS : CreateMeetingNotification(m.Organizer, m.Attendee, m)
     MS -> RS : DeleteMeetingReminders(m)
     MS -> MLS : CreateAndEnqueueMeetingMail(m.Organizer, m.Attendee, m)
-    
-    note right of MS : Delete meeting from system
+    MS -> M : Delete Meeting
+    destroy M
     note right of MS : **Transaction Commit**
     
     MS --> User : void

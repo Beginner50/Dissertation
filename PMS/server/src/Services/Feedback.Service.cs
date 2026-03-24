@@ -51,7 +51,7 @@ public class FeedbackService
         Func<IQueryable<FeedbackCriterion>, IQueryable<FeedbackCriterion>>? feedbackQueryExtension = null,
         Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
         Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null,
-        Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null
+        Func<IQueryable<ProjectAssignment>, IQueryable<ProjectAssignment>>? projectSupervisionQueryExtension = null
     )
     {
         var task = await projectTaskService.GetProjectTask(
@@ -81,7 +81,7 @@ public class FeedbackService
         Func<IQueryable<FeedbackCriterion>, IQueryable<FeedbackCriterion>>? feedbackQueryExtension = null,
         Func<IQueryable<ProjectTask>, IQueryable<ProjectTask>>? taskQueryExtension = null,
         Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null,
-        Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null
+        Func<IQueryable<ProjectAssignment>, IQueryable<ProjectAssignment>>? projectSupervisionQueryExtension = null
     )
     {
         var task = await projectTaskService.GetProjectTask(

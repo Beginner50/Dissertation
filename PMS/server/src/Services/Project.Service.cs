@@ -20,17 +20,17 @@ public static class ProjectQueryExtensions
 
 public static class ProjectSupervisionQueryExtensions
 {
-    public static IQueryable<ProjectSupervision> ContainsMember(this IQueryable<ProjectSupervision> query, long userID)
+    public static IQueryable<ProjectAssignment> ContainsMember(this IQueryable<ProjectAssignment> query, long userID)
     {
         return query.Where(ps => ps.StudentID == userID || ps.SupervisorID == userID);
     }
 
-    public static IQueryable<ProjectSupervision> ContainsSupervisor(this IQueryable<ProjectSupervision> query, long userID)
+    public static IQueryable<ProjectAssignment> ContainsSupervisor(this IQueryable<ProjectAssignment> query, long userID)
     {
         return query.Where(ps => ps.SupervisorID == userID);
     }
 
-    public static IQueryable<ProjectSupervision> ContainsStudent(this IQueryable<ProjectSupervision> query, long userID)
+    public static IQueryable<ProjectAssignment> ContainsStudent(this IQueryable<ProjectAssignment> query, long userID)
     {
         return query.Where(ps => ps.StudentID == userID);
     }
@@ -72,10 +72,10 @@ public class ProjectService
         long projectID,
         Expression<Func<Project, T>> selector,
         Func<IQueryable<Project>, IQueryable<Project>>? projectQueryExtension = null,
-        Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null
+        Func<IQueryable<ProjectAssignment>, IQueryable<ProjectAssignment>>? projectSupervisionQueryExtension = null
       )
     {
-        IQueryable<ProjectSupervision> projectSupervisionQuery = dbContext.ProjectSupervision
+        IQueryable<ProjectAssignment> projectSupervisionQuery = dbContext.ProjectAssignment
                                                     .Where(ps => ps.ProjectID == projectID)
                                                     .ContainsMember(userID);
         if (projectSupervisionQueryExtension != null)
@@ -96,13 +96,13 @@ public class ProjectService
     public async Task<(IEnumerable<T> items, long totalCount)>
         GetProjectsWithCount<T>(
             Expression<Func<Project, T>> selector,
-            Func<IQueryable<ProjectSupervision>, IQueryable<ProjectSupervision>>? projectSupervisionQueryExtension = null,
+            Func<IQueryable<ProjectAssignment>, IQueryable<ProjectAssignment>>? projectSupervisionQueryExtension = null,
             Func<IQueryable<Project>, IQueryable<Project>>? projectsQueryExtension = null,
             long limit = 5,
             long offset = 0
         )
     {
-        IQueryable<ProjectSupervision> projectSupervisionQuery = dbContext.ProjectSupervision;
+        IQueryable<ProjectAssignment> projectSupervisionQuery = dbContext.ProjectAssignment;
         if (projectSupervisionQueryExtension != null)
             projectSupervisionQuery = projectSupervisionQueryExtension(projectSupervisionQuery);
 
@@ -131,7 +131,7 @@ public class ProjectService
             long offset = 0
         )
     {
-        IQueryable<Project> projectsQuery = dbContext.ProjectSupervision
+        IQueryable<Project> projectsQuery = dbContext.ProjectAssignment
                                               .ContainsMember(userID)
                                               .Select(ps => ps.Project!)
                                               .NotArchived()
@@ -187,13 +187,13 @@ public class ProjectService
                 dbContext.Projects.Add(newProject);
                 await dbContext.SaveChangesAsync();
 
-                var newProjectSupervisionEntry = new ProjectSupervision
+                var newProjectSupervisionEntry = new ProjectAssignment
                 {
                     SupervisorID = supervisorID,
                     StudentID = studentID,
                     ProjectID = newProject.ProjectID
                 };
-                dbContext.ProjectSupervision.Add(newProjectSupervisionEntry);
+                dbContext.ProjectAssignment.Add(newProjectSupervisionEntry);
                 await dbContext.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -240,7 +240,7 @@ public class ProjectService
     )
     {
         var project = await GetProject(
-            projectID, selector: p => p, projectQueryExtension: q => q.Include(p => p.Supervisions)
+            projectID, selector: p => p, projectQueryExtension: q => q.Include(p => p.Assignments)
         );
 
         project.Title = title ?? project.Title;
@@ -249,19 +249,19 @@ public class ProjectService
 
         if (supervisorID != null && studentID != null)
         {
-            var projectSupervisionEntry = await dbContext.ProjectSupervision
+            var projectSupervisionEntry = await dbContext.ProjectAssignment
                                                 .Where(ps => ps.ProjectID == projectID)
                                                 .FirstOrDefaultAsync()
                                                 ?? throw new Exception("Project Supervision Entry Not Found!");
             dbContext.Remove(projectSupervisionEntry);
 
-            var newEntry = new ProjectSupervision
+            var newEntry = new ProjectAssignment
             {
                 SupervisorID = (long)supervisorID,
                 StudentID = (long)studentID,
                 ProjectID = projectID
             };
-            dbContext.ProjectSupervision.Add(newEntry);
+            dbContext.ProjectAssignment.Add(newEntry);
         }
 
         await dbContext.SaveChangesAsync();
@@ -307,13 +307,13 @@ public class ProjectService
         var project = await GetProject(
             projectID,
             selector: p => p,
-            projectQueryExtension: p => p.Include(p => p.Supervisions)
+            projectQueryExtension: p => p.Include(p => p.Assignments)
                                     .ThenInclude(ps => ps.Student)
-                                  .Include(p => p.Supervisions)
+                                  .Include(p => p.Assignments)
                                     .ThenInclude(ps => ps.Supervisor)
         ) ?? throw new Exception("Project Not Found!");
 
-        bool containsDeletedUser = project.Supervisions.Any(ps => ps.Student!.IsDeleted
+        bool containsDeletedUser = project.Assignments.Any(ps => ps.Student!.IsDeleted
                                                             || ps.Supervisor!.IsDeleted);
         if (containsDeletedUser)
             throw new UnauthorizedAccessException("Cannot Restore Project With Deleted Users!");

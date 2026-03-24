@@ -196,16 +196,16 @@ public class AIComplianceService
                         job.JobID,
                         selector: t => t,
                         taskQueryExtension: q => q.Include(t => t.Project!)
-                                                    .ThenInclude(p => p.Supervisions)
+                                                    .ThenInclude(p => p.Assignments)
                                                         .ThenInclude(ps => ps.Supervisor)
                                                   .Include(t => t.Project!)
-                                                    .ThenInclude(p => p.Supervisions)
+                                                    .ThenInclude(p => p.Assignments)
                                                         .ThenInclude(ps => ps.Supervisor)
 
                     );
 
         await feedbackService.EditFeedbackCriteria(job.JobID, updatedFeedbackCriteria);
-        foreach (var supervisionEntry in task.Project!.Supervisions)
+        foreach (var supervisionEntry in task.Project!.Assignments)
         {
             mailService.CreateAndEnqueueTaskMail(
                                 supervisor: supervisionEntry.Supervisor!,
