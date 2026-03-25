@@ -86,8 +86,8 @@ Note:
 */
 var allowedOrigins = new List<string> {
      "http://localhost:3000",
-     "https://localhost:80",
-     "https://website.com"
+     "http://localhost:8080",
+     "http://204.168.201.226"
 };
 builder.Services.AddCors(options =>
 {
@@ -313,8 +313,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    // HTTPs disabled for now
-    // app.UseHttpsRedirection();
+    app.UseHttpsRedirection();
 }
 
 app.MapControllers();
