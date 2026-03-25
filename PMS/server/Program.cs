@@ -87,7 +87,9 @@ Note:
 var allowedOrigins = new List<string> {
      "http://localhost:3000",
      "http://localhost:8080",
-     "http://204.168.201.226"
+     "http://204.168.201.226",
+     "http://fypms.online",
+     "https://www.fypms.online"
 };
 builder.Services.AddCors(options =>
 {
