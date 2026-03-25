@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Mail;
 using System.Threading.Channels;
 using PMS.Models;
-using UglyToad.PdfPig.Logging;
 
 namespace PMS.Services;
 

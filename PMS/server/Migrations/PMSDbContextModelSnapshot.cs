@@ -294,7 +294,7 @@ namespace PMS.Migrations
                         });
                 });
 
-            modelBuilder.Entity("ProjectSupervision", b =>
+            modelBuilder.Entity("ProjectAssignment", b =>
                 {
                     b.Property<long>("SupervisorID")
                         .HasColumnType("bigint");
@@ -311,7 +311,7 @@ namespace PMS.Migrations
 
                     b.HasIndex("StudentID");
 
-                    b.ToTable("ProjectSupervision");
+                    b.ToTable("ProjectAssignment");
                 });
 
             modelBuilder.Entity("PMS.Models.Deliverable", b =>
@@ -427,10 +427,10 @@ namespace PMS.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("ProjectSupervision", b =>
+            modelBuilder.Entity("ProjectAssignment", b =>
                 {
                     b.HasOne("PMS.Models.Project", "Project")
-                        .WithMany("Supervisions")
+                        .WithMany("Assignments")
                         .HasForeignKey("ProjectID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -456,7 +456,7 @@ namespace PMS.Migrations
 
             modelBuilder.Entity("PMS.Models.Project", b =>
                 {
-                    b.Navigation("Supervisions");
+                    b.Navigation("Assignments");
 
                     b.Navigation("Tasks");
                 });
