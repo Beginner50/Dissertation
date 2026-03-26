@@ -197,7 +197,7 @@ public class AIComplianceService
                         selector: t => t,
                         taskQueryExtension: q => q.Include(t => t.Project!)
                                                     .ThenInclude(p => p.Assignments)
-                                                        .ThenInclude(ps => ps.Supervisor)
+                                                        .ThenInclude(ps => ps.Student)
                                                   .Include(t => t.Project!)
                                                     .ThenInclude(p => p.Assignments)
                                                         .ThenInclude(ps => ps.Supervisor)
