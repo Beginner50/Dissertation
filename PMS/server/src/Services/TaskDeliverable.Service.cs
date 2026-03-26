@@ -73,7 +73,7 @@ public class TaskDeliverableService
 
         IQueryable<Deliverable> deliverableQuery = dbContext.Tasks
                     .Where(t => t.ProjectTaskID == taskID)
-                    .Select(t => t.StagedDeliverable!);
+                    .Select(t => t.SubmittedDeliverable!);
         if (deliverableQueryExtension != null)
             deliverableQuery = deliverableQueryExtension(deliverableQuery);
 
