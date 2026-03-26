@@ -27,21 +27,18 @@ public static class MeetingQueryExtensions
 public class MeetingService
 {
     private readonly PMSDbContext dbContext;
-    private readonly ProjectService projectService;
     private readonly ProjectTaskService projectTaskService;
     private readonly MailService mailService;
     private readonly ReminderService reminderService;
     private readonly ILogger<MeetingService> logger;
     public MeetingService(
         PMSDbContext dbContext,
-        ProjectService projectService,
         ProjectTaskService projectTaskService,
         MailService mailService,
         ReminderService reminderService,
         ILogger<MeetingService> logger)
     {
         this.dbContext = dbContext;
-        this.projectService = projectService;
         this.projectTaskService = projectTaskService;
         this.mailService = mailService;
         this.reminderService = reminderService;
@@ -72,9 +69,10 @@ public class MeetingService
     {
         var supervisorIDs = await dbContext.ProjectAssignment
                                         .ContainsMember(userID)
-                                        .Where(ps => dbContext.Projects.Where(p => p.ProjectID == ps.ProjectID)
-                                                                       .NotArchived()
-                                                                       .Any())
+                                        .Join(dbContext.Projects.NotArchived(),
+                                               ps => ps.ProjectID,
+                                               p => p.ProjectID,
+                                               (ps, p) => ps)
                                         .Select(ps => ps.Supervisor!)
                                         .Select(u => u.UserID)
                                         .ToListAsync();

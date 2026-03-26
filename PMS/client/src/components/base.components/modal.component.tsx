@@ -1,6 +1,10 @@
 import type { Theme } from "@emotion/react";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { DateTimePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import {
+  DateTimePicker,
+  LocalizationProvider,
+  MobileDateTimePicker,
+} from "@mui/x-date-pickers";
 import {
   Alert,
   Button,
@@ -127,7 +131,7 @@ Modal.DateTimePicker = ({
 }) => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <DateTimePicker
+      <MobileDateTimePicker
         label={label}
         value={value}
         onChange={handleValueChange}
@@ -139,6 +143,11 @@ Modal.DateTimePicker = ({
             fullWidth: true,
             inputProps: {
               "data-testid": "datetime_picker",
+            },
+          },
+          dialog: {
+            sx: {
+              zIndex: 9999,
             },
           },
         }}
