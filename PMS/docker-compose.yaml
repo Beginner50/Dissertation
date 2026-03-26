@@ -27,6 +27,7 @@ services:
       - POSTGRES_DB=pms
       - POSTGRES_HOST=postgres
       - ASPNETCORE_URLS=http://+:5081
+      - DISABLE_MAIL=true
     depends_on:
       postgres:
         condition: service_healthy
