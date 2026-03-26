@@ -138,19 +138,18 @@ public class ReportService
     */
     public async Task<FileDTO> GenerateProgressLogReport(long userID, long projectID)
     {
-        var project = await dbContext.ProjectAssignment
-                                                    .AsSplitQuery()
-                                                    .ContainsMember(userID)
-                                                    .Select(ps => ps.Project!)
-                                                    .Where(p => p.ProjectID == projectID)
-                                                    .Include(p => p.Assignments)
-                                                        .ThenInclude(s => s.Student)
-                                                    .Include(p => p.Assignments)
-                                                        .ThenInclude(s => s.Supervisor)
-                                                    .Include(p => p.Tasks.OrderBy(t => t.AssignedDate))
-                                                        .ThenInclude(t => t.Meetings)
-                                                    .FirstOrDefaultAsync()
-                                        ?? throw new Exception("Project Not Found!");
+        var project = await dbContext.Projects
+                .AsSplitQuery()
+                .Where(p => p.ProjectID == projectID)
+                .Where(p => p.Assignments.Any(a => a.StudentID == userID || a.SupervisorID == userID))
+                .Include(p => p.Assignments)
+                    .ThenInclude(s => s.Student)
+                .Include(p => p.Assignments)
+                    .ThenInclude(s => s.Supervisor)
+                .Include(p => p.Tasks.OrderBy(t => t.AssignedDate))
+                    .ThenInclude(t => t.Meetings)
+                .FirstOrDefaultAsync()
+                ?? throw new Exception("Project Not Found or Access Denied!");
 
         if (project.Tasks.Count == 0)
             throw new UnauthorizedAccessException("Tasks Not Found!");

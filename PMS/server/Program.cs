@@ -10,6 +10,9 @@ using Google.GenAI;
 using PMS.Lib;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
+using QuestPDF.Infrastructure;
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 /*
     The .NET Core web application (generic host) lifecycle can be broadly divided into 

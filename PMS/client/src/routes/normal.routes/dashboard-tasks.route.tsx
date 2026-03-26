@@ -228,19 +228,8 @@ export default function DashboardTasksRoute() {
       const response = await authorizedAPI.get(
         `api/users/${user.userID}/projects/${projectID}/progress-log`,
       );
-
-      const contentDisposition = response.headers.get("content-disposition");
-      const filename = (() => {
-        if (contentDisposition) {
-          const match = contentDisposition.match(/filename="?([^";]+)"/);
-          if (match && match[1]) return match[1];
-        }
-        return "progress_log.pdf";
-      })();
-
       const blob = await response.blob();
-      const file = new File([blob], filename, { type: blob.type });
-      const fileURL = window.URL.createObjectURL(file);
+      const fileURL = window.URL.createObjectURL(blob);
 
       window.open(fileURL, "_blank", "noopener,noreferrer");
 
@@ -249,6 +238,7 @@ export default function DashboardTasksRoute() {
       }, 1000 * 30);
     } catch (error) {
       console.error("Could not generate progress log report!");
+      setErrorMessage("Failed to generate progress log report!");
     }
   };
 
