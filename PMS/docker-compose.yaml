@@ -28,6 +28,7 @@ services:
       - POSTGRES_HOST=postgres
       - ASPNETCORE_URLS=http://+:5081
       - REDIS_CONNECTION=redis:6379
+      - DISABLE_MAIL=true
     depends_on:
       postgres:
         condition: service_healthy
