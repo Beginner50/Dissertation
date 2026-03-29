@@ -136,7 +136,6 @@ export default function Scheduler({
         initialView="timeGridWeek"
 	unselectAuto={false}
         height={"100%"}
-        unselectAuto={false}
         slotMinTime={"08:00:00"}
         slotMaxTime={"21:00:00"}
         slotDuration={"01:00:00"}
