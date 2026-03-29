@@ -134,6 +134,7 @@ export default function Scheduler({
       <FullCalendar
         plugins={[timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
+	unselectAuto={false}
         height={"100%"}
         unselectAuto={false}
         slotMinTime={"08:00:00"}
