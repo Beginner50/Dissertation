@@ -207,8 +207,6 @@ export default function TaskRoute() {
   const handleFileUpload = async (file: File) => {
     const formData = new FormData();
 
-    // The key "file" must match the parameter name in your .NET Controller
-    // e.g., [FromForm] IFormFile file
     formData.append("file", file);
     formData.append("filename", file.name);
     formData.append("contentType", file.type);
@@ -488,17 +486,15 @@ export default function TaskRoute() {
                 onLockTaskClick={handleLockTask}
               />
             )}
-            {user.role == "student" && (
-              <TaskActions.CheckComplianceButton
-                disabled={
-                  isPolling ||
-                  !stagedDeliverable ||
-                  task?.feedbackCriterias?.filter((c) => c.status == "unmet").length == 0
-                }
-                onClick={handleCheckFeedbackCompliance}
-                isLoading={mutation.status == "pending" || isPolling}
-              />
-            )}
+            <TaskActions.CheckComplianceButton
+              disabled={
+                isPolling ||
+                !stagedDeliverable ||
+                task?.feedbackCriterias?.filter((c) => c.status == "unmet").length == 0
+              }
+              onClick={handleCheckFeedbackCompliance}
+              isLoading={mutation.status == "pending" || isPolling}
+            />
             {user.role == "student" && (
               <TaskActions.SubmitDeliverableButton
                 disabled={

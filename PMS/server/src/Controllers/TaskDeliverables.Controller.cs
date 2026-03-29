@@ -129,10 +129,10 @@ public class TaskDeliverablesController : ControllerBase
         [FromRoute] long userID,
         [FromRoute] long projectID,
         [FromRoute] long taskID,
-        [FromForm] IFormFile formFile
+        [FromForm] IFormFile file
     )
     {
-        using var stream = formFile.OpenReadStream();
+        using var stream = file.OpenReadStream();
 
         try
         {
@@ -140,9 +140,9 @@ public class TaskDeliverablesController : ControllerBase
                 userID,
                 projectID,
                 taskID,
-                filename: formFile.FileName,
+                filename: file.FileName,
                 fileStream: stream,
-                contentType: formFile.ContentType
+                contentType: file.ContentType
             );
             return NoContent();
         }
