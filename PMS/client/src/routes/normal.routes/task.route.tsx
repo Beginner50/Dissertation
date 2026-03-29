@@ -61,8 +61,14 @@ export default function TaskRoute() {
     }) =>
       await authorizedAPI(url, {
         method: method,
-        json: data,
-        timeout: timeout ?? 1000 * 10,
+        [data instanceof FormData ? "body" : "json"]: data,
+        timeout: timeout ?? 1000 * 60,
+        headers:
+          data instanceof FormData
+            ? {
+                "Content-Type": undefined,
+              }
+            : {},
       }),
     onSuccess: (_data, variables) =>
       variables.invalidateQueryKeys.forEach((key) =>
