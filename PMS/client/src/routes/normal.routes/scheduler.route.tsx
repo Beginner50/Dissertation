@@ -37,6 +37,13 @@ export default function SchedulerRoute() {
     projectID: 0,
     taskID: 0,
   });
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [tempDescription, setTempDescription] = useState("");
+
+  useEffect(() => {
+    setIsEditingDescription(false);
+    setTempDescription(selectedMeeting?.description ?? "");
+  }, [selectedMeeting?.description]);
 
   /* ---------------------------------------------------------------------------------- */
 
@@ -252,7 +259,10 @@ export default function SchedulerRoute() {
 
   /* ---------------------------------------------------------------------------------- */
 
-  const isFormValid = meetingFormData.projectID !== 0 && meetingFormData.taskID !== 0;
+  const isFormValid =
+    meetingFormData.projectID !== 0 &&
+    meetingFormData.taskID !== 0 &&
+    meetingFormData.start >= new Date(Date.now());
 
   const selectedProject = userProjects?.find(
     (p) => p.projectID === meetingFormData.projectID,
@@ -368,7 +378,18 @@ export default function SchedulerRoute() {
                 selectedMeeting.organizer.userID == user.userID ||
                 selectedMeeting.attendee.userID == user.userID
               }
-              handleUpdateDescription={handleUpdateDescription}
+              isEditing={isEditingDescription}
+              tempDescription={tempDescription}
+              onEditStart={() => setIsEditingDescription(true)}
+              onTempDescriptionChange={setTempDescription}
+              onCancelEdit={() => {
+                setTempDescription(selectedMeeting.description);
+                setIsEditingDescription(false);
+              }}
+              onSave={() => {
+                handleUpdateDescription(tempDescription);
+                setIsEditingDescription(false);
+              }}
             />
 
             {selectedMeeting.status === "pending" && (

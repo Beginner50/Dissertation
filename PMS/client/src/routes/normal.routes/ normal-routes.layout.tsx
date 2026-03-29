@@ -26,14 +26,14 @@ export default function NormalRoutesLayout() {
 
   const [errorMessage, setErrorMessage] = useState("");
 
-  if (!authState.isAuthenticated) return <Navigate to={"/sign-in"} />;
-
   const { data: project } = useQuery({
     queryKey: ["projects", projectID],
     queryFn: async (): Promise<Project> =>
       await authorizedAPI.get(`api/users/${user.userID}/projects/${projectID}`).json(),
-    enabled: !!projectID && !!user,
+    enabled: authState.isAuthenticated && !!projectID && !!user,
   });
+
+  if (!authState.isAuthenticated) return <Navigate to={"/sign-in"} />;
 
   const currentTaskTitle = project?.tasks?.find(
     (t) => t.taskID.toString() === taskID,

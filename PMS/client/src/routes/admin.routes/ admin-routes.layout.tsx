@@ -10,11 +10,10 @@ export default function AdminRoutesLayout() {
   const {
     authState: { isAuthenticated },
   } = useAuth();
-
-  if (!isAuthenticated) return <Navigate to={"/sign-in"} />;
-
   const [searchParams] = useSearchParams();
   const [errorMessage, setErrorMessage] = useState("");
+
+  if (!isAuthenticated) return <Navigate to={"/sign-in"} />;
 
   return (
     <Box

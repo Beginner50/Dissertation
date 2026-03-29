@@ -76,6 +76,7 @@ public class MeetingService
                                         .Select(ps => ps.Supervisor!)
                                         .Select(u => u.UserID)
                                         .ToListAsync();
+        logger.LogDebug("{supervisorIDs}", JsonSerializer.Serialize(supervisorIDs));
 
         var meetingsQuery = dbContext.Meetings.Where(
             m => supervisorIDs.Contains(m.OrganizerID) || supervisorIDs.Contains(m.AttendeeID)
@@ -92,6 +93,9 @@ public class MeetingService
         long attendeeID, string? description, DateTime start, DateTime end
     )
     {
+        if (end < start || start < DateTime.UtcNow)
+            throw new Exception("Invalid Appointment Time!");
+
         var task = await projectTaskService.GetProjectTask(
             organizerID,
             projectID,

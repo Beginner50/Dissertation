@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Edit, Save, Close, Info } from "@mui/icons-material";
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { Meeting } from "../../lib/types";
 
 export function MeetingDetails({ children }: { children: ReactNode }) {
@@ -55,72 +55,68 @@ MeetingDetails.Status = ({ status }: { status: Meeting["status"] }) => (
 MeetingDetails.Description = ({
   description,
   isMeetingParticipant,
-  handleUpdateDescription,
+  isEditing,
+  tempDescription,
+  onEditStart,
+  onCancelEdit,
+  onSave,
+  onTempDescriptionChange,
 }: {
   description: string;
   isMeetingParticipant: boolean;
-  handleUpdateDescription: (description: string) => void;
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempDescription, setTempDescription] = useState(description);
-
-  useEffect(() => {
-    setTempDescription(description);
-  }, [description]);
-
-  const handleSave = () => {
-    handleUpdateDescription(tempDescription);
-    setIsEditing(false);
-  };
-
-  return (
-    <Box sx={{ mt: 2 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
-          Description
-        </Typography>
-        {!isEditing && isMeetingParticipant && (
-          <IconButton size="small" onClick={() => setIsEditing(true)}>
-            <Edit fontSize="small" />
-          </IconButton>
-        )}
-      </Stack>
-
-      {isEditing ? (
-        <Stack spacing={1} sx={{ mt: 1 }}>
-          <TextField
-            fullWidth
-            multiline
-            rows={3}
-            size="small"
-            value={tempDescription}
-            onChange={(e) => setTempDescription(e.target.value)}
-          />
-          <Stack direction="row" spacing={1} justifyContent="flex-end">
-            <Button
-              size="small"
-              color="inherit"
-              onClick={() => setIsEditing(false)}
-              startIcon={<Close />}>
-              Cancel
-            </Button>
-            <Button
-              size="small"
-              variant="contained"
-              onClick={handleSave}
-              startIcon={<Save />}>
-              Save
-            </Button>
-          </Stack>
-        </Stack>
-      ) : (
-        <Typography
-          variant="body2"
-          color="textSecondary"
-          sx={{ mt: 0.5, fontStyle: description ? "normal" : "italic" }}>
-          {description || "No description provided."}
-        </Typography>
+  isEditing: boolean;
+  tempDescription: string;
+  onEditStart: () => void;
+  onCancelEdit: () => void;
+  onSave: () => void;
+  onTempDescriptionChange: (description: string) => void;
+}) => (
+  <Box sx={{ mt: 2 }}>
+    <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+        Description
+      </Typography>
+      {!isEditing && isMeetingParticipant && (
+        <IconButton size="small" onClick={onEditStart}>
+          <Edit fontSize="small" />
+        </IconButton>
       )}
-    </Box>
-  );
-};
+    </Stack>
+
+    {isEditing ? (
+      <Stack spacing={1} sx={{ mt: 1 }}>
+        <TextField
+          fullWidth
+          multiline
+          rows={3}
+          size="small"
+          value={tempDescription}
+          onChange={(e) => onTempDescriptionChange(e.target.value)}
+        />
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Button
+            size="small"
+            color="inherit"
+            onClick={onCancelEdit}
+            startIcon={<Close />}>
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={onSave}
+            startIcon={<Save />}>
+            Save
+          </Button>
+        </Stack>
+      </Stack>
+    ) : (
+      <Typography
+        variant="body2"
+        color="textSecondary"
+        sx={{ mt: 0.5, fontStyle: description ? "normal" : "italic" }}>
+        {description || "No description provided."}
+      </Typography>
+    )}
+  </Box>
+);

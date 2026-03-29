@@ -44,7 +44,7 @@ public class TokenService
 
     public (string accessToken, DateTime accessTokenExpiry) CreateAccessToken(long userId, string role)
     {
-        var expiry = DateTime.UtcNow.AddMinutes(5);
+        var expiry = DateTime.UtcNow.AddMinutes(1);
         return (GenerateToken(userId, role, expiry), expiry);
     }
 

@@ -122,14 +122,22 @@ public class UserService
                                         ?? throw new UnauthorizedAccessException("User Not Found!");
 
         user.Name = name ?? user.Name;
+
         if (email != null && email != user.Email)
         {
             var existingUser = await GetUserByEmail(email, selector: u => u);
             if (existingUser != null)
                 throw new UnauthorizedAccessException("Email Already In Use!");
+            user.Email = email ?? user.Email;
         }
-        user.Email = email ?? user.Email;
-        user.Role = role ?? user.Role;
+
+        if (role != null && role != user.Role)
+        {
+            var existingProjectAssignment = await dbContext.ProjectAssignment.ContainsMember(userID).AnyAsync();
+            if (existingProjectAssignment)
+                throw new Exception("Cannot Change Role: User Already Assigned To A Project!");
+            user.Role = role ?? user.Role;
+        }
 
         await dbContext.SaveChangesAsync();
     }
