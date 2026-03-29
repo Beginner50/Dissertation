@@ -86,8 +86,16 @@ public class TaskDeliverableService
     // Creates a new staged deliverable for the task 
     public async Task<Deliverable> UploadDeliverable(
     long userID, long projectID, long taskID,
-    byte[] fileData, string filename, string contentType)
+    Stream fileStream, string filename, string contentType)
     {
+        byte[] fileData;
+        using (var ms = new MemoryStream())
+        {
+            await fileStream.CopyToAsync(ms);
+            fileData = ms.ToArray();
+        }
+
+
         if (!Sanitization.IsValidPdf(fileData))
             throw new SecurityException("File Is Not A Valid PDF!");
 

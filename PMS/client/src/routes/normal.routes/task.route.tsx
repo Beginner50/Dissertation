@@ -204,28 +204,20 @@ export default function TaskRoute() {
     }
   };
 
-  /*
-    file.arrayBuffer() returns the file contents as an ArrayBuffer, which is simply
-    a fixed length binary data buffer that cannot be manipulated.
-
-    Thus, by constructing a UInt8Array from the buffer, the contents can be manipulated,
-    and in that case, converted to base64 format that can be processed by the server.
- */
   const handleFileUpload = async (file: File) => {
-    const fileBytes = new Uint8Array(await file.arrayBuffer());
-    const base64File = base64js.fromByteArray(fileBytes);
+    const formData = new FormData();
 
-    const deliverableFile: DeliverableFile = {
-      filename: file.name,
-      file: base64File,
-      contentType: file.type,
-    };
+    // The key "file" must match the parameter name in your .NET Controller
+    // e.g., [FromForm] IFormFile file
+    formData.append("file", file);
+    formData.append("filename", file.name);
+    formData.append("contentType", file.type);
 
     mutation.mutate(
       {
         method: "post",
         url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}/staged-deliverable`,
-        data: deliverableFile,
+        data: formData,
         invalidateQueryKeys: [[taskID, "deliverables", "staged"]],
       },
       {

@@ -129,18 +129,20 @@ public class TaskDeliverablesController : ControllerBase
         [FromRoute] long userID,
         [FromRoute] long projectID,
         [FromRoute] long taskID,
-        [FromBody] FileDTO taskDeliverableFileDTO
+        [FromForm] IFormFile formFile
     )
     {
+        using var stream = formFile.OpenReadStream();
+
         try
         {
             await taskDeliverableService.UploadDeliverable(
                 userID,
                 projectID,
                 taskID,
-                filename: taskDeliverableFileDTO.Filename,
-                fileData: taskDeliverableFileDTO.File,
-                contentType: taskDeliverableFileDTO.ContentType
+                filename: formFile.FileName,
+                fileStream: stream,
+                contentType: formFile.ContentType
             );
             return NoContent();
         }

@@ -337,12 +337,12 @@ export default function DashboardTasksRoute() {
               />
             )}
             <TaskModal.TextField
-              label={"title"}
+              label={"Title"}
               value={taskModalData.title ?? ""}
               handleValueChange={handleTitleChange}
             />
             <TaskModal.TextField
-              label={"description"}
+              label={"Description"}
               value={taskModalData.description ?? ""}
               handleValueChange={handleDescriptionChange}
             />

@@ -135,6 +135,7 @@ export default function Scheduler({
         plugins={[timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
         height={"100%"}
+        unselectAuto={false}
         slotMinTime={"08:00:00"}
         slotMaxTime={"21:00:00"}
         slotDuration={"01:00:00"}
