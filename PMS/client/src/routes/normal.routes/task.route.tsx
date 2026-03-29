@@ -353,8 +353,7 @@ export default function TaskRoute() {
         method: "put",
         url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskID}`,
         data: {
-          ...task,
-          dueDate: task?.dueDate.toISOString(),
+          taskID: taskID,
           isLocked: !task?.isLocked,
         },
         invalidateQueryKeys: [["tasks", taskID]],

@@ -295,6 +295,7 @@ export default function DashboardProjectsRoute() {
                 <ProjectModal.TextField
                   label="ProjectID"
                   value={projectModalData.projectID}
+                  disabled
                 />
               )}
               <ProjectModal.TextField

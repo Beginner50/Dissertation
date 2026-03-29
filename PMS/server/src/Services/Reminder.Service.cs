@@ -106,6 +106,19 @@ public class ReminderService
         await dbContext.SaveChangesAsync();
     }
 
+    public async Task DeleteTaskReminder(ProjectTask task)
+    {
+        var tasks = await dbContext.Reminders
+                        .Where(r => r.TaskID == task.ProjectTaskID)
+                        .ToListAsync();
+
+        if (tasks.Count > 0)
+        {
+            dbContext.Reminders.RemoveRange(tasks);
+            await dbContext.SaveChangesAsync();
+        }
+    }
+
     public async Task UpdateTaskReminders(ProjectTask task)
     {
         var reminders = await dbContext.Reminders.Where(r => r.TaskID == task.ProjectTaskID)

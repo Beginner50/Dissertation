@@ -11,16 +11,19 @@ public class TaskDeliverableService
 {
     private readonly PMSDbContext dbContext;
     private readonly ProjectTaskService projectTaskService;
+    private readonly ReminderService reminderService;
     private readonly ILogger<TaskDeliverableService> logger;
 
     public TaskDeliverableService(
         PMSDbContext dbContext,
         ProjectTaskService projectTaskService,
+        ReminderService reminderService,
         ILogger<TaskDeliverableService> logger
     )
     {
         this.dbContext = dbContext;
         this.projectTaskService = projectTaskService;
+        this.reminderService = reminderService;
         this.logger = logger;
     }
 
@@ -192,6 +195,8 @@ public class TaskDeliverableService
                     await dbContext.Deliverables
                              .Where(d => d.DeliverableID == previousSubmissionID)
                              .ExecuteDeleteAsync();
+
+                await reminderService.DeleteTaskReminder(task);
 
                 await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();

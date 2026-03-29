@@ -331,7 +331,7 @@ export default function DashboardTasksRoute() {
           <TaskModal.Fields>
             {taskModalState.mode == "edit" && (
               <TaskModal.TextField
-                label={"taskID"}
+                label={"TaskID"}
                 value={taskModalData.taskID}
                 disabled
               />

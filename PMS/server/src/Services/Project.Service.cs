@@ -230,7 +230,7 @@ public class ProjectService
             ?? throw new Exception($"Student {studentEmail} Not Found!");
 
         await EditProject(projectID, title, description,
-                          student?.UserID, supervisor?.UserID,
+                          supervisor?.UserID, student?.UserID,
                           isArchived);
     }
 

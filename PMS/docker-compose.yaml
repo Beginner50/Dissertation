@@ -31,6 +31,7 @@ services:
       - POSTGRES_DB=pms
       - POSTGRES_HOST=postgres
       - ASPNETCORE_URLS=http://+:5081 # Tell .NET Host to listen to all network interfaces (0.0.0.0) outside the container
+      - DISABLE_MAIL=true
     depends_on:
       postgres:
         condition: service_healthy
