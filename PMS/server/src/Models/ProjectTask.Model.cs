@@ -27,14 +27,6 @@ public class ProjectTask
     [ForeignKey("AssignedByID")]
     public User? AssignedBy { get; init; }
 
-
-    /*
-        The InverseProperty is explictly used to connect a Navigation property to its
-        inverse in another entity referencing User.
-
-        A Navigation Property does not actually exist in the database table
-    */
-
     [InverseProperty("Task")]
     public List<FeedbackCriterion> FeedbackCriterias { get; set; } = [];
 

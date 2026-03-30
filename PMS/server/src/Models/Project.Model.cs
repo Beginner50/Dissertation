@@ -10,7 +10,6 @@ public class Project
     public required bool IsArchived { get; set; }
     public DateTime AssignedDate { get; set; } = DateTime.UtcNow;
 
-
     /*
         The InverseProperty is explictly used to connect a Navigation property to its
         inverse in another entity referencing User.

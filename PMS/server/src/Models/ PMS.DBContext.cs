@@ -89,7 +89,6 @@ public class PMSDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         SeedAdminUser(modelBuilder);
-        // SeedData(modelBuilder);
     }
 
     protected void SeedAdminUser(ModelBuilder modelBuilder)
