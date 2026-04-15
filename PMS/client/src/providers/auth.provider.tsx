@@ -77,42 +77,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         default value. This will cause the layout component to re-render, which will
         subsequently redirect the user to the /sign-in route upon seeing isAuthenticated false
   */
-  const authorizedAPI = useMemo(
-    () =>
-      ky.extend({
-        prefixUrl: baseURL,
-        credentials: "include",
-        hooks: {
-          beforeRequest: [
-            (request) => {
-              if (authState.token)
-                request.headers.set("Authorization", `Bearer ${authState.token}`);
-            },
-          ],
-          beforeError: [
-            async (error) => {
-              if (error.response?.status === 401) {
-                try {
-                  const data = await performRefresh();
+  const authorizedAPI = useMemo(() => {
+    return ky.extend({
+      prefixUrl: baseURL,
+      credentials: "include",
+      hooks: {
+        beforeRequest: [
+          (request) => {
+            if (authState.token) {
+              request.headers.set("Authorization", `Bearer ${authState.token}`);
+            }
+          },
+        ],
+        afterResponse: [
+          async (request, options, response) => {
+            if (response.status === 401) {
+              try {
+                const data = await performRefresh();
 
-                  setAuthState((current) => ({
-                    ...current,
-                    token: data.token,
-                    isAuthenticated: true,
-                    tokenExpiry: data.tokenExpiry,
-                  }));
-                } catch (e) {
-                  await signOut();
-                }
+                setAuthState((current) => ({
+                  ...current,
+                  token: data.token,
+                  isAuthenticated: true,
+                  tokenExpiry: data.tokenExpiry,
+                }));
+
+                request.headers.set("Authorization", `Bearer ${data.token}`);
+                return ky(request, options);
+              } catch (error) {
+                await signOut();
+                throw error;
               }
-              return error;
-            },
-          ],
-        },
-        retry: { limit: 1 },
-      }),
-    [authState],
-  );
+            }
+          },
+        ],
+      },
+      retry: { limit: 1 },
+    });
+  }, [authState]);
 
   const signIn = useCallback(
     async (userData: Record<string, any>): Promise<AuthState> => {
