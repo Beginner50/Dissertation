@@ -1,0 +1,43 @@
+@startuml
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+actor "User / Services" as A
+actor MailWorker
+participant "MailService" as MS
+participant "MailQueue" as Q
+participant "SmtpClient" as SMTP
+
+A -> MS : CreateAndEnqueueTaskMail(supervisor, student, task, mailType)
+activate MS
+    note right of MS : Sanitize strings and \nswitch on MailType
+    create participant "mail : MimeMessage" as M
+    MS -> M : new MimeMessage()
+    MS -> Q : QueueMail(mail)
+    note left of Q : Add message to Channel
+    MS --> A : void
+deactivate MS
+
+|||
+
+loop while !stoppingToken.IsCancellationRequested
+    MailWorker -> MS : DequeueAndSendMail(stoppingToken)
+    activate MS
+        MS -> Q : mail := DequeueMail(stoppingToken)
+        activate Q
+            note left of Q : Wait until mail is available
+        deactivate Q
+        
+        create participant "client : SmtpClient" as SC
+        MS -> SC : new SmtpClient()
+        MS -> SC : ConnectAsync("smtp.gmail.com", 587)
+        MS -> SC : AuthenticateAsync(user, pass)
+        MS -> SC : SendAsync(mail)
+        MS -> SC : DisconnectAsync(true)
+        destroy SC
+        
+        MS --> MailWorker : void
+    deactivate MS
+end
+
+@enduml

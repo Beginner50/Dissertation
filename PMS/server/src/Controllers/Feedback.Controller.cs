@@ -156,9 +156,9 @@ public class FeedbackController : ControllerBase
     [HttpGet]
     [Route("api/users/{userID}/projects/{projectID}/tasks/{taskID}/feedback/compliance-status")]
     [Authorize(Policy = "Ownership")]
-    public IActionResult GetFeedbackComplianceStatus([FromRoute] long taskID)
+    public async Task<IActionResult> GetFeedbackComplianceStatus([FromRoute] long taskID)
     {
-        var status = AIComplianceService.PollAIComplianceJob(taskID);
+        var status = await AIComplianceService.PollAIComplianceJob(taskID);
 
         return Ok(new { status });
     }

@@ -11,7 +11,7 @@ services:
     volumes:
       - postgres-data-pms:/var/lib/postgresql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U root -d postgres" ]
+      test: ["CMD-SHELL", "pg_isready -U root -d postgres"]
       interval: 5s
       timeout: 2s
       retries: 20 # Arbitrary numbers for interval, timeout, retries
@@ -31,6 +31,7 @@ services:
       - POSTGRES_DB=pms
       - POSTGRES_HOST=postgres
       - ASPNETCORE_URLS=http://+:5081 # Tell .NET Host to listen to all network interfaces (0.0.0.0) outside the container
+      - REDIS_CONNECTION=redis:6379
       - DISABLE_MAIL=true
     depends_on:
       postgres:
@@ -43,7 +44,7 @@ services:
           initial_sync: true
     ports:
       - "5081:5081"
-    
+
   react:
     build:
       context: ./client
@@ -61,6 +62,11 @@ services:
     ports:
       - "3000:3000"
 
+  redis:
+    image: redis:latest
+    container_name: redis_pms
+    ports:
+      - "6379:6379"
+
 volumes:
   postgres-data-pms:
-

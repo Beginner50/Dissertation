@@ -5,58 +5,14 @@ using System.Threading.Channels;
 using Google.GenAI;
 using Google.GenAI.Types;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json.Linq;
 using PMS.DatabaseContext;
 using PMS.DTOs;
-using PMS.Models;
+using PMS.Lib;
 using Type = Google.GenAI.Types.Type;
 
 namespace PMS.Services;
-
-public class AIJobQueue
-{
-    private readonly Channel<AIJob> Queue;
-    private readonly ConcurrentDictionary<long, string> JobStatusMap;
-
-    public AIJobQueue()
-    {
-        Queue = Channel.CreateUnbounded<AIJob>();
-        JobStatusMap = new ConcurrentDictionary<long, string>();
-    }
-
-    public void QueueJob(AIJob job)
-    {
-        Queue.Writer.TryWrite(job);
-        JobStatusMap[job.JobID] = "queued";
-    }
-
-    public async Task<AIJob> DequeueJob(CancellationToken cancellationToken)
-    {
-        var AIJob = await Queue.Reader.ReadAsync(cancellationToken);
-        JobStatusMap[AIJob.JobID] = "processing";
-
-        return AIJob;
-    }
-    public void SetJobStatus(long jobID, string status)
-    {
-        JobStatusMap[jobID] = status;
-    }
-
-    public string GetJobStatus(long jobID)
-    {
-        if (JobStatusMap.TryGetValue(jobID, out var status))
-        {
-            return status;
-        }
-        return "unknown";
-    }
-
-    public void ClearMapEntry(long jobID)
-    {
-        JobStatusMap.Remove(jobID, out _);
-    }
-}
-
 
 public class AIComplianceService
 {
@@ -120,7 +76,7 @@ public class AIComplianceService
         catch (JsonException e)
         {
             logger.LogError(e, "Failed to deserialize AI response for Job {JobId}. Raw text: {RawText}", job.JobID, text);
-            throw;
+            return default;
         }
     }
 
@@ -151,11 +107,11 @@ public class AIComplianceService
             Parts = new List<Part> {
             new Part { Text = $"""
                 TASK CONTEXT: {task.Title} - {task.Description}
-                
+
                 OBJECTIVE:
-                Compare the 'New Deliverable' against the 'Previous Deliverable'. 
+                Compare the 'New Deliverable' against the 'Previous Deliverable'.
                 Determine if the following 'unmet' criteria have been addressed.
-                
+
                 CRITERIA:
                 {string.Join("\n", unmetFeedbackCriteria
                        .Select(c => $"FeedbackCriterionID:{c.FeedbackCriterionID} | Requirement: {c.Description}"))}
@@ -184,7 +140,7 @@ public class AIComplianceService
             Config = config
         };
 
-        AIProcessingQueue.QueueJob(job);
+        await AIProcessingQueue.QueueJob(job);
     }
 
     public async Task ExecuteAIComplianceJob(AIJob job)
@@ -215,14 +171,14 @@ public class AIComplianceService
                         );
         }
 
-        AIProcessingQueue.SetJobStatus(job.JobID, "completed");
+        await AIProcessingQueue.SetJobStatus(job.JobID, "completed");
     }
 
-    public string PollAIComplianceJob(long taskID)
+    public async Task<string> PollAIComplianceJob(long taskID)
     {
-        var status = AIProcessingQueue.GetJobStatus(taskID);
+        var status = await AIProcessingQueue.GetJobStatus(taskID);
         if (status == "completed" || status == "failed")
-            AIProcessingQueue.ClearMapEntry(taskID);
+            await AIProcessingQueue.DeleteJobStatusRecord(taskID);
 
         return status;
     }

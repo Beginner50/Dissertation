@@ -15,8 +15,6 @@ public class User
     public required string Password { get; set; }
     public required string Role { get; set; }
 
-    [Column(TypeName = "text")]
-    public string? RefreshToken { get; set; } = null;
     public bool IsDeleted { get; set; }
 
     /*

@@ -270,9 +270,6 @@ namespace PMS.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("text");
-
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("text");
@@ -289,7 +286,6 @@ namespace PMS.Migrations
                             IsDeleted = false,
                             Name = "Admin",
                             Password = "$2a$12$FkZUs6elcp0MMrmAVvZXaud.SkwEG0JSQo0eQueIKmP63bHvbrK1m",
-                            RefreshToken = "",
                             Role = "admin"
                         });
                 });

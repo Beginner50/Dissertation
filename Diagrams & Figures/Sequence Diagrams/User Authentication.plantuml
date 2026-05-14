@@ -1,0 +1,57 @@
+@startuml
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+actor User
+participant "UserService" as US
+participant "TokenService" as TS
+
+User -> US : Login(email, password)
+activate US
+    US -> US : user := GetUserByEmail(email)
+    
+    alt user != null && isPasswordVerified(password, user.Password)
+        US -> TS : CreateAccessToken(user.UserID, user.Role)
+        activate TS
+        TS --> US : accessToken : string
+        deactivate TS
+        
+        US -> TS : CreateRefreshToken(user.UserID, user.Role)
+        activate TS
+        TS --> US : refreshToken : string
+        deactivate TS
+        
+        note right of US : Set user.RefreshToken = refreshToken
+        
+        US --> User : GetUserAuth { user, accessToken, refreshToken }
+    else invalid credentials
+        US --> User : throw AuthenticationException
+    end
+deactivate US
+
+User -> US : RefreshAccessToken(refreshToken)
+activate US
+    note right of US  
+        Parse refreshToken 
+        userID = refreshToken.sub 
+    end note
+    US -> US : user := GetUser(userID)
+    
+    alt user != null && user.RefreshToken == payload
+        US -> TS : CreateAccessToken(user.UserID, user.Role)
+        activate TS
+        TS --> US : accessToken : string
+        deactivate TS
+        US --> User : accessToken : String
+    else session expired
+        US --> User : throw AuthenticationException
+    end
+deactivate US
+
+User -> US : Logout(userID)
+activate US
+    note right of US : Set user.RefreshToken = null in DB
+    US --> User : void
+deactivate US
+
+@enduml

@@ -1,0 +1,94 @@
+@startuml
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+actor Admin
+participant "ProjectService" as PS
+participant "ReportService" as RS
+
+Admin -> PS : CreateProject(supervisorID, title, description, studentID)
+activate PS
+    note right of PS: **Transaction Start**
+    create participant "p : Project" as P
+    PS -> P : new Project(title, description)
+    create participant "pa: ProjectAssignment" as PA
+    PS -> PA : new ProjectAssignment(supervisorID, studentID, p.ProjectID)
+    note right of PS: **Transaction Commit**
+    PS --> Admin : void
+deactivate PS
+
+Admin -> PS : ArchiveProject(projectID)
+activate PS
+    PS -> PS : project := GetProject(projectID)
+    note right of PS : project.IsArchived := true
+    PS --> Admin : void
+deactivate PS
+
+Admin -> PS : RestoreProject(projectID)
+activate PS
+    note right of PS
+         Fetch project assignment entries containing projectID
+    end note
+    PS -> PS : project := GetProject(projectID)
+    
+    alt project entries contain deleted user
+        PS --> Admin : throw Exception
+    end
+    note right of PS : project.IsArchived := false
+    PS --> Admin : void
+deactivate PS
+
+Admin -> PS : GetProject(userID, projectID)
+activate PS
+    alt project = null
+        PS --> Admin: throw UnauthorizedAccessException
+    end
+    PS --> Admin : project : Project
+deactivate PS
+
+Admin -> PS : GetProjectsWithCount(limit, offset)
+activate PS
+    note right of PS : Fetch all projects regardless of status
+    PS --> Admin : (Project[], totalCount)
+deactivate PS
+
+Admin -> PS : EditProject(projectID, title, description, supervisorID, studentID)
+activate PS
+    PS -> PS : project := GetProject(projectID)
+    
+    note right of PS: **Transaction Start**
+    note right of PS : Update project details 
+    note right of PS
+        Delete project's Assignment Entries 
+    end note
+    create participant "pa: ProjectAssignment" as PA
+    PS -> PA : new ProjectAssignment(supervisorID, studentID, projectID)
+    note right of PS: **Transaction Commit**
+
+    PS --> Admin : void
+deactivate PS
+
+Admin -> RS : IngestProjectSupervisionList(file)
+activate RS
+    
+    note right of RS : Check if the file is a valid format
+    
+    note right of RS
+        Pull project info from the file and match
+        emails to existing User IDs
+    end note
+
+    note right of RS : Filter out projects that are already in the database
+
+    note right of RS: **Transaction Start**
+    loop for each new project, p
+        create participant "p : Project" as NP
+        RS -> NP : new Project(p.title, p.description)
+        create participant "pa : Project Assignment" as NPA
+        RS -> NPA : new ProjectAssignment(p.supervisorID, p.studentID, p.ProjectID)
+    end
+    note right of RS: **Transaction Commit**
+    RS --> Admin : void
+deactivate RS
+
+@enduml

@@ -4,6 +4,7 @@ using System.Security.Authentication;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json.Linq;
 using PMS.DatabaseContext;
 using PMS.DTOs;
@@ -22,13 +23,21 @@ public static class UserQueryExtensions
 
 public class UserService
 {
-    protected readonly PMSDbContext dbContext;
-    protected readonly TokenService tokenService;
-    protected readonly ILogger<UserService> logger;
-    public UserService(PMSDbContext dbContext, TokenService tokenService, ILogger<UserService> logger)
+    private readonly PMSDbContext dbContext;
+    private readonly TokenService tokenService;
+    private readonly IDistributedCache cache;
+    private readonly ILogger<UserService> logger;
+
+    public UserService(
+        PMSDbContext dbContext,
+        TokenService tokenService,
+        IDistributedCache cache,
+        ILogger<UserService> logger
+    )
     {
         this.dbContext = dbContext;
         this.tokenService = tokenService;
+        this.cache = cache;
         this.logger = logger;
     }
 
@@ -191,7 +200,7 @@ public class UserService
         var (accessToken, accessTokenExpiry) = tokenService.CreateAccessToken(user.UserID, user.Role);
         var (refreshToken, refreshTokenExpiry) = tokenService.CreateRefreshToken(user.UserID, user.Role);
 
-        user.RefreshToken = refreshToken;
+        await cache.SetRecord($"refresh:{user.UserID}", refreshToken, refreshTokenExpiry - DateTime.UtcNow);
         await dbContext.SaveChangesAsync();
 
         return new GetUserAuth
@@ -221,12 +230,15 @@ public class UserService
         try
         {
             var userID = long.Parse(refreshToken.Subject);
-            var user = await GetUser(userID, selector: u => u);
+            var role = refreshToken.Claims.First(c => c.Type == "role").Value;
+            var storedRefreshToken = await cache.GetRecord<string>($"refresh:{userID}");
 
-            if (user.RefreshToken != refreshTokenPayload)
+            if (storedRefreshToken != refreshTokenPayload)
                 throw new Exception("Invalid or Revoked Session!");
 
-            var (accessToken, accessTokenExpiry) = tokenService.CreateAccessToken(user.UserID, user.Role);
+            var (accessToken, accessTokenExpiry) = tokenService.CreateAccessToken(userID, role);
+
+            logger.LogDebug("Token for User {userID} refreshed successfully!", userID);
 
             return new TokenDTO
             {
@@ -245,7 +257,7 @@ public class UserService
         var user = await dbContext.Users.FindAsync(userID);
         if (user != null)
         {
-            user.RefreshToken = null;
+            await cache.RemoveAsync($"refresh:{userID}");
             await dbContext.SaveChangesAsync();
 
             logger.LogDebug("User {userID} logged out successfully!", user.UserID);

@@ -1,0 +1,49 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
+  <diagram name="Page-1" id="1JRuO4VKOA4PlabRyaYc">
+    <mxGraphModel dx="1608" dy="2659" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="NjxCcQ4pbWsvk2nISR9Q-105" value="MailService" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="-695" y="-1490" width="320" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="NjxCcQ4pbWsvk2nISR9Q-106" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="NjxCcQ4pbWsvk2nISR9Q-105" vertex="1">
+          <mxGeometry y="26" width="320" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="NjxCcQ4pbWsvk2nISR9Q-107" value="+CreateAndEnqueueMeetingMail(organizer: User, attendee: User, meeting: Meeting, mailType)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="NjxCcQ4pbWsvk2nISR9Q-105" vertex="1">
+          <mxGeometry y="34" width="320" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="NjxCcQ4pbWsvk2nISR9Q-115" value="+CreateAndEnqueueTaskMail(supervisor: User, student: User, task: ProjectTask, mailType)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="NjxCcQ4pbWsvk2nISR9Q-105" vertex="1">
+          <mxGeometry y="80" width="320" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="NjxCcQ4pbWsvk2nISR9Q-116" value="+DequeueAndSendMail()" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="NjxCcQ4pbWsvk2nISR9Q-105" vertex="1">
+          <mxGeometry y="130" width="320" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="dMS8dIT_0PRAV7qoryrv-1" value="MailWorker" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-695" y="-1640" width="320" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="dMS8dIT_0PRAV7qoryrv-2" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="dMS8dIT_0PRAV7qoryrv-1">
+          <mxGeometry y="26" width="320" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="dMS8dIT_0PRAV7qoryrv-5" value="+ExecuteAsync(CancellationToken)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="dMS8dIT_0PRAV7qoryrv-1">
+          <mxGeometry y="34" width="320" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="dMS8dIT_0PRAV7qoryrv-6" value="«interface»&lt;br&gt;&lt;b&gt;BackgroundService&lt;/b&gt;" style="html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="-260" y="-1633" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="dMS8dIT_0PRAV7qoryrv-7" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;" edge="1" parent="1" target="dMS8dIT_0PRAV7qoryrv-6" source="dMS8dIT_0PRAV7qoryrv-1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="-379.99913580246925" y="-1540" as="sourcePoint" />
+            <mxPoint x="72.47" y="-1264" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dMS8dIT_0PRAV7qoryrv-8" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;" edge="1" parent="1" source="dMS8dIT_0PRAV7qoryrv-1" target="NjxCcQ4pbWsvk2nISR9Q-105">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="-350" y="-1510" as="sourcePoint" />
+            <mxPoint x="-235" y="-1510" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

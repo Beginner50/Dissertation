@@ -4,15 +4,15 @@ namespace PMS.DatabaseContext;
 
 /*
     ENTITY FRAMEWORK CORE:
-        Entity Framework Core is an Object-Relational Mapper (ORM) that enables .NET developers 
+        Entity Framework Core is an Object-Relational Mapper (ORM) that enables .NET developers
         to work with a database using .NET objects.
 
-        For this to work, EF Core uses a Model that maps the database schema from .NET 
+        For this to work, EF Core uses a Model that maps the database schema from .NET
         classes or vice-versa. A Model is made up of a set of classes (known as entity classes)
-        and a context that represents the session with the database, allowing us to 
+        and a context that represents the session with the database, allowing us to
         query and save data.
 
-        The PMSDbContext class is combined with the entity classes defined in the PMS.Models 
+        The PMSDbContext class is combined with the entity classes defined in the PMS.Models
         namespace to form the Model for the PMS application.
 
     DbSet PROPERTY:
@@ -39,7 +39,7 @@ public class PMSDbContext : DbContext
         The Model interacts with the underlying database via a provider that translates
         the operations into database-specific commands.
 
-        Npgsql is the .NET data provider for PostgreSQL. 
+        Npgsql is the .NET data provider for PostgreSQL.
 
         More information on how to configure EF Core with Npgsql can be found here:
             https://www.nuget.org/packages/Npgsql.EntityFrameworkCore.PostgreSQL
@@ -102,7 +102,6 @@ public class PMSDbContext : DbContext
                         Name = "Admin",
                         Email = "admin@uni.com",
                         Password = passwordHash,
-                        RefreshToken = "",
                         Role = "admin"
                     });
     }
@@ -118,7 +117,6 @@ public class PMSDbContext : DbContext
                 Name = "Mr. Pile",
                 Email = "jatooprashant099@gmail.com",
                 Password = passwordHash,
-                RefreshToken = "",
                 Role = "supervisor"
             },
             new User
@@ -127,7 +125,6 @@ public class PMSDbContext : DbContext
                 Name = "Bob",
                 Email = "prashant_pms@outlook.com",
                 Password = passwordHash,
-                RefreshToken = "",
                 Role = "student"
             },
             new User
@@ -136,7 +133,6 @@ public class PMSDbContext : DbContext
                 Name = "Mrs. Alice",
                 Email = "test@outlook.com",
                 Password = passwordHash,
-                RefreshToken = "",
                 Role = "supervisor"
             });
     }

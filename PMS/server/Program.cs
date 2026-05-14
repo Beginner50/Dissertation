@@ -15,7 +15,7 @@ using QuestPDF.Infrastructure;
 QuestPDF.Settings.License = LicenseType.Community;
 
 /*
-    The .NET Core web application (generic host) lifecycle can be broadly divided into 
+    The .NET Core web application (generic host) lifecycle can be broadly divided into
     three phases:
 
         1) Configuration Phase
@@ -30,7 +30,7 @@ QuestPDF.Settings.License = LicenseType.Community;
 
            In this phase, the middleware pipeline is configured. Middleware components are added
            to the pipeline to handle HTTP requests and responses. This includes setting up routing,
-           authentication, authorization, and other middleware necessary for the application's 
+           authentication, authorization, and other middleware necessary for the application's
            functionality.
 
         3) Execution Phase
@@ -71,7 +71,7 @@ CORS
 
 Note:
     AllowCredentials
-        AllowCredentials ensures the website can read and save cookies such as refreshTokens for 
+        AllowCredentials ensures the website can read and save cookies such as refreshTokens for
         authentication. This ensures that when other unallowed origins call the refresh token
         endpoint, they will not be able to read and save the refresh token.
 
@@ -101,6 +101,7 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Allow route segments to be case-insensitive
 builder.Services.Configure<RouteOptions>(options =>
     options.LowercaseUrls = true);
 
@@ -126,7 +127,7 @@ HTTP request and then based on the configurations given, it performs the followi
        token is expired or not
 
 
-Note: 
+Note:
     Clock Skew
         Clock skew simply gives a grace period to the expiry time.
 
@@ -136,10 +137,10 @@ Note:
     MapInboundClaims = false
         MapInboundClaims = false is to prevent .NET from mapping/renaming JWT claims
         (sub, role) into deprecated SOAP XML standards.
-    
+
     ValidateIssuer + ValidateAudience
         .NET automatically sets these to true even though these claims are not being used
-        in the application. 
+        in the application.
 
         However, when deploying the web application, it is important to set the issuer claim
         in the JWT and set ValidateIssuer to true, since issuer claim identifies the website
@@ -178,7 +179,7 @@ Based on the official documentation page:
     This necessitates a custom policy which implements Ownership Authorization alongside RBAC,
     ensuring that users (except admins) cannot make requests on behalf of other users while
     having maximum clearance on their owned resource.
-    
+
     To denote resource ownership for a user, the REST API for accessing the resource follows a
     hierarchical path: /api/users/{userID}/resource.
 
@@ -200,6 +201,16 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
+
+/*
+    Connect dotnet-server with redis-cache
+*/
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["REDIS_CONNECTION"];
+    options.InstanceName = "Cache";
+});
+
 /*
 AddScoped:
     AddScoped method is used to register a Service with a scoped lifetime in the
@@ -219,7 +230,7 @@ AddSingleton:
 
 AddHostedService:
     AddHostedService is used to register a background service that runs alongside the
-    web application. Hence, their lifetime is not scoped to a client request but rather 
+    web application. Hence, their lifetime is not scoped to a client request but rather
     to the entire application lifetime.
 */
 builder.Services.AddSingleton<IAuthorizationHandler, OwnershipHandler>();
@@ -253,10 +264,10 @@ var app = builder.Build();
 
 /*
 Migrations:
-    Broadly speaking, migrations act as a version control system for the database schema, 
+    Broadly speaking, migrations act as a version control system for the database schema,
     allowing the database schema over time without (potentially) losing existing data.
 
-    The way it works is that it syncs the database schema with the current model definition 
+    The way it works is that it syncs the database schema with the current model definition
     generated from running the `dotnet ef migrations add <MigrationName>` command, from the
     DbContext and entity classes in the Models directory.
 
@@ -291,7 +302,7 @@ using (var scope = app.Services.CreateScope())
                |
         ----------------
         |              |
-     OpenAPI     HTTPS Redirection 
+     OpenAPI     HTTPS Redirection
   (API Reference)      |
         |              |
         ----------------
