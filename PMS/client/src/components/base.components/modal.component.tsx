@@ -43,7 +43,8 @@ export default function Modal({
           sx: { mx: "auto", ...sx },
         },
       }}
-      keepMounted>
+      keepMounted
+    >
       {children}
     </Dialog>
   );
@@ -57,7 +58,9 @@ Modal.Header = ({ mode, item }: { mode: ModalActions; item: string }) => {
     archive: `Archive ${item}`,
     restore: `Restore ${item}`,
   };
-  return <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>;
+  return (
+    <DialogTitle sx={{ fontWeight: "bold", pb: 1 }}>{titles[mode]}</DialogTitle>
+  );
 };
 
 Modal.Fields = ({ children }: { children: ReactNode }) => {
@@ -85,10 +88,10 @@ Modal.TextField = <T extends string | number>({
   const [localValue, setLocalValue] = useState(value);
 
   /*
-    1st useEffect: 
-        Syncing localValue with value prop changes (e.g., when editing a different item), 
+    1st useEffect:
+        Syncing localValue with value prop changes (e.g., when editing a different item),
 
-    2nd useEffect: 
+    2nd useEffect:
         Syncing value prop with localValue changes, but only when either is empty.
 
         The reason for this condition is that keeping them in sync at all times leads to performance
@@ -141,6 +144,7 @@ Modal.DateTimePicker = ({
           textField: {
             size: "small",
             fullWidth: true,
+            error: true,
             inputProps: {
               "data-testid": "datetime_picker",
             },
@@ -174,7 +178,8 @@ Modal.Select = <T extends string | number>({
         label={label}
         value={currentOption}
         onChange={(e) => handleOptionChange(e.target.value as T)}
-        size="small">
+        size="small"
+      >
         {Object.entries(options).map(([label, value]) => (
           <MenuItem value={value}>{label}</MenuItem>
         ))}
@@ -229,7 +234,8 @@ Modal.Actions = ({
         onClick={actions[mode]}
         color={mode === "delete" || mode == "archive" ? "error" : "primary"}
         loading={loading}
-        disabled={disabled}>
+        disabled={disabled}
+      >
         {labels[mode]}
       </Button>
     </DialogActions>

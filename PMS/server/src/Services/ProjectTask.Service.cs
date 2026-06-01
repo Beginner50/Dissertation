@@ -93,7 +93,7 @@ public class ProjectTaskService
         );
 
         IQueryable<ProjectTask> taskQuery = dbContext.Tasks.Where(t => t.ProjectID == project.ProjectID)
-                                                           .OrderByDescending(t => t.DueDate);
+                                                           .OrderByDescending(t => t.CreatedAt);
         if (taskQueryExtension != null)
             taskQuery = taskQueryExtension(taskQuery);
 
@@ -182,7 +182,7 @@ public class ProjectTaskService
             projectID,
             selector: p => p,
             projectQueryExtension: p => p.Include(p => p.Assignments)
-                                            .ThenInclude(ps => ps.Supervisor)
+                                            .ThenInclude(ps => ps.Student)
                                          .Include(p => p.Assignments)
                                             .ThenInclude(ps => ps.Supervisor)
         );

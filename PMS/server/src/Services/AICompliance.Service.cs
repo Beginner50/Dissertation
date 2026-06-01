@@ -145,33 +145,41 @@ public class AIComplianceService
 
     public async Task ExecuteAIComplianceJob(AIJob job)
     {
-        var updatedFeedbackCriteria = await ExecuteAIJob<List<UpdateFeedbackCriterionDTO>>(job)
-                ?? throw new Exception("Could Not Obtain AI Feedback!");
-
-        var task = await projectTaskService.GetProjectTask(
-                        job.JobID,
-                        selector: t => t,
-                        taskQueryExtension: q => q.Include(t => t.Project!)
-                                                    .ThenInclude(p => p.Assignments)
-                                                        .ThenInclude(ps => ps.Student)
-                                                  .Include(t => t.Project!)
-                                                    .ThenInclude(p => p.Assignments)
-                                                        .ThenInclude(ps => ps.Supervisor)
-
-                    );
-
-        await feedbackService.EditFeedbackCriteria(job.JobID, updatedFeedbackCriteria);
-        foreach (var supervisionEntry in task.Project!.Assignments)
+        try
         {
-            mailService.CreateAndEnqueueTaskMail(
-                                supervisor: supervisionEntry.Supervisor!,
-                                student: supervisionEntry.Student!,
-                                task: task,
-                                MailType.TASK_COMPLIANCE_CHECK_COMPLETION
-                        );
-        }
 
-        await AIProcessingQueue.SetJobStatus(job.JobID, "completed");
+            var updatedFeedbackCriteria = await ExecuteAIJob<List<UpdateFeedbackCriterionDTO>>(job)
+                    ?? throw new Exception("Could Not Obtain AI Feedback!");
+
+            var task = await projectTaskService.GetProjectTask(
+                            job.JobID,
+                            selector: t => t,
+                            taskQueryExtension: q => q.Include(t => t.Project!)
+                                                        .ThenInclude(p => p.Assignments)
+                                                            .ThenInclude(ps => ps.Student)
+                                                      .Include(t => t.Project!)
+                                                        .ThenInclude(p => p.Assignments)
+                                                            .ThenInclude(ps => ps.Supervisor)
+
+                        );
+
+            await feedbackService.EditFeedbackCriteria(job.JobID, updatedFeedbackCriteria);
+            foreach (var supervisionEntry in task.Project!.Assignments)
+            {
+                mailService.CreateAndEnqueueTaskMail(
+                                    supervisor: supervisionEntry.Supervisor!,
+                                    student: supervisionEntry.Student!,
+                                    task: task,
+                                    MailType.TASK_COMPLIANCE_CHECK_COMPLETION
+                            );
+            }
+
+            await AIProcessingQueue.SetJobStatus(job.JobID, "completed");
+        }
+        catch (Exception)
+        {
+            await AIProcessingQueue.SetJobStatus(job.JobID, "failed");
+        }
     }
 
     public async Task<string> PollAIComplianceJob(long taskID)

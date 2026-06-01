@@ -69,7 +69,9 @@ export default function DashboardTasksRoute() {
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ["projects", projectID],
     queryFn: async (): Promise<Project> =>
-      await authorizedAPI.get(`api/users/${user.userID}/projects/${projectID}`).json(),
+      await authorizedAPI
+        .get(`api/users/${user.userID}/projects/${projectID}`)
+        .json(),
     retry: 1,
   });
 
@@ -152,8 +154,13 @@ export default function DashboardTasksRoute() {
       {
         method: "post",
         url: `api/users/${user.userID}/projects/${projectID}/tasks`,
-        data: { ...taskModalData, dueDate: taskModalData.dueDate.toISOString() },
-        invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
+        data: {
+          ...taskModalData,
+          dueDate: taskModalData.dueDate.toISOString(),
+        },
+        invalidateQueryKeys: [
+          [projectID, "tasks", taskListOffset, taskListLimit],
+        ],
       },
       {
         onSettled: () => {
@@ -172,8 +179,13 @@ export default function DashboardTasksRoute() {
       {
         method: "put",
         url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
-        data: { ...taskModalData, dueDate: taskModalData.dueDate.toISOString() },
-        invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
+        data: {
+          ...taskModalData,
+          dueDate: taskModalData.dueDate.toISOString(),
+        },
+        invalidateQueryKeys: [
+          [projectID, "tasks", taskListOffset, taskListLimit],
+        ],
       },
       {
         onSettled: () => {
@@ -192,8 +204,13 @@ export default function DashboardTasksRoute() {
       {
         method: "delete",
         url: `api/users/${user.userID}/projects/${projectID}/tasks/${taskModalData.taskID}`,
-        data: { ...taskModalData, dueDate: taskModalData.dueDate.toISOString() },
-        invalidateQueryKeys: [[projectID, "tasks", taskListOffset, taskListLimit]],
+        data: {
+          ...taskModalData,
+          dueDate: taskModalData.dueDate.toISOString(),
+        },
+        invalidateQueryKeys: [
+          [projectID, "tasks", taskListOffset, taskListLimit],
+        ],
       },
       {
         onSettled: () => {
@@ -214,7 +231,7 @@ export default function DashboardTasksRoute() {
     Since the browser cannot directly open BLOB objects, a temporary URL is created using the
     URL.createObjectURL() method, which generates a unique URL that points to the BLOB data.
 
-    window.open() is then used to open this temporary URL in a new browser tab. 
+    window.open() is then used to open this temporary URL in a new browser tab.
 
       The "_blank" parameter specifies that the URL should be opened in a new tab,
       while "noopener,noreferrer" are security features to prevent the new page from
@@ -268,7 +285,8 @@ export default function DashboardTasksRoute() {
           marginRight: "3vw",
           marginBottom: "2vh",
           columnGap: "2vw",
-        }}>
+        }}
+      >
         {/* Left Section - Tasks */}
         <TaskList sx={{ flexGrow: 3 }}>
           <TaskList.Header>
