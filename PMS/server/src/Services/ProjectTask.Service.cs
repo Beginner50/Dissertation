@@ -93,7 +93,7 @@ public class ProjectTaskService
         );
 
         IQueryable<ProjectTask> taskQuery = dbContext.Tasks.Where(t => t.ProjectID == project.ProjectID)
-                                                           .OrderByDescending(t => t.CreatedAt);
+                                                           .OrderByDescending(t => t.AssignedDate);
         if (taskQueryExtension != null)
             taskQuery = taskQueryExtension(taskQuery);
 

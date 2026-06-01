@@ -36,12 +36,11 @@ services:
   react:
     build:
       context: ./client
-      target: production # This now triggers the Nginx-based build
+      target: production
     container_name: react_pms
     restart: always
     depends_on:
       - dotnet-server
-    # No ports needed! The tunnel talks to port 80 internally.
 
   nginx-proxy:
     image: nginx:alpine
@@ -51,7 +50,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro # For SSL keys
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - dotnet-server
       - react
