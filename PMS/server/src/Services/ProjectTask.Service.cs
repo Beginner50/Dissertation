@@ -195,6 +195,9 @@ public class ProjectTaskService
             taskQueryExtension: t => t.Where(t => t.AssignedByID == userID)
         );
 
+        logger.LogInformation("New DueDate: {DueDate}, Previous DueDate: {PreviousDueDate}", dueDate, task.DueDate);
+        logger.LogInformation("DueDate Updated: {dueDateUpdated}", dueDate == task.DueDate);
+
         bool dueDateUpdated = false;
         using var transaction = await dbContext.Database.BeginTransactionAsync();
         try
