@@ -174,9 +174,6 @@ public class ProjectTaskService
         string? description, DateTime? dueDate, bool? isLocked
     )
     {
-        if (dueDate < DateTime.Now)
-            throw new Exception("Invalid Due Date!");
-
         var project = await projectService.GetProject(
             userID,
             projectID,
@@ -195,8 +192,8 @@ public class ProjectTaskService
             taskQueryExtension: t => t.Where(t => t.AssignedByID == userID)
         );
 
-        logger.LogDebug("New DueDate: {DueDate}, Previous DueDate: {PreviousDueDate}", dueDate, task.DueDate);
-        logger.LogDebug("DueDate Updated: {dueDateUpdated}", dueDate == task.DueDate);
+        if (dueDate != task.DueDate && dueDate < DateTime.Now)
+            throw new Exception("Invalid Due Date!");
 
         bool dueDateUpdated = false;
         using var transaction = await dbContext.Database.BeginTransactionAsync();
