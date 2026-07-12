@@ -1,0 +1,160 @@
+# FYPMS — Final Year Project Management System
+
+A full-stack web application for managing final year projects in an academic setting. The system supports three roles — **Admin**, **Supervisor**, and **Student** — each with tailored dashboards for project creation, task tracking, meeting scheduling, and AI-assisted feedback.
+
+---
+
+## Tech Stack
+
+| Layer      | Technology                                                    |
+|------------|---------------------------------------------------------------|
+| Frontend   | React 19, TypeScript, Vite, Material UI 7, TanStack Query     |
+| Backend    | ASP.NET Core Web API (.NET 10), Entity Framework Core         |
+| Database   | PostgreSQL (via Npgsql)                                       |
+| Cache      | Redis                                                         |
+| AI         | Google Gemini (via `Google.GenAI`) for automated feedback     |
+| Scheduling | FullCalendar                                                  |
+| PDF/Excel  | QuestPDF, ClosedXML                                           |
+| Auth       | JWT (Bearer tokens) with BCrypt password hashing              |
+| Testing    | Playwright (end-to-end)                                       |
+| DevOps     | Docker + Docker Compose                                       |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker Engine + Docker Compose)
+- An `.env` file at `PMS/.env` with the following variables:
+
+```
+MAIL_ACCOUNT=your-email@example.com
+MAIL_PASSWORD=your-app-password
+JWT_SECRET_KEY=your-secret-key
+GOOGLE_API_KEY=your-gemini-api-key
+```
+
+> **Note:** Email functionality is disabled by default (`DISABLE_MAIL=true` in `docker-compose.yaml`). Remove or set to `false` to enable.
+
+### Running the Application
+
+```sh
+cd PMS
+docker compose up --build
+```
+
+Once all services are healthy, open **http://localhost:3000** in your browser.
+
+### Services & Ports
+
+| Service       | Container           | Port  |
+|---------------|---------------------|-------|
+| React Client  | `react_pms`         | 3000  |
+| .NET Server   | `dotnet_server`     | 5081  |
+| PostgreSQL    | `postgres_db_pms`   | 5431  |
+| Redis         | `redis_pms`         | 6379  |
+
+---
+
+## Test Credentials
+
+| Role       | Email                | Password   |
+|------------|----------------------|------------|
+| Student    | student@uni.com      | password   |
+| Supervisor | supervisor@uni.com   | password   |
+
+> Admin accounts are created via database seeding — refer to the project setup guide for the admin password.
+
+---
+
+## Features
+
+- **Admin dashboard** — Create/manage projects and user accounts
+- **Supervisor dashboard** — Oversee assigned projects, create tasks, define grading criteria, schedule meetings
+- **Student dashboard** — View tasks, submit deliverables, receive AI-generated feedback, book supervisor meetings
+- **AI feedback** — Gemini-powered automatic feedback on student submissions
+- **Scheduler** — Bookable meeting slots with FullCalendar integration
+- **Progress reports** — Exportable as PDF
+- **Email notifications & reminders** — Configurable via environment variables
+
+---
+
+## Project Structure
+
+```
+PMS/
+├── client/                  # React + TypeScript + Vite frontend
+│   └── src/
+│       ├── components/      # Reusable UI components by feature
+│       ├── routes/          # Page-level route components (admin / normal)
+│       ├── providers/       # Auth context provider
+│       └── lib/             # Shared types, config, theme
+├── server/                  # ASP.NET Core Web API backend
+│   └── src/
+│       ├── Controllers/     # REST API endpoints
+│       ├── Services/        # Business logic layer
+│       ├── Models/          # Entity Framework domain models
+│       ├── DTOs/            # Data Transfer Objects
+│       └── Lib/             # Utilities (AI, JWT, RBAC, PDF, Mail)
+├── tests/                   # Playwright end-to-end tests
+├── docker-compose.yaml      # Docker orchestration
+└── docker-compose.test.yaml # Test environment orchestration
+```
+
+---
+
+## Testing
+
+The project includes **Playwright** end-to-end tests located in `PMS/tests/`.
+
+```sh
+cd PMS/tests
+npm install
+npx playwright test
+```
+
+A dedicated Docker Compose file (`docker-compose.test.yaml`) is available for spinning up a test environment.
+
+---
+
+## Interface Screenshots
+
+Screenshots of all major views are available in [`Diagrams & Figures/Interface/`](Diagrams%20%26%20Figures/Interface/).
+
+| # | Screen | Role |
+|---|--------|------|
+| 1 | Login | All |
+| 2 | Admin — Manage Projects | Admin |
+| 3 | Admin — Create Project | Admin |
+| 4 | Admin — Manage Users | Admin |
+| 5 | Supervisor — My Projects | Supervisor |
+| 6 | Supervisor — Tasks Overview | Supervisor |
+| 7 | Supervisor — View Task | Supervisor |
+| 8 | Supervisor — Add Criterion | Supervisor |
+| 9 | Supervisor — Scheduler | Supervisor |
+| 10 | Supervisor — Book a Slot | Supervisor |
+| 11 | Student — My Tasks | Student |
+
+**Login**
+
+![FYPMS Login](Diagrams%20%26%20Figures/Interface/FYPMS%20Login.png)
+
+**Admin**
+
+![FYPMS Admin Projects](Diagrams%20%26%20Figures/Interface/FYPMS%20Admin%20Projects.png)
+![FYPMS Admin Projects (Create)](Diagrams%20%26%20Figures/Interface/FYPMS%20Admin%20Projects%20(Create).png)
+![FYPMS Admin Users](Diagrams%20%26%20Figures/Interface/FYPMS%20Admin%20Users.png)
+
+**Supervisor**
+
+![FYPMS Supervisor Projects](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Projects.png)
+![FYPMS Supervisor Tasks](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Tasks.png)
+![FYPMS Supervisor Task](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Task.png)
+![FYPMS Supervisor Task (Add Criterion)](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Task%20(Add%20Criterion).png)
+![FYPMS Supervisor Scheduler](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Scheduler.png)
+![FYPMS Supervisor Scheduler (Book)](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Scheduler%20(Book).png)
+
+**Student**
+
+![FYPMS Student Task](Diagrams%20%26%20Figures/Interface/FYPMS%20Student%20Task.png)

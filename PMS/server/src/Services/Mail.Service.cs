@@ -11,21 +11,21 @@ namespace PMS.Services;
     To understand how the mail delivery chain works (sending/receiving mail),
     it is important to understand that there are 3 major components involved:
 
-    1. Mail User Agent (MUA) - 
+    1. Mail User Agent (MUA) -
         This is the email client that the user interacts with to read and send emails.
 
         Examples include Microsoft Outlook, Mozilla Thunderbird, and web-based clients like Gmail.
 
     2. Mail Transfer Agent (MTA) -
-        This is the server-side software that transfers email messages from one server to 
+        This is the server-side software that transfers email messages from one server to
         another, closer to the final destination of the recipient. It is the "mail server"
         from the MUA's perspective
 
         It uses SMTP (Simple Mail Transfer Protocol) for sending emails.
 
-        Examples include Postfix 
+        Examples include Postfix
 
-    3. Mail Delivery Agent (MDA) - 
+    3. Mail Delivery Agent (MDA) -
         This is the software that delivers email messages to the recipient's mailbox.
 
         The MUA on the recipient's side can use protocols like IMAP (Internet Message
@@ -42,7 +42,7 @@ namespace PMS.Services;
     The reason why I am using smtp.gmail.com (my personal gmail account) as the
     mail server (encompassing both MTA and MDA) is because setting up a reliable mail server
     whose mails will not be rejected by recipient mail servers (like gmail, outlook, etc)
-    requires buying a dedicated IP address, a registered domain and setting up proper 
+    requires buying a dedicated IP address, a registered domain and setting up proper
     DNS records.
 
     Ideally, the university's mail server should be used for sending mails to students and staff.
@@ -236,7 +236,7 @@ public class MailService
                 mail.Body = $"""
                     Dear {sanitizedStudentName},<br/><br/>
 
-                    {sanitizedSupervisorName} has deleted the task, 
+                    {sanitizedSupervisorName} has deleted the task,
                     <b>{sanitizedTaskTitle}</b>.<br/><br/>
 
                     {MailFooter}
@@ -274,7 +274,6 @@ public class MailService
         try
         {
             await client.SendMailAsync(mail, cancellationToken);
-            logger.LogInformation("Email sent successfully in background.");
         }
         catch (Exception)
         {
