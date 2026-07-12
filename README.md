@@ -4,6 +4,47 @@ A full-stack web application for managing final year projects in an academic set
 
 ---
 
+## Interface Screenshots
+
+### Login
+
+![FYPMS Login](Diagrams%20%26%20Figures/Interface/FYPMS%20Login.png)
+
+### Admin
+
+![FYPMS Admin Projects](Diagrams%20%26%20Figures/Interface/FYPMS%20Admin%20Projects.png)
+![FYPMS Admin Projects (Create)](Diagrams%20%26%20Figures/Interface/FYPMS%20Admin%20Projects%20(Create).png)
+![FYPMS Admin Users](Diagrams%20%26%20Figures/Interface/FYPMS%20Admin%20Users.png)
+
+### Supervisor
+
+![FYPMS Supervisor Projects](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Projects.png)
+![FYPMS Supervisor Tasks](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Tasks.png)
+![FYPMS Supervisor Task](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Task.png)
+![FYPMS Supervisor Task (Add Criterion)](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Task%20(Add%20Criterion).png)
+![FYPMS Supervisor Scheduler](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Scheduler.png)
+![FYPMS Supervisor Scheduler (Book)](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Scheduler%20(Book).png)
+
+### Student
+
+![FYPMS Student Task](Diagrams%20%26%20Figures/Interface/FYPMS%20Student%20Task.png)
+
+| # | Screen | Role |
+|---|--------|------|
+| 1 | Login | All |
+| 2 | Admin — Manage Projects | Admin |
+| 3 | Admin — Create Project | Admin |
+| 4 | Admin — Manage Users | Admin |
+| 5 | Supervisor — My Projects | Supervisor |
+| 6 | Supervisor — Tasks Overview | Supervisor |
+| 7 | Supervisor — View Task | Supervisor |
+| 8 | Supervisor — Add Criterion | Supervisor |
+| 9 | Supervisor — Scheduler | Supervisor |
+| 10 | Supervisor — Book a Slot | Supervisor |
+| 11 | Student — My Tasks | Student |
+
+---
+
 ## Tech Stack
 
 | Layer      | Technology                                                    |
@@ -18,6 +59,29 @@ A full-stack web application for managing final year projects in an academic set
 | Auth       | JWT (Bearer tokens) with BCrypt password hashing              |
 | Testing    | Playwright (end-to-end)                                       |
 | DevOps     | Docker + Docker Compose                                       |
+
+---
+
+## Test Credentials
+
+| Role       | Email                | Password   |
+|------------|----------------------|------------|
+| Student    | student@uni.com      | password   |
+| Supervisor | supervisor@uni.com   | password   |
+
+> Admin accounts are created via database seeding — refer to the project setup guide for the admin password.
+
+---
+
+## Features
+
+- **Admin dashboard** — Create/manage projects and user accounts
+- **Supervisor dashboard** — Oversee assigned projects, create tasks, define grading criteria, schedule meetings
+- **Student dashboard** — View tasks, submit deliverables, receive AI-generated feedback, book supervisor meetings
+- **AI feedback** — Gemini-powered automatic feedback on student submissions
+- **Scheduler** — Bookable meeting slots with FullCalendar integration
+- **Progress reports** — Exportable as PDF
+- **Email notifications & reminders** — Configurable via environment variables
 
 ---
 
@@ -57,29 +121,6 @@ Once all services are healthy, open **http://localhost:3000** in your browser.
 
 ---
 
-## Test Credentials
-
-| Role       | Email                | Password   |
-|------------|----------------------|------------|
-| Student    | student@uni.com      | password   |
-| Supervisor | supervisor@uni.com   | password   |
-
-> Admin accounts are created via database seeding — refer to the project setup guide for the admin password.
-
----
-
-## Features
-
-- **Admin dashboard** — Create/manage projects and user accounts
-- **Supervisor dashboard** — Oversee assigned projects, create tasks, define grading criteria, schedule meetings
-- **Student dashboard** — View tasks, submit deliverables, receive AI-generated feedback, book supervisor meetings
-- **AI feedback** — Gemini-powered automatic feedback on student submissions
-- **Scheduler** — Bookable meeting slots with FullCalendar integration
-- **Progress reports** — Exportable as PDF
-- **Email notifications & reminders** — Configurable via environment variables
-
----
-
 ## Project Structure
 
 ```
@@ -115,46 +156,3 @@ npx playwright test
 ```
 
 A dedicated Docker Compose file (`docker-compose.test.yaml`) is available for spinning up a test environment.
-
----
-
-## Interface Screenshots
-
-Screenshots of all major views are available in [`Diagrams & Figures/Interface/`](Diagrams%20%26%20Figures/Interface/).
-
-| # | Screen | Role |
-|---|--------|------|
-| 1 | Login | All |
-| 2 | Admin — Manage Projects | Admin |
-| 3 | Admin — Create Project | Admin |
-| 4 | Admin — Manage Users | Admin |
-| 5 | Supervisor — My Projects | Supervisor |
-| 6 | Supervisor — Tasks Overview | Supervisor |
-| 7 | Supervisor — View Task | Supervisor |
-| 8 | Supervisor — Add Criterion | Supervisor |
-| 9 | Supervisor — Scheduler | Supervisor |
-| 10 | Supervisor — Book a Slot | Supervisor |
-| 11 | Student — My Tasks | Student |
-
-**Login**
-
-![FYPMS Login](Diagrams%20%26%20Figures/Interface/FYPMS%20Login.png)
-
-**Admin**
-
-![FYPMS Admin Projects](Diagrams%20%26%20Figures/Interface/FYPMS%20Admin%20Projects.png)
-![FYPMS Admin Projects (Create)](Diagrams%20%26%20Figures/Interface/FYPMS%20Admin%20Projects%20(Create).png)
-![FYPMS Admin Users](Diagrams%20%26%20Figures/Interface/FYPMS%20Admin%20Users.png)
-
-**Supervisor**
-
-![FYPMS Supervisor Projects](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Projects.png)
-![FYPMS Supervisor Tasks](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Tasks.png)
-![FYPMS Supervisor Task](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Task.png)
-![FYPMS Supervisor Task (Add Criterion)](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Task%20(Add%20Criterion).png)
-![FYPMS Supervisor Scheduler](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Scheduler.png)
-![FYPMS Supervisor Scheduler (Book)](Diagrams%20%26%20Figures/Interface/FYPMS%20Supervisor%20Scheduler%20(Book).png)
-
-**Student**
-
-![FYPMS Student Task](Diagrams%20%26%20Figures/Interface/FYPMS%20Student%20Task.png)
