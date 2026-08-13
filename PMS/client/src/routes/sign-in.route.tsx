@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useAuth } from "../providers/auth.provider";
-import { Box } from "@mui/material";
+import { Box, Tooltip, Typography, IconButton } from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Header from "../components/header.components/header.component";
 import { SignIn } from "../components/auth.components/sign-in.component";
 
@@ -44,11 +45,36 @@ export default function SignInRoute() {
 
   const isInvalid = !authData.email || !authData.password;
 
+  const testCredentialsTooltip = (
+    <Box sx={{ p: 0.5 }}>
+      <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 0.5 }}>
+        Demo Credentials
+      </Typography>
+      <Typography variant="caption" component="div" sx={{ mb: 1, color: "grey.400" }}>
+        Password for all: <strong>password</strong>
+      </Typography>
+      <Typography variant="body2">
+        • <strong>Admin:</strong> admin@uni.com
+      </Typography>
+      <Typography variant="body2">
+        • <strong>Student:</strong> student@uni.com
+      </Typography>
+      <Typography variant="body2">
+        • <strong>Supervisor:</strong> supervisor@uni.com
+      </Typography>
+    </Box>
+  );
+
   return (
     <>
       <Header>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Header.Brand title="Project Management System" />
+          <Tooltip title={testCredentialsTooltip} placement="right" arrow>
+            <IconButton size="small" sx={{ color: "action.active" }}>
+              <InfoOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Header>
 
